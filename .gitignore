@@ -1,0 +1,5 @@
+/build
+/node_modules
+package-lock.json
+
+REACT_APP_MAPBOX_ACCESS_TOKEN=<pk.eyJ1IjoiYXNpbWRhdWQiLCJhIjoiY2thaTR3ZHBlMDZ0eDJ4b2R0MzVmczF3dCJ9.2cyTQ4M-y1edGcN_nwmb1g>
