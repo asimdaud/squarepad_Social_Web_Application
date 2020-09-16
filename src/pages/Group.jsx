@@ -45,10 +45,10 @@ class Group extends React.Component {
         <main
           className="profile-page"
           ref="main"
-          // style={{
-          //   backgroundImage:
-          //     "linear-gradient(to right, #e4efe9, #d9ede8, #cfeae9, #c6e6ed, #c0e2f1, #bcdef2, #badaf3, #bad5f4, #b7d1f2, #b5ccf1, #b3c8ef, #b1c3ed)",
-          // }}
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #e4efe9, #d9ede8, #cfeae9, #c6e6ed, #c0e2f1, #bcdef2, #badaf3, #bad5f4, #b7d1f2, #b5ccf1, #b3c8ef, #b1c3ed)",
+          }}
         >
           <section
             className="section section-blog-info"

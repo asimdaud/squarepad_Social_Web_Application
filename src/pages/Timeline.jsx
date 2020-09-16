@@ -284,9 +284,9 @@ class Timeline extends React.Component {
             // backgroundPosition: "center",
             // backgroundRepeat: "no-repeat",
             // backgroundSize: "cover",
-            backgroundColor: "black",
-            // backgroundImage:
-            //   "linear-gradient(to right bottom, #e4efe9, #d9ede8, #cfeae9, #c6e6ed, #c0e2f1, #bcdef2, #badaf3, #bad5f4, #b7d1f2, #b5ccf1, #b3c8ef, #b1c3ed)",
+            // backgroundColor: "black",
+            backgroundImage:
+              "linear-gradient(to right bottom, #e4efe9, #d9ede8, #cfeae9, #c6e6ed, #c0e2f1, #bcdef2, #badaf3, #bad5f4, #b7d1f2, #b5ccf1, #b3c8ef, #b1c3ed)",
           }}
         >
           <section
@@ -319,13 +319,13 @@ class Timeline extends React.Component {
                 className="order-md-3"
                 style={{ zoom: "85%" }}
               >
-                <Card>
+                {/* <Card> */}
                 <AdSense.Google
   client='ca-pub-3206659815873877'
   slot='1742211567'
 />
 
-                </Card>
+                {/* </Card> */}
               </Col>
             </Row>
           </section>

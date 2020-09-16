@@ -596,9 +596,9 @@ Fravatar = doc.data().profilePic;
           className="profile-page"
           ref="main"
           style={{
-            backgroundColor:"black",
-            // backgroundImage:
-            //   "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
+            // backgroundColor:"black",
+            backgroundImage:
+              "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
         >
           <section
