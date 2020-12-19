@@ -1,5 +1,6 @@
 import React from "react";
 import moment from "moment";
+
 // reactstrap components
 import { Button, Card, Container, Row, Col, Modal, Badge } from "reactstrap";
 // import SmoothImage from "react-smooth-image";
@@ -12,6 +13,7 @@ import * as firebase from "firebase";
 // import PostModal from "components/Modal/postModal";
 import Post from "../components/post";
 import PostPicOnly from "../components/postPicOnly";
+import Update from "./Update";
 import { Redirect, Link, useRouteMatch } from "react-router-dom";
 
 import UserNavbar from "components/Navbars/UserNavbar";
@@ -23,6 +25,7 @@ import {
   FormControl,
 } from "@material-ui/core";
 import { withTranslation } from "react-i18next";
+import ExampleNavbar from "components/Navbars/ExampleNavbar";
 // import defModal from "components/Modal/defModal";
 // import postModal from "components/Modal/postModal";
 // import Modals from "components/Modal/Modals";
@@ -79,9 +82,8 @@ class Profile extends React.Component {
       user: {},
       userdb: {},
       uid: "uid",
-      profilePic:
-      require('assets/img/icons/user/user1.png'),
-        // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
+      profilePic: require("assets/img/icons/user/user1.png"),
+      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
       username: "Username",
       bio: "This is my bio",
       name: "Name",
@@ -95,19 +97,17 @@ class Profile extends React.Component {
       // showModal: false,
       defaultModal: false,
       modalItem: "",
-      value: JSON.parse(localStorage.getItem("lang")),
+      value: localStorage.getItem("lang"),
+      admin: false,
     };
   }
-
 
   toggleModal = (state) => {
     this.setState({
       [state]: !this.state[state],
     });
   };
- componentDidMount() {
-    
-
+  componentDidMount() {
     firebase.auth().onAuthStateChanged((user) => {
       this.setState({ user: user });
 
@@ -127,12 +127,17 @@ class Profile extends React.Component {
               profilePic: res.profilePic,
               userdb: res,
             });
+
+            if (doc.data().admin) {
+              this.setState({ admin: true });
+            }
           }
+
           console.log(res, this.state.userdb);
         });
     });
 
-    localStorage.setItem("groupId", JSON.stringify("TCeQwxQ2DprIpZpr431V"));
+    // localStorage.setItem("groupId", JSON.stringify("TCeQwxQ2DprIpZpr431V"));
 
     this.getFriendList();
     this.getPosts();
@@ -147,7 +152,6 @@ class Profile extends React.Component {
     // this.getPosts();
     // this.getProfilePic();
   }
-
 
   getPosts = () => {
     const cloudImages = [];
@@ -207,22 +211,25 @@ class Profile extends React.Component {
 
   viewFriendListData = () => {
     let followerArr = [];
-    let Fravatar =
-    require('assets/img/icons/user/user1.png');
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
-    let Frname;
+    let Fravatar = require("assets/img/icons/user/user1.png");
+    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
+    let Frname, Frusername;
     this.state.followerList.forEach((userId) => {
       //  avatar =  this.getUserPic(userId);
       this.firestoreUsersRef
         .doc(userId)
         .get()
         .then((doc) => {
-          Frname = doc.data().username;
-Fravatar = doc.data().profilePic;
+          Frname = doc.data().name;
+          avatar = doc.data().profilePic
+            ? doc.data().profilePic
+            : require("assets/img/icons/user/user1.png");
+          Frusername = doc.data().username;
           let followerList = {
             userId: userId,
             Frname: Frname,
-            Fravatar:Fravatar ,
+            Frusername: Frusername,
+            Fravatar: Fravatar,
           };
 
           followerArr.push(followerList);
@@ -230,27 +237,30 @@ Fravatar = doc.data().profilePic;
           // console.log(this.state.followedUsersData);
         })
         .catch((err) => {
-          alert(err);
+          console.warn(err);
         });
     });
     let followingArr = [];
-    let avatar =
-    require('assets/img/icons/user/user1.png');
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
-    let name;
+    let avatar = require("assets/img/icons/user/user1.png");
+    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
+    let name, username;
     this.state.followingList.forEach((userId) => {
       //  avatar =  this.getUserPic(userId);
       this.firestoreUsersRef
         .doc(userId)
         .get()
         .then((doc) => {
-          name = doc.data().username;
-          avatar = doc.data().profilePic;
+          name = doc.data().name;
+          avatar = doc.data().profilePic
+            ? doc.data().profilePic
+            : require("assets/img/icons/user/user1.png");
+          username = doc.data().username;
 
           let followingList = {
             userId: userId,
             name: name,
             avatar: avatar,
+            username: username,
           };
 
           followingArr.push(followingList);
@@ -258,7 +268,7 @@ Fravatar = doc.data().profilePic;
           // console.log(this.state.followedUsersData);
         })
         .catch((err) => {
-          alert(err);
+          console.warn(err);
         });
     });
   };
@@ -273,7 +283,7 @@ Fravatar = doc.data().profilePic;
             {this.state.posts.map((post, index) => (
               <Card
                 className="col-sm-4"
-                style={{ padding: "10px" }}
+                style={{ padding: "10px", justifyContent: "center" }}
                 key={index}
                 onClick={() => {
                   this.setState({ modalItem: post });
@@ -334,6 +344,7 @@ Fravatar = doc.data().profilePic;
     return (
       <>
         <UserNavbar />
+        {/* <ExampleNavbar/> */}
         <main
           className="profile-page"
           ref="main"
@@ -344,38 +355,31 @@ Fravatar = doc.data().profilePic;
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
         >
-          <section
-            className="section section-blog-info"
-            style={{ marginTop: "200px" }}
-          >
+          <section className="section" style={{ marginTop: "200px" }}>
             <Container>
               <Card className="card-profile shadow">
                 <div className="px-4">
                   <Row className="justify-content-center">
-                    <Col className="order-lg-2" lg="3">
+                    <Col
+                      className="order-lg-2"
+                      lg="3"
+                      style={{ padding: "15px" }}
+                    >
                       <div className="card-profile-image">
                         <a href="#pablo" onClick={(e) => e.preventDefault()}>
                           <img
-                            alt="..."
+                            className="rounded-circle"
                             style={{
                               width: "200px",
                               height: "200px",
-                              display: "block",
+                              display: "table",
                               objectFit: "cover",
                             }}
-                            className="rounded-circle img-responsive"
                             src={
                               this.state.userdb.profilePic
                                 ? this.state.userdb.profilePic
-                                : 
-                                
-                                
-                                
-                                require('assets/img/icons/user/user1.png')
-                                // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg"
+                                : require("assets/img/icons/user/user1.png")
                             }
-
-                            // src="https://lh3.googleusercontent.com/a-/AOh14GjaRx-1UE5OWMPZbWttAYH-_Zs8uv17cu-WFMNm31M"
                           />
                         </a>
                       </div>
@@ -384,18 +388,12 @@ Fravatar = doc.data().profilePic;
                       className="order-lg-3 text-lg-right align-self-lg-center"
                       lg="4"
                     >
-                      <div className="card-profile-actions py-4 mt-lg-0">
-                        {/* <Button
-                          className="mr-4"
-                          color="info"
-                          href="#pablo"
-                          onClick={e => e.preventDefault()}
-                          size="sm"
-                        >
-                          Follow
-                        </Button> */}
+                      <div
+                        className="card-profile-actions py-4 mt-lg-0"
+                        style={{ padding: "5px" }}
+                      >
                         <Button
-                          className="float-right"
+                          className="mr-4"
                           color="default"
                           size="sm"
                           to="/edit-profile"
@@ -403,15 +401,25 @@ Fravatar = doc.data().profilePic;
                         >
                           {t("Edit Profile")}
                         </Button>
+
+                        {this.state.admin ? (
+                          <Button
+                            className="float-right"
+                            color="danger
+ "
+                            size="sm"
+                            to="/admin"
+                            tag={Link}
+                          >
+                            {t("Admin Panel")}
+                          </Button>
+                        ) : (
+                          ""
+                        )}
                       </div>
                     </Col>
                     <Col className="order-lg-1" lg="4">
-                      <div
-                        className="card-profile-stats d-flex justify-content-center"
-                        onClick={() => this.toggleModal("notificationModal")}
-                        // onMouseEnter={event => onMouseOver(event)}
-                        // onMouseOut={event => onMouseOut(event)}
-                      >
+                      <div className="card-profile-stats d-flex justify-content-center">
                         <div>
                           <span className="heading">
                             {" "}
@@ -419,14 +427,27 @@ Fravatar = doc.data().profilePic;
                           </span>
                           <span className="description">{t("Posts")}</span>
                         </div>
-                        <div>
+
+                        <div
+                          onClick={
+                            this.state.followerList < 1
+                              ? (e) => e.preventDefault()
+                              : () => this.toggleModal("defaultModal3")
+                          }
+                        >
                           <span className="heading">
                             {" "}
                             {this.state.followerList.length}
                           </span>
                           <span className="description">{t("Followers")}</span>
                         </div>
-                        <div>
+                        <div
+                          onClick={
+                            this.state.followingList < 1
+                              ? (e) => e.preventDefault()
+                              : () => this.toggleModal("defaultModal2")
+                          }
+                        >
                           <span className="heading">
                             {" "}
                             {this.state.followingList.length}
@@ -455,6 +476,24 @@ Fravatar = doc.data().profilePic;
                       University of Computer Science
                     </div> */}
                   </div>
+
+                  {/* {this.state.admin ? (
+                    <div className="text-center mt-5">
+                      <Button
+                        //  className="float-right"
+                        color="danger
+ "
+                        size="sm"
+                        to="/admin"
+                        tag={Link}
+                      >
+                        {t("Admin Panel")}
+                      </Button>
+                    </div>
+                  ) : (
+                    ""
+                  )} */}
+
                   <div className="mt-5 py-5 border-top text-center">
                     <Row className="justify-content-center">
                       <Col lg="11">{this.postsView()}</Col>
@@ -464,114 +503,51 @@ Fravatar = doc.data().profilePic;
               </Card>
             </Container>
           </section>
-            <SimpleFooter />
+          <SimpleFooter />
         </main>
 
         <Modal
-          className="modal-dialog-centered modal-danger"
-          contentClassName="bg-gradient-danger"
-          isOpen={this.state.notificationModal}
-          toggle={() => this.toggleModal("notificationModal")}
-          size="lg"
+          size="md"
+          isOpen={this.state.defaultModal3}
+          toggle={() => this.toggleModal("defaultModal3")}
+          className="fluid"
         >
-          <div className="modal-header"></div>
+          {" "}
           <Row>
             <Col>
-              {" "}
               <ul>
-                <h3 className="mb-0 text-white font-weight-bold">Following</h3>
-
-                {this.state.followingListData.map((user, postindex) => (
-                  <li key={postindex} item={this.state.followingList}>
-                    <Row
-                    // className="justify-content-center"
-                    >
-                      <Col lg="6" onMouseOver={() => this.onHover(user.userId)}>
-                        <div
-                          className="media media-comment"
-                          style={{ margin: "5px" }}
-                        >
-                          <img
-                            alt="Image placeholder"
-                            className="media-comment-avatar avatar rounded-circle"
-                            style={{
-                              display: "block",
-                              objectFit: "cover",
-                              padding: "2px",
-                              margin: "5px",
-                            }}
-                            src={user.avatar}
-                          />
-                          <div className="media-body">
-                            <div className="media-comment-text">
-                              <h4>
-                                <Badge
-                                  color="secondary"
-                                  style={{ padding: "2px" }}
-                                >
-                                  {user.name}
-                                </Badge>
-                              </h4>
-                              {/* <p className="description" onCLick={()=>{}}>View profile</p> */}
-
-                              <Link to="/friend">
-                                <a class="description link">
-                                  {t("View profile")}
-                                </a>
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-                  </li>
-                ))}
-              </ul>
-            </Col>
-            <Col>
-              <ul>
-                <h3 className="mb-0 text-white font-weight-bold">Followers</h3>
+                <h3 className="mb-0 text-dark">Followers</h3>
 
                 {this.state.followerListData.map((user, postindex) => (
                   <li key={postindex} item={this.state.followerList}>
                     <Row
                     // className="justify-content-center"
                     >
-                      <Col lg="6" onMouseOver={() => this.onHover(user.userId)}>
-                        <div
-                          className="media media-comment"
-                          style={{ margin: "5px" }}
-                        >
-                          <img
-                            alt="Image placeholder 2"
-                            className="media-comment-avatar avatar rounded-circle"
-                            style={{
-                              display: "block",
-                              objectFit: "cover",
-                              padding: "2px",
-                              margin: "5px",
-                            }}
-                            src={user.Fravatar}
-                          />
-                          <div className="media-body">
-                            <div className="media-comment-text">
-                              <h4>
-                                <Badge
-                                  color="secondary"
-                                  style={{ padding: "2px" }}
-                                >
-                                  {user.Frname}
-                                </Badge>
-                              </h4>
-                              {/* <p className="description" onCLick={()=>{}}>View profile</p> */}
-                              <Link to="/friend">
-                                <a class="description link">
-                                  {t("View profile")}
-                                </a>
-                              </Link>
+                      <Col lg="6">
+                        <Link to={`/friend/${user.userId}`}>
+                          <div
+                            className="d-flex align-items-center"
+                            style={{ margin: "5px" }}
+                          >
+                            <img
+                              alt="Image placeholder 2"
+                              className="media-comment-avatar avatar rounded-circle"
+                              style={{
+                                display: "block",
+                                objectFit: "cover",
+                                padding: "2px",
+                                margin: "5px",
+                              }}
+                              src={user.Fravatar}
+                            />
+                            <div className="mx-3">
+                              <h5 className="mb-0 text-black">{user.Frname}</h5>
+                              <small className="text-muted">
+                                @{user.Frusername}
+                              </small>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       </Col>
                     </Row>
                   </li>
@@ -579,17 +555,58 @@ Fravatar = doc.data().profilePic;
               </ul>
             </Col>
           </Row>
-          <div className="modal-footer">
-            <Button
-              className="text-white ml-auto"
-              color="link"
-              data-dismiss="modal"
-              type="button"
-              onClick={() => this.toggleModal("notificationModal")}
-            >
-              {t("Close")}
-            </Button>
-          </div>
+        </Modal>
+
+        <Modal
+          size="md"
+          isOpen={this.state.defaultModal2}
+          toggle={() => this.toggleModal("defaultModal2")}
+          className="fluid"
+          // style={{overflowWrap:"anywhere"}}
+        >
+          {" "}
+          <Row>
+            <Col>
+              <ul>
+                <h3 className="mb-0 text-dark">Following</h3>
+
+                {this.state.followingListData.map((user, postindex) => (
+                  <li key={postindex} item={this.state.followingList}>
+                    <Row
+                    // className="justify-content-center"
+                    >
+                      <Col lg="6">
+                        <Link to={`/friend/${user.userId}`}>
+                          <div
+                            className="d-flex align-items-center"
+                            style={{ margin: "5px" }}
+                          >
+                            <img
+                              alt="Image placeholder 2"
+                              className="media-comment-avatar avatar rounded-circle"
+                              style={{
+                                display: "block",
+                                objectFit: "cover",
+                                padding: "2px",
+                                margin: "5px",
+                              }}
+                              src={user.avatar}
+                            />
+                            <div className="mx-3">
+                              <h5 className="mb-0 text-black">{user.name}</h5>
+                              <small className="text-muted">
+                                @{user.username}
+                              </small>
+                            </div>
+                          </div>
+                        </Link>
+                      </Col>
+                    </Row>
+                  </li>
+                ))}
+              </ul>
+            </Col>
+          </Row>
         </Modal>
 
         <Modal
@@ -601,6 +618,8 @@ Fravatar = doc.data().profilePic;
           {" "}
           {this.state.modalItem && <PostPicOnly item={this.state.modalItem} />}
         </Modal>
+
+        {/* <Update /> */}
       </>
     );
   }

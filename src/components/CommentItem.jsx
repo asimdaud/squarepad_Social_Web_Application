@@ -36,34 +36,46 @@ class CommentItem extends React.Component {
 
   componentWillUnmount = () => {
     this.ismounted = false;
+    clearInterval(this.getUserId());
   };
 
   componentDidMount = () => {
     this.ismounted = true;
-    this.getProfilePic();
+    // this.getProfilePic();
     this.getUserId();
   };
 
-  getProfilePic = (friendId) => {
-    const { item } = this.props;
+//   componentDidUpdate(prevProps, prevState) {
+//     this.ismounted = true;
+//     const { item } = this.props;
 
-    const firebaseProfilePic = firebase
-      .storage()
-      .ref()
-      .child("profilePics/(" + item.commentData.userId + ")ProfilePic");
-    firebaseProfilePic
-      .getDownloadURL()
-      .then((url) => {
-        this.setState({ profilePic: url });
-      })
-      .catch((error) => {
-        console.log("No picture found for: " + item.commentData.userId);
-      });
-  };
+//       if (prevState.commentDeleted !== this.state.commentDeleted) {
+//         this.getUserId();
 
-  getUserId = () => {
+//   }
+// }
+
+
+  // getProfilePic = (friendId) => {
+  //   const { item } = this.props;
+
+  //   const firebaseProfilePic = firebase
+  //     .storage()
+  //     .ref()
+  //     .child("profilePics/(" + item.commentData.userId + ")ProfilePic");
+  //   firebaseProfilePic
+  //     .getDownloadURL()
+  //     .then((url) => {
+  //       this.setState({ profilePic: url });
+  //     })
+  //     .catch((error) => {
+  //       console.log("No picture found for: " + item.commentData.userId);
+  //     });
+  // };
+
+  getUserId = async () => {
     const { item } = this.props;
-    firebase
+    await firebase
       .firestore()
       .collection("users")
       .doc(item.commentData.userId)
@@ -73,6 +85,7 @@ class CommentItem extends React.Component {
         if (res != null) {
           this.setState({
             username: res.username,
+            profilePic: res.profilePic ? res.profilePic : this.state.profilePic,
           });
         }
       });
@@ -82,17 +95,37 @@ class CommentItem extends React.Component {
     const { item } = this.props;
 
     // if (item.userId == this.state.currentUserId) {
+
     await firebase
       .firestore()
-      .collection("comments")
+      .collection("posts")
+      .doc(item.commentData.userId)
+      .collection("userPosts")
       .doc(item.postId)
-      .collection("userComments")
+      .collection("comments")
       .doc(item.commentData.timestamp)
       // .doc(item.commentData.commentId)
       .delete()
+      //  && 
+      // firebase
+      // .firestore()
+      // .collection("notifications")
+      // .doc(item.userId)
+      // .collection("userNotifications")     
+      // .doc(item.commentData.timestamp)
+      // .delete()
       .then(() => {
+        // && 
+        firebase
+        .firestore()
+        .collection("notifications")
+        .doc(item.authorId)
+        .collection("userNotifications")     
+        .doc(item.commentData.timestamp)
+        .delete()
         console.log("Comment Deleted!");
         this.setState({ commentDeleted: true });
+        // console.log(item)
       })
       .catch((err) => {
         alert(err);
@@ -103,8 +136,8 @@ class CommentItem extends React.Component {
   render() {
     const { item } = this.props;
     return (
-      <div className="media-list">
-        <div className="media media-comment">
+      <div className="media-list" key={item.timestamp}>
+        <div className="media media-comment" key={item.timestamp}>
           <img
             alt="Image placeholder"
             className="media-comment-avatar avatar rounded-circle"
@@ -113,23 +146,42 @@ class CommentItem extends React.Component {
               // height: "200px",
               display: "block",
               objectFit: "cover",
+              marginLeft: "5px",
             }}
             // src={this.state.profilePic}
             // className="rounded-circle img-responsive"
 
             src={this.state.profilePic}
           />
-          <div className="media-body">
+          <div
+            //  className="media-body"
+            style={{
+              padding: "12px",
+              borderRadius: "20px",
+              background: "lavender",
+              margin: "5px",
+            }}
+          >
             <div className="media-comment-text">
-              <h4>
-                <Badge color="secondary">{this.state.username}</Badge>
-              </h4>
+              <h5>
+                {/* <Badge color="secondary"> */}
+                {this.state.username}
+                {/* </Badge> */}
+              </h5>
 
               <p>
-               <span class="textarea" role="textbox" style={{WebkitTextStroke:'medium', overflowWrap:'anywhere'}} contenteditable>             
-                   {item.commentData.comment}
-                   </span>
-               </p>
+                <span
+                  className="textarea"
+                  role="textbox"
+                  style={{
+                    //  WebkitTextStroke:'medium',
+                    overflowWrap: "anywhere",
+                  }}
+                  // contentEditable
+                >
+                  {item.commentData.comment}
+                </span>
+              </p>
 
               {/* <p
                 className="text-sm lh-160"
@@ -141,24 +193,27 @@ class CommentItem extends React.Component {
               </p> */}
             </div>
           </div>
-
           {item.commentData.userId == this.state.currentUserId ? (
-            <DeleteOutline onClick={this.deleteComment} fontSize="small" />
+            <UncontrolledDropdown style={{ alignSelf: "center" }}>
+              <DropdownToggle nav className="nav-link-icon">
+                <DeleteOutline
+                  // style={{ flex: "1", border: "dashed" }}
+                  onClick={this.deleteComment}
+                  fontSize="small"
+                />
+
+                {/* <i className="ni ni-settings-gear-65" /> */}
+              </DropdownToggle>
+              {/* <DropdownMenu aria-labelledby="navbar-success_dropdown_1" right>
+            <DropdownItem onClick={this.deleteComment}>
+            <DeleteOutline style={{flex:"1", border:"dashed"}} onClick={this.deleteComment} fontSize="small" />
+              Location
+            </DropdownItem>
+          </DropdownMenu> */}
+            </UncontrolledDropdown>
           ) : (
             ""
           )}
-
-          {/* <UncontrolledDropdown>
-            <DropdownToggle nav className="nav-link-icon">
-              <i className="ni ni-settings-gear-65" />
-            </DropdownToggle>
-            <DropdownMenu aria-labelledby="navbar-success_dropdown_1" right>
-              <DropdownItem onClick={this.deleteComment}>
-                <i className="ni ni-fat-remove" />
-                Location
-              </DropdownItem>
-            </DropdownMenu>
-          </UncontrolledDropdown> */}
         </div>
       </div>
     );

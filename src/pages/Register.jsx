@@ -11,18 +11,18 @@ import {
   Input,
   InputGroupAddon,
   InputGroupText,
+  FormFeedback,
   InputGroup,
   Container,
   Row,
   Col,
-  FormFeedback,
   Label,
 } from "reactstrap";
 
 // core components
 import PubNavbar from "components/Navbars/PubNavbar.jsx";
 import SimpleFooter from "components/Footers/SimpleFooter.jsx";
-import * as firebase from "firebase";
+import firebase from "firebase";
 import { CreateUser } from "../services/authServices";
 import "firebase/auth";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
@@ -40,6 +40,7 @@ import { withTranslation } from "react-i18next";
 //   setValidated(true);
 // };
 
+
 class Register extends React.Component {
   constructor() {
     super();
@@ -52,8 +53,11 @@ class Register extends React.Component {
       isSignedIn: false,
       isUsernameAvailable: true,
       usernameChecked: false,
+      isUsernameValid: true,
       // value: "en",
-      value: JSON.parse(localStorage.getItem("lang")),
+      value: localStorage.getItem("lang")
+        ? localStorage.getItem("lang")
+        : "en",
       // setValidated: false,
       // validated: false,
       error: "",
@@ -73,7 +77,7 @@ class Register extends React.Component {
     signInFlow: "popup",
     signInOptions: [
       firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-      firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+      // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
       // firebase.auth.EmailAuthProvider.PROVIDER_ID,
     ],
     callbacks: {
@@ -82,13 +86,27 @@ class Register extends React.Component {
   };
 
   componentDidMount = () => {
-    // this.checkUsernameAvailability();
+    localStorage.setItem("lang", "en");
+    // localStorage.setItem("ss", "en");
+// console.log(   JSON.parse(localStorage.getItem("lang")))   ;
+// console.log(   localStorage.getItem("lang")) ;
+// console.log(   localStorage.getItem("ss")) ;
+
+// console.log(   JSON.parse(localStorage.getItem("ss")))   ;
+    
+// this.hollow().then(() => {
+
+    // this.handleSubmit();
+    // });
 
     firebase.auth().onAuthStateChanged((user) => {
       this.setState({ isSignedIn: !!user });
       console.log("user", user);
-      if (this.state.isSignedIn) this.next(user);
-    });
+      if (this.state.isSignedIn) 
+      {      this.next(user);
+    
+      }
+      });
   };
 
   componentWillUnmount = () => {};
@@ -105,31 +123,40 @@ class Register extends React.Component {
   // }
 
   next = (user) => {
-    if (!firebase.firestore().collection("users").doc(user.uid)) {
-      firebase
-        .firestore()
-        .collection("users")
-        .doc(user.uid)
-        .set({
-          username: user.email,
-          name: user.displayName,
+    // if (!firebase.firestore().collection("users").doc(user.uid)) {
+
+      
+      
+      
+      firebase.firestore()
+      .collection("users")
+      .doc(user.uid)
+      .set({
+        // username: user.email.replace('@','').toLowerCase(),   
+        name: user.displayName,
           email: user.email,
           profilePic: user.photoURL,
           publicProfile: true,
           emailAlert: false,
           bio: user.displayName + "'s bio.",
         });
-    }
-    localStorage.setItem(
-      "uid",
-      JSON.stringify(firebase.auth().currentUser.uid)
+        // }
+        localStorage.setItem(
+          "uid",
+          JSON.stringify(firebase.auth().currentUser.uid)
     );
     localStorage.setItem("user", JSON.stringify(firebase.auth().currentUser));
+    
+    // localStorage.setItem("lang", "en");
+    
+    // this.props.history.push("/update");
+    
+    
     // alert(localStorage.getItem("uid"));
     // console.log(cred);
-    this.props.history.push("/profile");
+    // this.props.history.push("/profile");
   };
-
+  
   handleChangeData = (e) => {
     this.setState({
       [e.target.id]: e.target.value,
@@ -185,74 +212,104 @@ class Register extends React.Component {
     // } else console.log(this.state.isUsernameAvailable, "free", word);
 
     let userCollectionRef = firebase.firestore().collection("users");
+    var pattern = new RegExp(/[~`@!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/); //unacceptable chars
+
     // console.log(word);
     if (word.length > 3) {
       this.setState({ usernameChecked: true });
     }
     let users = [];
     userCollectionRef
-      .where("username", "==", word)
+      .where("username", "==", word.toLowerCase())
       .get()
       .then((querySnapshot) => {
         querySnapshot.forEach((documentSnapshot) => {
           users.push(documentSnapshot.data());
           //   console.log(documentSnapshot.id);
-          this.setState({
-            // username: documentSnapshot.username,
-            isUsernameAvailable: true,
-            // usernameChecked: true,
-          });
+          // this.setState({
+          //   // username: documentSnapshot.username,
+          //   isUsernameAvailable: true,
+          //   // usernameChecked: true,
+          // });
           // console.log(this.state.foundUser)
           // console.log(users);
         });
         // console.log(this.state.searchResults);
         // console.log(this.state.foundUser);
+        if (pattern.test(word)) {
+          this.setState({
+            isUsernameValid: false,
+            isUsernameAvailable:false,
 
-        if (users.length == 0) {
-          this.setState({
-            isUsernameAvailable: true,
           });
-          console.log(this.state.isUsernameAvailable, "free");
+          console.log(this.state.isUsernameValid, "Invalid");
         } else {
-          this.setState({
-            username: "",
-            isUsernameAvailable: false,
-          });
-          console.log(this.state.isUsernameAvailable, "taken");
+          if (users.length == 0) {
+            this.setState({
+              isUsernameAvailable: true,
+            });
+            console.log(this.state.isUsernameAvailable, "free");
+          } else {
+            this.setState({
+              username: "",
+              isUsernameAvailable: false,
+            });
+            console.log(this.state.isUsernameAvailable, "taken");
+          }
+
         }
+    
+     
       });
   }
 
-  hollow = async () => {
-    console.log("hollow");
-  };
+  //   hollow =  async () => {
+  // console.log("hollow");
+  //   };
 
   handleSubmit = (e) => {
     e.preventDefault();
+    var pattern = new RegExp(/[~`@!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/); //unacceptable chars
     localStorage.clear();
     const { username, name, email, password, bio } = this.state;
     console.log(this.state);
     // CreateUser()
-    if (this.state.username !== "") {
-      this.hollow()
-        .then(() => {
-          CreateUser(username, name, email, password, bio)
-            .then(() => {
-              this.props.history.push("/profile");
-            })
-            .catch((err) => {
-              console.log(err.message);
-              this.setState({ error: err.message });
-            });
-
-          // this.props.history.push("/profile");
+    if (username == "" || name == "" || email == "" || password == "") {
+      alert("Please fill in the fields");
+    } else if (pattern.test(username)) {
+      alert("Please only use standard alphanumerics for username");
+    }
+    //  if (username !== "" && name !== "")
+    else if(this.state.isUsernameAvailable) {
+      CreateUser(username, name, email, password, bio)
+        .then((res) => {
+          console.log(res);
+          this.props.history.push("/profile");
         })
         .catch((err) => {
-          console.log(err.message);
-          this.setState({ error: err.message });
+          alert(err);
         });
     }
   };
+
+  // handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   localStorage.clear();
+  //   const { username, name, email, password, bio } = this.state;
+  //   console.log(this.state);
+  //   // CreateUser()
+  //   // if (this.state.username !== "") {
+  //     CreateUser(username, name, email, password, bio)
+  //     // this.hollow()
+  //       .then(() => {
+  //         this.props.history.push("/profile");
+  //       })
+  //       .catch((err) => {
+  //         console.log(err.message);
+  //         this.setState({ error: err.message });
+  //       });
+  //   // }
+  // };
 
   render() {
     const { t } = this.props;
@@ -295,28 +352,46 @@ class Register extends React.Component {
                       </div>
                       <Form role="form" onSubmit={this.handleSubmit}>
                         <FormGroup>
+
+                        <InputGroup className="input-group-alternative mb-3">
+                            <InputGroupAddon addonType="prepend">
+                              <InputGroupText>
+                                <i className="ni ni-hat-3" />
+                              </InputGroupText>
+                            </InputGroupAddon>
+                            <Input
+                              placeholder={t("Display Name")}
+                              type="text"
+                              id="name"
+                              onChange={this.handleChangeData}
+                            />
+                          </InputGroup>
+
                           <InputGroup className="input-group-alternative mb-3">
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 {/* <i className="ni ni-email-83" /> */}@
                               </InputGroupText>
                             </InputGroupAddon>
-
                             <Input
                               valid={
                                 this.state.isUsernameAvailable &&
-                                this.state.usernameChecked
+                                this.state.usernameChecked 
+                                // &&
+                                // this.state.isUsernameValid
                               }
                               invalid={
                                 !this.state.isUsernameAvailable &&
                                 this.state.usernameChecked
+                                //  &&
+                                // !this.state.isUsernameValid
                               }
                               // style={{
 
                               //   color:"orange",
                               //   backgroundColor:"pink"
                               // }}
-                              placeholder={t("Username")}
+                              placeholder={t("username")}
                               type="text"
                               id="username"
                               className="form-control"
@@ -330,7 +405,7 @@ class Register extends React.Component {
                             </FormFeedback>
 
                             <FormFeedback invalid>
-                              Bummer! that username is already taken
+                              Bummer! 
                             </FormFeedback>
                             {/* <Form.Control
                               type="text"
@@ -359,20 +434,35 @@ class Register extends React.Component {
                             /> */}
                           </InputGroup>
 
-                          <InputGroup className="input-group-alternative mb-3">
-                            <InputGroupAddon addonType="prepend">
-                              <InputGroupText>
-                                <i className="ni ni-hat-3" />
-                              </InputGroupText>
-                            </InputGroupAddon>
+
+                        </FormGroup>
+
+                        {/* <FormGroup
+                          className={
+                            this.state.isUsernameAvailable &&
+                            this.state.usernameChecked
+                              ? "has-success"
+                              : "has-danger"
+                          }
+                        >
+                          <InputGroup>
                             <Input
-                              placeholder={t("Display Name")}
+                              placeholder={t("Username")}
                               type="text"
-                              id="name"
-                              onChange={this.handleChangeData}
+                              id="username"
+                              className={
+                                this.state.isUsernameAvailable &&
+                                this.state.usernameChecked
+                                  ? "form-control is-valid"
+                                  : "form-control is-invalid"
+                              }
+                              onChange={(word) => this.textInput(word)}
+                              aria-describedby="inputGroupPrepend"
+                              required
                             />
                           </InputGroup>
-                        </FormGroup>
+                        </FormGroup> */}
+
                         <FormGroup>
                           <InputGroup className="input-group-alternative mb-3">
                             <InputGroupAddon addonType="prepend">
@@ -404,7 +494,7 @@ class Register extends React.Component {
                             />
                           </InputGroup>
                         </FormGroup>
-                        <InputGroup className="input-group-alternative mb-3">
+                        {/* <InputGroup className="input-group-alternative mb-3">
                           <InputGroupAddon addonType="prepend">
                             <InputGroupText>
                               <i className="ni ni-email-83" />
@@ -416,7 +506,7 @@ class Register extends React.Component {
                             id="bio"
                             onChange={this.handleChangeData}
                           />
-                        </InputGroup>
+                        </InputGroup> */}
 
                         <div className="text-muted font-italic">
                           <small>

@@ -12,6 +12,8 @@ import Profile from "pages/Profile.jsx";
 import Register from "pages/Register.jsx";
 import Timeline from "pages/Timeline.jsx";
 import EditProfile from "pages/EditProfile";
+import Update from "pages/Update";
+import Admin from "pages/Admin";
 import PrivateRoute from "./privateRoute";
 import FriendsPage from "pages/FirendsPage";
 import Chat from "pages/chat";
@@ -39,12 +41,26 @@ ReactDOM.render(
         render={(props) => <EditProfile {...props} />}
         exact
       />
+      {/* <PrivateRoute
+        path="/update"
+        render={(props) => <Update {...props} />}
+        exact
+      /> */}
 
       <Route
         path="/register"
         exact
         render={(props) => <Register {...props} />}
       />
+
+
+
+<PrivateRoute
+        path="/admin"
+        exact
+        render={(props) => <Admin {...props} />}
+      />
+
 
       <PrivateRoute
         path="/chat/:fuid"
@@ -63,7 +79,7 @@ ReactDOM.render(
         render={(props) => <Timeline {...props} />}
         exact
       />
-      {/* <Redirect to="/profile" /> */}
+      <Redirect to="/profile" />
     </Switch>
   </BrowserRouter>
   </I18nextProvider>,

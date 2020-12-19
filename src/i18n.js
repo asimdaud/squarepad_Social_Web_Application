@@ -61,6 +61,8 @@ const resources = {
       Email: "Email",
       "Sign in": "Sign in",
       "Create new account": "Create new account",
+      "Inbox":"Inbox",
+      "No Recent Chats":      "No Recent Chats",
 
       // "Me":"Me",
     },
@@ -151,6 +153,7 @@ const resources = {
       "Create new account": "Eメール",
 
       "Nothing to Show":"Nothing to Show",
+      "Inbox":"Inbox",
       "Follow more accounts to see their posts":"Follow more accounts to see their posts",
       
     },
@@ -242,6 +245,7 @@ const resources = {
       Email: "correo electrónico",
       "Sign in": "Registrarse",
       "Create new account": "Crear una nueva cuenta",
+      "Inbox":"Inbox",
     },
   },
 
@@ -332,7 +336,9 @@ const resources = {
       Password: "Passwort",
       Email: "Email",
       "Sign in": "Einloggen",
+
       "Create new account": "Neuen Account erstellen",
+      "Inbox":"Inbox",
     },
   },
   fre: {
@@ -442,6 +448,7 @@ const resources = {
       Email: "Email",
       "Sign in": "Se connecter",
       "Create new account": "Créer un nouveau compte",
+      "Inbox":"Inbox",
     },
   },
 };

@@ -25,12 +25,16 @@ import { firebase, ui } from "../services/firebase";
 import { SigninUser } from "../services/authServices";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import { withTranslation } from "react-i18next";
+
+
 class Login extends React.Component {
   state = {
     email: "",
     password: "",
     isSignedIn: false,
-    value: "en",
+    value: localStorage.getItem("lang")
+        ? localStorage.getItem("lang")
+        : "en",
     error: "",
   };
 
@@ -54,6 +58,9 @@ class Login extends React.Component {
   };
 
   componentDidMount = () => {
+
+    localStorage.setItem("lang", "en");
+
     firebase.auth().onAuthStateChanged((user) => {
       this.setState({ isSignedIn: !!user });
       console.log("user", user);

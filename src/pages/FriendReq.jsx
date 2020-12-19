@@ -27,6 +27,7 @@ class FriendReq extends React.Component {
       friendReqData: [],
       friendReq: [],
       value: "en",
+      currentUsername: undefined,
     };
   }
 
@@ -40,6 +41,7 @@ class FriendReq extends React.Component {
 
   componentDidMount() {
     this.getFriendReq();
+    this.getCurrentUsername();
     // document.documentElement.scrollTop = 0;
     // document.scrollingElement.scrollTop = 0;
     // this.refs.main.scrollTop = 0;
@@ -63,9 +65,8 @@ class FriendReq extends React.Component {
 
   viewFriendReq = () => {
     let friendReqArr = [];
-    let avatar =
-    require('assets/img/icons/user/user1.png');
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
+    let avatar = require("assets/img/icons/user/user1.png");
+    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
     let name;
     let fullName;
     this.state.friendReq.forEach((userId) => {
@@ -76,11 +77,11 @@ class FriendReq extends React.Component {
         .then((doc) => {
           name = doc.data().username;
           fullName = doc.data().name;
-avatar = doc.data().profilePic;
+          avatar = doc.data().profilePic;
           let friendReqData = {
             userId: userId,
             name: name,
-            avatar: avatar ,
+            avatar: avatar,
             fullName: fullName,
           };
 
@@ -118,7 +119,29 @@ avatar = doc.data().profilePic;
         .doc(uId)
         .collection("sent")
         .doc(this.state.currentUserUid)
+        .delete() &&
+      firebase
+        .firestore()
+        .collection("notifications")
+        .doc(uId)
+        .collection("userNotifications")
+        .doc(this.state.currentUserUid)
+        .set({
+          type: "requestAccepted",
+          content: "accepted your follow request",
+          accepter: this.state.currentUsername,
+          accepterId: this.state.currentUserUid,
+          userId: uId,
+          time: moment().valueOf().toString(),
+        }) &&
+        firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.currentUserUid)
+        .collection("userNotifications")
+        .doc(uId)
         .delete();
+        ;
 
     console.log("accepted");
     // .then(() => {
@@ -131,12 +154,33 @@ avatar = doc.data().profilePic;
       .doc(this.state.currentUserUid)
       .collection("received")
       .doc(uId)
-      .delete();
+      .delete() &&
+      this.firestoreUsersRef
+        .doc(uId)
+        .collection("sent")
+        .doc(this.state.currentUserUid)
+        .delete() &&
+      firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.currentUserUid)
+        .collection("userNotifications")
+        .doc(uId)
+        .delete();
     console.log("rejected");
     // .then(() => {
     //     this.setState({ following: true });
     //   });
   };
+
+  getCurrentUsername() {
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .get()
+      .then((document) => {
+        this.setState({ currentUsername: document.data().username });
+      });
+  }
 
   checkCondition = () => {
     const { t } = this.props;
@@ -184,7 +228,7 @@ avatar = doc.data().profilePic;
                     <Col className="justify-content-center">
                       {" "}
                       <img
-                        alt="Image placeholder"
+                        alt="Avatar"
                         className="media-comment-avatar avatar rounded-circle"
                         style={{
                           display: "block",
@@ -198,7 +242,7 @@ avatar = doc.data().profilePic;
                     <Col className="justify-content-center">
                       {/* <div className="card-profile-stats d-flex justify-content-center"> */}
 
-                      <a href="/friend" className="description link">
+                      <a href="/friend" class="description link">
                         {user.name}
                       </a>
                       <p className="mb-0 text-black font-weight-bold small">

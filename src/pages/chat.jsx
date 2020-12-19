@@ -20,6 +20,8 @@ import {
   DropdownToggle,
   UncontrolledDropdown,
 } from "reactstrap";
+import imageCompression from 'browser-image-compression';
+import ReactPlayer from "react-player/lazy";
 import ReactLoading from "react-loading";
 import ReactShadowScroll from "react-shadow-scroll";
 import images from "../components/Themes/images";
@@ -40,6 +42,8 @@ import { withTranslation } from "react-i18next";
 
 import { Carousel } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
+import Inbox from "components/inbox";
+import Update from "./Update";
 
 const userId = JSON.parse(localStorage.getItem("uid"));
 const firestoreUsersRef = firebase.firestore().collection("users");
@@ -56,11 +60,11 @@ const gf = new GiphyFetch("sXpGFDGZs0Dv1mmNFvYaGUvYwKX0PWIh");
 class chat extends React.Component {
   firestoreUsersRef = firebase.firestore().collection("users");
   firestorePostRef = firebase.firestore().collection("posts");
-  firestoreFollowingRef = firebase
-    .firestore()
-    .collection("following")
-    .doc(userId)
-    .collection("userFollowing");
+  // firestoreFollowingRef = firebase
+  //   .firestore()
+  //   .collection("following")
+  //   .doc(userId)
+  //   .collection("userFollowing");
   user = firebase.auth().currentUser;
   constructor(props) {
     super(props);
@@ -70,17 +74,18 @@ class chat extends React.Component {
       progress: 0,
       userName: "username",
       name: "name",
-      followedUsersData: [],
+      // followedUsersData: [],
+      inboxUsersData: [],
+      inboxData: [],
+      // inbox: {},
+      groupChats: [],
       peerName: "peer",
       peerUserName: "peer username",
       friendName: "friend name",
       friendUserName: "friend username",
       profilePic: require("assets/img/icons/user/user1.png"),
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
       peerPic: require("assets/img/icons/user/user1.png"),
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
       friendPic: require("assets/img/icons/user/user1.png"),
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
       followedUsers: [],
       isLoading: false,
       chatDeleted: false,
@@ -91,7 +96,8 @@ class chat extends React.Component {
     this.currentUserId = JSON.parse(localStorage.getItem("uid"));
     this.currentUserAvatar = this.state.profiePic;
     this.listMessage = [];
-    this.currentPeerUser = this.props.match.params.fuid;
+    this.listInbox = [];
+    // this.currentPeerUser = this.props.match.params.fuid;
     this.currentPeerUserId = this.props.match.params.fuid;
     // this.FListId = this.getFollowedUsers;
     // this.fListPic=;
@@ -118,129 +124,344 @@ class chat extends React.Component {
       });
   }
 
-//   componentDidUpdate() {
-//     this.scrollToBottom();
-//     // this.fetchGifs();
-//   }
-
-
   componentDidUpdate(prevProps, prevState) {
-
     if (prevState.inputValue !== this.state.inputValue) {
-      this.getFriendId().then(() => {
-this.fetchGifs();
-this.scrollToBottom();
-    });
+      this.fetchGifs();
     }
+
+    //     functions.firestore()
+    //     .collection("messages")
+    //     .where("members", "array-contains", this.currentUserId)
+    //     .onUpdate((change, context) => {
+    //       // ... Your code here
+
+    // this.getInboxUsers();
+    //     });
+
+    // if (prevProps.inputValue !== this.state.inputValue) {
+    //   this.getInboxUsers();
+    // }
+
+    if (prevProps.match.params.fuid !== this.props.match.params.fuid) {
+      this.currentPeerUserId = this.props.match.params.fuid;
+
+      firestoreUsersRef.doc(this.props.match.params.fuid).onSnapshot((doc) => {
+        const res = doc.data();
+        if (res != null) {
+          this.setState({
+            peerUserName: res.username,
+            peerName: res.name,
+            peerPic: res.profilePic
+              ? res.profilePic
+              : require("assets/img/icons/user/user1.png"),
+          });
+        }
+      });
+      this.getListHistory();
+    }
+    this.scrollToBottom();
   }
 
   componentDidMount() {
     // For first render, it's not go through componentWillReceiveProps
 
     this.getListHistory();
-    this.getFollowedUsers();
+    this.scrollToBottom();
+
+    this.getInboxUsers();
+
+    // this.getFollowedUsers();
   }
 
-  getFollowedUsersData = () => {
-    let followedUsersDataArr = [];
-    let avatar =
-    require('assets/img/icons/user/user1.png');
-    let name, username;
-    this.state.followedUsers.forEach((userId) => {
-      //  avatar =  this.getUserPic(userId);
-      firestoreUsersRef
-        .doc(userId)
+  // onUpdateItem = i => {
+  //   this.setState(state => {
+  //     const list = state.groupChats.map((item, j) => {
+  //       if (j === i) {
+
+  //         firebase
+  //           .firestore()
+  //           .collection("messages")
+  //           .doc(item.groupChatId)
+  //           .onSnapshot((doc) => {
+  //             const res = doc.data().user1;
+  //             const groupChatId = docSnap.id;
+  //             let inboxData = {
+  //               peer: res,
+  //               groupChatId: groupChatId,
+  //             };
+  //             // console.log("TORRES",inboxData);
+  //             users.push(inboxData);
+  //             console.log(users);
+  //           });
+
+  //       } else {
+  //         return item;
+  //       }
+  //     });
+
+  //     return {
+  //       list,
+  //     };
+  //   });
+  // };
+
+  getInboxUsers = async () => {
+    let users = [];
+
+    await firebase
+      .firestore()
+      .collection("messages")
+      .where("members", "array-contains", this.currentUserId)
+      .orderBy("timestamp", "desc")
+      .limit(6)
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((docSnap) => {
+          firebase
+            .firestore()
+            .collection("messages")
+            .doc(docSnap.id)
+            .onSnapshot((doc) => {
+              const groupChatId = docSnap.id;
+              let res = "";
+              if (this.currentUserId == doc.data().members[0]) {
+                res = doc.data().members[1];
+              } else res = doc.data().members[0];
+              let inboxData = {
+                peer: res,
+                groupChatId: groupChatId,
+              };
+              users.push(inboxData);
+            });
+        });
+      });
+    await firebase
+      .firestore()
+      .collection("fake")
+      .get()
+      .then((querySnapshot2) => {
+        console.log(querySnapshot2.size);
+      });
+    this.setState({ groupChats: users });
+    this.getInboxUsersData();
+  };
+
+  getInboxUsersData = () => {
+    let inboxUsersDataArr = [];
+    let name,
+      username,
+      profilePic,
+      idFrom,
+      peername,
+      peerusername,
+      peerprofilePic;
+
+    this.state.groupChats.forEach((id) => {
+      // console.log(id);
+
+      firebase
+        .firestore()
+        .collection("messages")
+        .doc(id.groupChatId)
         .get()
         .then((doc) => {
-          name = doc.data().name;
-          username = doc.data().username;
-avatar = doc.data().profilePic;
-          let followedUsersData = {
-            userId: userId,
-            name: name,
-            username: username,
-            avatar:avatar,
-          };
+          console.log(doc.data().latestMessage);
+          console.log(doc.data().messageSender);
 
-          followedUsersDataArr.push(followedUsersData);
-          this.setState({ followedUsersData: followedUsersDataArr });
-          // console.log(this.state.followedUsersData);
-        })
-        .catch((err) => {
-          alert(err);
+          this.firestoreUsersRef
+            .doc(id.peer)
+            .get()
+            .then((doco) => {
+              this.firestoreUsersRef
+                .doc(doc.data().messageSender)
+                .get()
+                .then((docot) => {
+                  let inboxUsersData = {
+                    name: docot.data().name,
+                    username: docot.data().username,
+                    peername: doco.data().name,
+                    peerusername: doco.data().username,
+                    peerprofilePic: doco.data().profilePic
+                      ? doco.data().profilePic
+                      : require("assets/img/icons/user/user1.png"),
+                    content: doc.data().latestMessage,
+                    timestamp: doc.data().timestamp,
+                    peerid: id.peer,
+                    idFrom: doc.data().messageSender,
+                    groupChatId: id.groupChatId,
+                  };
+                  inboxUsersDataArr.push(inboxUsersData);
+                  this.listInbox.push(inboxUsersData);
+                  this.setState({
+                    inboxUsersData: inboxUsersDataArr,
+                  });
+                  // console.log(this.listInbox);
+                  // console.log(this.state.inboxUsersData);
+                });
+            })
+            .catch((err) => {
+              alert(err);
+            });
+          this.setState({ inboxData: this.listInbox });
         });
+
+      // firebase
+      //   .firestore()
+      //   .collection("messages")
+      //   .doc(id.groupChatId)
+      //   .collection("msg")
+      //   .orderBy("timestamp", "desc")
+      //   .limit(1)
+      //   .onSnapshot(
+      //     (snapshot) => {
+      //       snapshot.docChanges().forEach((change) => {
+      //         if (change.type === "added") {
+      //           // console.log("adeedede");
+      //           this.firestoreUsersRef
+      //             .doc(id.peer)
+      //             .get()
+      //             .then((doco) => {
+      //               this.firestoreUsersRef
+      //                 .doc(change.doc.data().idFrom)
+      //                 .get()
+      //                 .then((docot) => {
+
+      //                   let inboxUsersData = {
+      //                     name: docot.data().name,
+      //                     username: docot.data().username,
+      //                     peername: doco.data().name,
+      //                     peerusername: doco.data().username,
+      //                     peerprofilePic: doco.data().profilePic,
+      //                     content: change.doc.data().content,
+      //                     timestamp: change.doc.data().timestamp,
+      //                     peerid: id.peer,
+      //                     idFrom: change.doc.data().idFrom,
+      //                     groupChatId: id.groupChatId,
+      //                   };
+      //                   inboxUsersDataArr.push(inboxUsersData);
+      //                   this.listInbox.push(inboxUsersData);
+      //                   this.setState({
+      //                     inboxUsersData: inboxUsersDataArr,
+      //                   });
+      //                   // console.log(this.listInbox);
+      //                   // console.log(this.state.inboxUsersData);
+      //                 });
+      //             })
+      //             .catch((err) => {
+      //               alert(err);
+      //             });
+      //         }
+      //       });
+      //       this.setState({ inboxData: this.listInbox });
+      //       // console.log(this.state.inboxData);
+      //       // console.log(this.state.inboxData);
+      //       // console.log(this.state.inboxUsersData);
+      //       // this.setState({ isLoading: false });
+      //     },
+      //     (err) => {
+      //       alert(err.toString());
+      //     }
+      //   );
     });
   };
+  // getFollowedUsersData = () => {
+  //   let followedUsersDataArr = [];
+  //   let avatar = require("assets/img/icons/user/user1.png");
+  //   let content;
+  //   this.state.followedUsers.forEach((userId) => {
+  //     //  avatar =  this.getUserPic(userId);
+  //     firestoreUsersRef
+  //       .doc(userId)
 
-  getUserPic = (friendId) => {
-    const firebaseProfilePic = firebase
-      .storage()
-      .ref()
-      .child("profilePics/(" + friendId + ")ProfilePic");
-    let url = "";
-    firebaseProfilePic
-      .getDownloadURL()
-      .then((url) => {
-        // Inserting into an State and local storage incase new device:
-        // this.setState({ peerPic: url });
-        url = url;
+  //     // .orderBy("time", "desc")
+  //         // let article = {
+  //       // .get()
+  //       .orderBy("timestamp", "desc")
+  //       .limit(1)
+  //     .onSnapshot((snapshot) => {
+  //       snapshot.forEach((doc) => {
+  //         content = doc.data().content;
+  //         let followedUsersData = {
+  //           userId: userId,
+  //           content: content,
+  //         };
 
-        console.log("dsbdashbfhasfb" + url);
-        return url;
-      })
-      .catch((error) => {
-        // Handle any errors
-        switch (error.code) {
-          case "storage/object-not-found":
-            // File doesn't exist
-            url =
-            require('assets/img/icons/user/user1.png');
-            // this.setState({
-            //   peerPic:            require('assets/img/icons/user/user1.png'),
-            //   });
-            return url;
-            break;
-          default:
-        }
-        //   alert(error);
-      });
-  };
+  //         followedUsersDataArr.push(followedUsersData);
+  //         this.setState({ followedUsersData: followedUsersDataArr });
+  //         console.log(this.state.followedUsersData);
+  //       })})
+  //       .catch((err) => {
+  //         alert(err);
+  //       });
+  //   });
+  // };
 
-  getProfilePic = (friendId) => {
-    const firebaseProfilePic = firebase
-      .storage()
-      .ref()
-      .child("profilePics/(" + this.currentPeerUserId + ")ProfilePic");
-    let url = "";
-    firebaseProfilePic
-      .getDownloadURL()
-      .then((url) => {
-        // Inserting into an State and local storage incase new device:
-        this.setState({ peerPic: url });
-        // url = url;
-      })
-      .catch((error) => {
-        // Handle any errors
-        switch (error.code) {
-          case "storage/object-not-found":
-            // File doesn't exist
-            // url =              require('assets/img/icons/user/user1.png');
-            this.setState({
-              peerPic:
-              require('assets/img/icons/user/user1.png'),
-            });
-            break;
-          default:
-        }
-        //   alert(error);
-      });
-    // return url;
-  };
+  // getUserPic = (friendId) => {
+  //   // const firebaseProfilePic = firebase
+  //   //   .storage()
+  //   //   .ref()
+  //   //   .child("profilePics/(" + friendId + ")ProfilePic");
+  //   // let url = "";
+  //   // firebaseProfilePic
+  //   //   .getDownloadURL()
+  //   //   .then((url) => {
+  //   //     // Inserting into an State and local storage incase new device:
+  //   //     // this.setState({ peerPic: url });
+  //   //     url = url;
+  //   //     // console.log("dsbdashbfhasfb" + url);
+  //   //     return url;
+  //   //   })
+  //   //   .catch((error) => {
+  //   //     // Handle any errors
+  //   //     switch (error.code) {
+  //   //       case "storage/object-not-found":
+  //   //         // File doesn't exist
+  //   //         url = require("assets/img/icons/user/user1.png");
+  //   //         // this.setState({
+  //   //         //   peerPic:            require('assets/img/icons/user/user1.png'),
+  //   //         //   });
+  //   //         return url;
+  //   //         break;
+  //   //       default:
+  //   //     }
+  //   //     //   alert(error);
+  //   //   });
+  // };
+
+  // getProfilePic = (friendId) => {
+  //   // const firebaseProfilePic = firebase
+  //   //   .storage()
+  //   //   .ref()
+  //   //   .child("profilePics/(" + this.currentPeerUserId + ")ProfilePic");
+  //   // let url = "";
+  //   // firebaseProfilePic
+  //   //   .getDownloadURL()
+  //   //   .then((url) => {
+  //   //     // Inserting into an State and local storage incase new device:
+  //   //     this.setState({ peerPic: url });
+  //   //     // url = url;
+  //   //   })
+  //   //   .catch((error) => {
+  //   //     // Handle any errors
+  //   //     switch (error.code) {
+  //   //       case "storage/object-not-found":
+  //   //         // File doesn't exist
+  //   //         // url =              require('assets/img/icons/user/user1.png');
+  //   //         this.setState({
+  //   //           peerPic: require("assets/img/icons/user/user1.png"),
+  //   //         });
+  //   //         break;
+  //   //       default:
+  //   //     }
+  //   //     //   alert(error);
+  //   //   });
+  //   // // return url;
+  // };
 
   componentWillMount = () => {
-    this.getFollowedUsers();
-
-    this.getProfilePic();
+    // this.getFollowedUsers();
+    this.getInboxUsersData();
+    // this.getProfilePic();
 
     firestoreUsersRef.doc(this.currentUserId).onSnapshot((doc) => {
       const res = doc.data();
@@ -258,35 +479,37 @@ avatar = doc.data().profilePic;
         this.setState({
           peerUserName: res.username,
           peerName: res.name,
+          peerPic: res.profilePic
+            ? res.profilePic
+            : require("assets/img/icons/user/user1.png"),
         });
       }
     });
 
-    // profile pic
-    const firebaseProfilePic = firebase
-      .storage()
-      .ref()
-      .child("profilePics/(" + this.currentUserId + ")ProfilePic");
-    firebaseProfilePic
-      .getDownloadURL()
-      .then((url) => {
-        // Inserting into an State and local storage incase new device:
-        this.setState({ profilePic: url });
-      })
-      .catch((error) => {
-        // Handle any errors
-        switch (error.code) {
-          case "storage/object-not-found":
-            // File doesn't exist
-            this.setState({
-              profilePic:
-              require('assets/img/icons/user/user1.png'),
-            });
-            break;
-          default:
-        }
-        // alert(error);
-      });
+    // // profile pic
+    // const firebaseProfilePic = firebase
+    //   .storage()
+    //   .ref()
+    //   .child("profilePics/(" + this.currentUserId + ")ProfilePic");
+    // firebaseProfilePic
+    //   .getDownloadURL()
+    //   .then((url) => {
+    //     // Inserting into an State and local storage incase new device:
+    //     this.setState({ profilePic: url });
+    //   })
+    //   .catch((error) => {
+    //     // Handle any errors
+    //     switch (error.code) {
+    //       case "storage/object-not-found":
+    //         // File doesn't exist
+    //         this.setState({
+    //           profilePic: require("assets/img/icons/user/user1.png"),
+    //         });
+    //         break;
+    //       default:
+    //     }
+    //     // alert(error);
+    //   });
   };
 
   componentWillUnmount() {
@@ -330,9 +553,11 @@ avatar = doc.data().profilePic;
           this.setState({ isLoading: false });
         },
         (err) => {
-          this.props.showToast(0, err.toString());
+          alert(err.toString());
         }
       );
+
+    console.log("listmesg:", this.listMessage);
   };
 
   onSendMessage = (content, type) => {
@@ -366,86 +591,40 @@ avatar = doc.data().profilePic;
         this.setState({ inputValue: "" });
       })
       .catch((err) => {
-        this.props.showToast(0, err.toString());
+        alert(err.toString());
       });
+
+    if (itemMessage.content.length > 10) {
+      itemMessage.content = itemMessage.content.substring(0, 11) + "..";
+    }
+
+    if (this.currentUserId <= this.currentPeerUserId) {
+      firebase
+        .firestore()
+        .collection("messages")
+        .doc(this.groupChatId)
+        .set({
+          members: [this.currentUserId, this.currentPeerUserId],
+          timestamp: timestamp,
+          latestMessage: itemMessage.content,
+          messageSender: itemMessage.idFrom,
+        });
+    } else {
+      firebase
+        .firestore()
+        .collection("messages")
+        .doc(this.groupChatId)
+        .set({
+          members: [this.currentUserId, this.currentPeerUserId],
+          timestamp: timestamp,
+          latestMessage: itemMessage.content,
+          messageSender: itemMessage.idFrom,
+        });
+    }
+    this.getInboxUsers();
   };
-
-  // CarouselDemo=() =>{
-  //     const fetchGifs = (offset: number) =>
-  //       giphyFetch.search("dogs", { offset, limit: 10 });
-  //     return <Carousel fetchGifs={fetchGifs} gifHeight={200} gutter={6} />;
-  //   };
-
-  //   fetchGifsAsim = () =>{
-
-  //     giphyFetch.search("dogs", { offset, limit: 10 });
-  //     return <Carousel fetchGifs={fetchGifs} gifHeight={200} gutter={6} />;
-
-  //   }
-
   getGifImage = (value) => {
     return " https://i.giphy.com/media/" + value + "/giphy.webp";
-  };
-
-  renderStickers = () => {
-    return (
-      <div className="viewStickers">
-        <img
-          className="imgSticker"
-          src={images.mimi1}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi1", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi2}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi2", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi3}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi3", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi4}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi4", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi5}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi5", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi6}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi6", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi7}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi7", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi8}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi8", 2)}
-        />
-        <img
-          className="imgSticker"
-          src={images.mimi9}
-          alt="sticker"
-          onClick={() => this.onSendMessage("mimi9", 2)}
-        />
-      </div>
-    );
   };
 
   onChoosePhoto = (event) => {
@@ -454,25 +633,73 @@ avatar = doc.data().profilePic;
       this.currentPhotoFile = event.target.files[0];
       // Check this file is an image?
       const prefixFiletype = event.target.files[0].type.toString();
-      if (prefixFiletype.indexOf("image/") === 0) {
-        this.uploadPhoto();
+
+      if (this.currentPhotoFile.size > 10e6) {
+        alert("Please upload a file smaller than 10 MB");
+        return false;
       } else {
-        this.setState({ isLoading: false });
-        this.props.showToast(0, "This file is not an image");
+        // if (prefixFiletype.indexOf("image/") === 0) {
+        //   this.uploadPhoto();
+        // } else
+        
+        if (prefixFiletype.indexOf("video/") === 0) {
+          this.uploadVideo();
+        } else {
+          this.setState({ isLoading: false });
+
+          alert("Invalid format");
+        }
       }
     } else {
       this.setState({ isLoading: false });
     }
   };
 
-  uploadPhoto = () => {
-    if (this.currentPhotoFile) {
+  uploadPhoto = (file) => {
+    if (file) {
       const timestamp = moment().valueOf().toString();
 
       const uploadTask = firebase
         .storage()
         .ref()
         .child("chatPics/" + timestamp)
+        .put(file);
+
+      uploadTask.on(
+        "state_changed",
+        // null,
+        (snapshot) => {
+          const getProgress = Math.round(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          );
+          this.setState({ progress: getProgress });
+        },
+        (err) => {
+          this.setState({ isLoading: false });
+          alert(err.message);
+        },
+
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            this.setState({ isLoading: false });
+            this.onSendMessage(downloadURL, 1);
+          });
+        }
+      );
+    } else {
+      this.setState({ isLoading: false });
+      alert("File is null");
+    }
+  };
+
+  uploadVideo = () => {
+    if (this.currentPhotoFile) {
+      const timestamp = moment().valueOf().toString();
+
+      const uploadTask = firebase
+        .storage()
+        .ref()
+        .child("chatVids/" + timestamp)
         .put(this.currentPhotoFile);
 
       uploadTask.on(
@@ -486,19 +713,19 @@ avatar = doc.data().profilePic;
         },
         (err) => {
           this.setState({ isLoading: false });
-          this.props.showToast(0, err.message);
+          alert(err.message);
         },
 
         () => {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
             this.setState({ isLoading: false });
-            this.onSendMessage(downloadURL, 1);
+            this.onSendMessage(downloadURL, 3);
           });
         }
       );
     } else {
       this.setState({ isLoading: false });
-      this.props.showToast(0, "File is null");
+      alert("File is null");
     }
   };
 
@@ -515,17 +742,83 @@ avatar = doc.data().profilePic;
   };
 
   // Get all the users the current user3 is following
-  getFollowedUsers = async () => {
-    let users = [];
-    await this.firestoreFollowingRef.get().then((querySnapshot) => {
-      querySnapshot.forEach((docSnap) => {
-        users.push(docSnap.id);
-      });
-    });
-    this.setState({ followedUsers: users });
-    console.log("FRIENDS LIST: " + this.state.followedUsers);
-    this.getFollowedUsersData();
-  };
+  // getFollowedUsers = async () => {
+  //   let users = [];
+  //   await firebase
+  //   .firestore()
+  //   .collection("messages")
+  //   .where("user2","==",this.currentUserId  )
+  //   .get()
+  //   .then((querySnapshot) => {
+  //     querySnapshot.forEach((docSnap) => {
+  //       users.push(docSnap.id);
+  //     });
+  //   });
+  //   await firebase
+  //   .firestore()
+  //   .collection("messages")
+  //   .where("user1","==",this.currentUserId  )
+  //   .get()
+  //   .then((querySnapshot) => {
+  //     querySnapshot.forEach((docSnap) => {
+  //       users.push(docSnap.id);
+  //     });
+  //   });
+
+  //   this.setState({ followedUsers: users });
+  //   console.log("FRIENDS LIST1: " , this.state.followedUsers);
+  //   this.getFollowedUsersData();
+  // };
+
+  // getChat = async () => {
+  //   let users = [];
+  //   await firebase
+  //     .firestore()
+  //     .collection("messages")
+  //     .where(
+  //       "user1",
+  //       "==",
+  //       this.currentUserId || "user2",
+  //       "==",
+  //       this.currentUserId
+  //     )
+  //     .get()
+  //     .then((querySnapshot) => {
+  //       querySnapshot.forEach((docSnap) => {
+  //         users.push(docSnap.id);
+  //       });
+  //     });
+  //   this.setState({ followedUsers: users });
+  //   console.log("FRIENDS LIST2: ", this.state.followedUsers);
+  //   // this.getFollowedUsersData();
+  // };
+
+
+   handleImageUpload = async  (event) => {
+
+    const imageFile = event.target.files[0];
+    console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+    console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true
+    }
+    try {
+      const compressedFile = await imageCompression(imageFile, options);
+      console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
+      console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+
+      await this.uploadPhoto(compressedFile);
+      // console.log(compressedFile)
+      // uploadToServer(compressedFile); // write your own logic
+    } catch (error) {
+      console.log(error);
+    }
+
+  }
+
 
   renderListMessage = () => {
     const { t } = this.props;
@@ -537,7 +830,10 @@ avatar = doc.data().profilePic;
           // Item right (my message)
           if (item.type === 0) {
             viewListMessage.push(
-              <div className="row justify-content-end text-right">
+              <div
+                className="row justify-content-end text-right"
+                key={item.timestamp}
+              >
                 <div className="col-auto">
                   {/* <ReactShadowScroll> */}
                   <div
@@ -550,7 +846,7 @@ avatar = doc.data().profilePic;
                       style={{ overflowWrap: "anywhere", maxWidth: "400px" }}
                     >
                       <p className="mb-1 font-weight-bold">
-                        {/* <span class="textarea" role="textbox"  contenteditable>              */}
+                        {/* <span class="textarea" role="textbox"  contentEditable>              */}
 
                         {item.content}
                         {/* </span> */}
@@ -604,6 +900,41 @@ avatar = doc.data().profilePic;
                 </div>
               </div>
             );
+          } else if (item.type === 3) {
+            viewListMessage.push(
+              <div className="row justify-content-end text-right">
+                <div className="col-auto">
+                  {/* <ReactShadowScroll> */}
+                  <div
+                    className="card bg-gradient-muted text-primary shadow"
+                    style={{ borderRadius: "10px", marginBottom: "10px" }}
+                  >
+                    <div
+                      className="card-body p-2 "
+                      key={item.timestamp}
+                      style={{
+                        width: "420px",
+                        //  height:"300px"
+                      }}
+                    >
+                      <ReactPlayer
+                        url={item.content}
+                        light={require("assets/img/icons/images/download.png")}
+                        controls={true}
+                        width="100%"
+                        height="100%"
+                      />
+                      <div>
+                        <small className="opacity-60">
+                          {moment(Number(item.timestamp)).format("lll")}
+                        </small>
+                        <i className="ni ni-check-bold"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
           } else {
             viewListMessage.push(
               <div className="row justify-content-end text-right">
@@ -614,11 +945,16 @@ avatar = doc.data().profilePic;
                     <div
                       className="viewItemRight3"
                       key={item.timestamp}
-                      style={{ height: "80px", width: "80px" }}
+                      style={{
+                        height: "-webkit-fill-available",
+                        width: "inherit",
+                        paddingBottom: "20px",
+                        marginRight: "0px",
+                      }}
                     >
                       <img
                         className="imgItemRight"
-                        style={{ height: "80px", width: "80px" }}
+                        style={{ height: "200px", width: "270px" }}
                         src={
                           "https://i.giphy.com/media/" +
                           item.content +
@@ -641,7 +977,6 @@ avatar = doc.data().profilePic;
                   // className="viewWrapItemLeft3"
                   style={{ display: "flex", flexDirection: "left" }}
                 >
-
                   {/* {this.isLastMessageLeft(index) ? (
                                         <img
                                             src={this.state.peerPic}
@@ -654,7 +989,11 @@ avatar = doc.data().profilePic;
                   <div className="col-auto">
                     <div
                       className="card bg-gradient-muted text-black shadow"
-                      style={{ borderRadius: "10px", marginBottom: "10px", marginTop: "10px" }}
+                      style={{
+                        borderRadius: "10px",
+                        marginBottom: "10px",
+                        marginTop: "10px",
+                      }}
                     >
                       <div
                         className="card-body p-2"
@@ -686,7 +1025,7 @@ avatar = doc.data().profilePic;
             viewListMessage.push(
               <div className="viewWrapItemLeft2" key={item.timestamp}>
                 <div className="viewWrapItemLeft3">
-                  <div className="viewPaddingLeft" />
+                  {/* <div className="viewPaddingLeft" /> */}
 
                   {/* {this.isLastMessageLeft(index) ? (
                                         <img
@@ -698,14 +1037,13 @@ avatar = doc.data().profilePic;
                                         <div className="viewPaddingLeft"/>
                                     )} */}
                   <div
-                    className="col-auto"
+                    // className="col-auto"
                     style={{ height: "45%", width: "100%" }}
                   >
                     <div
                       className="card bg-gradient-muted text-black shadow"
                       style={{ borderRadius: "10px", marginBottom: "10px" }}
                     >
-
                       {/* {this.isLastMessageLeft(index) ? (
                         <img
                           src={this.state.peerPic}
@@ -737,11 +1075,77 @@ avatar = doc.data().profilePic;
                 </div>
               </div>
             );
+          } else if (item.type === 3) {
+            viewListMessage.push(
+              <div className="viewWrapItemLeft2" key={item.timestamp}>
+                <div className="viewWrapItemLeft3">
+                  {/* <div className="viewPaddingLeft" /> */}
+
+                  {/* {this.isLastMessageLeft(index) ? (
+                                        <img
+                                            src={this.state.peerPic}
+                                            alt="avatar"
+                                            className="avatar shadow left peerAvatarLeft" 
+                                        />
+                                    ) : (
+                                        <div className="viewPaddingLeft"/>
+                                    )} */}
+                  <div
+                  // className="col-auto"
+                  // style={{ height: "45%", width: "100%" }}
+                  >
+                    <div
+                      className="card bg-gradient-muted text-black shadow"
+                      style={{ borderRadius: "10px", marginBottom: "10px" }}
+                    >
+                      {/* {this.isLastMessageLeft(index) ? (
+                        <img
+                          src={this.state.peerPic}
+                          alt="avatar"
+                          className="avatar shadow left peerAvatarLeft"
+                        />
+                      ) : (
+                        <div className="viewPaddingLeft" />
+                      )} */}
+                      <div
+                        className="card-body p-2"
+                        key={item.timestamp}
+                        style={{
+                          width: "420px",
+                          //  height:"300px"
+                        }}
+                      >
+                        {/* <p className="mb-1 font-weight-bold"> */}
+                        {/* <div className="player-wrapper"> */}
+                        <ReactPlayer
+                          // className="react-player"
+                          controls={true}
+                          light={require("assets/img/icons/images/download.png")}
+                          url={item.content}
+                          width="100%"
+                          height="100%"
+                        />
+                        {/* </div> */}
+
+                        {/* <br /> */}
+                        {/* </p> */}
+                        <div>
+                          <small className="opacity-60">
+                            {moment(Number(item.timestamp)).format("lll")}
+                          </small>
+                          <i className="ni ni-check-bold"></i>
+                        </div>
+                      </div>
+                    </div>
+                    <br />
+                  </div>
+                </div>
+              </div>
+            );
           } else {
             viewListMessage.push(
               <div className="viewWrapItemLeft2" key={item.timestamp}>
                 <div className="viewWrapItemLeft3">
-
                   {/* {this.isLastMessageLeft(index) ? (
                     <img
                       src={this.state.peerPic}
@@ -755,11 +1159,16 @@ avatar = doc.data().profilePic;
                     <div
                       className="viewItemLeft3"
                       key={item.timestamp}
-                      style={{ height: "80px", width: "80px" }}
+                      style={{
+                        height: "-webkit-fill-available",
+                        width: "inherit",
+                        paddingBottom: "20px",
+                        marginLeft: "0px",
+                      }}
                     >
                       <img
                         className="imgItemLeft"
-                        style={{ height: "80px", width: "80px" }}
+                        style={{ height: "200px", width: "270px" }}
                         src={
                           "https://i.giphy.com/media/" +
                           item.content +
@@ -827,16 +1236,23 @@ avatar = doc.data().profilePic;
           this.setState({
             userName: res.username,
             name: res.name,
+            profilePic: res.profilePic
+              ? res.profilePic
+              : require("assets/img/icons/user/user1.png"),
           });
         } else if (type.trim() === "peer") {
           this.setState({
             peerUserName: res.username,
             peerName: res.name,
+            peerPic: res.profilePic,
           });
         } else if (type.trim() === "friend") {
           this.setState({
             friendUserName: res.username,
             friendName: res.name,
+            friendPic: res.profilePic
+              ? res.profilePic
+              : require("assets/img/icons/user/user1.png"),
           });
         }
       }
@@ -876,19 +1292,19 @@ avatar = doc.data().profilePic;
     }
   }
 
-  scrollToBottom = () => {
-    if (this.messagesEnd) {
-      this.messagesEnd.scrollIntoView({});
-    }
-  };
+  // scrollToBottom = () => {
+  //   if (this.messagesEnd) {
+  //     this.messagesEnd.scrollIntoView({});
+  //   }
+  // };
 
-  componentDidUpdate() {
-    this.scrollToBottom();
-  }
+  // componentDidUpdate() {
+  //   this.scrollToBottom();
+  // }
 
-  onHover = (userId) => {
-    localStorage.setItem("Fuid", JSON.stringify(userId));
-  };
+  // onHover = (userId) => {
+  //   localStorage.setItem("Fuid", JSON.stringify(userId));
+  // };
 
   clearChat = async () => {
     // await firebase
@@ -908,13 +1324,12 @@ avatar = doc.data().profilePic;
   };
 
   fetchGifs = (offset) =>
-  this.state.inputValue.length > 1
-    ? gf.search(this.state.inputValue , {
-        offset,
-        limit: 5,
-      })
-    : gf.trending({ offset, limit: 10 });
-
+    this.state.inputValue.length > 1
+      ? gf.search(this.state.inputValue, {
+          offset,
+          limit: 5,
+        })
+      : gf.trending({ offset, limit: 10 });
 
   render() {
     const { t } = this.props;
@@ -932,7 +1347,7 @@ avatar = doc.data().profilePic;
         >
           <section
             className="section section-blog-info"
-            style={{ marginTop: "100px" }}
+            style={{ marginTop: "30px" }}
           >
             <div
               className="mb-5"
@@ -943,14 +1358,85 @@ avatar = doc.data().profilePic;
               }}
             >
               <div className="row flex-row chat justify-content-center">
-                <div className="col-lg-2">
+                <div className="col-lg-3" style={{ borderBottom: "22px" }}>
+                  {/* ADD INBOX COMPONENT */}
+
+                  {/* <Inbox /> */}
+
                   <div
+                    className="card bg-secondary"
+                    style={{
+                      overflow: "auto",
+                      borderRadius: "20px",
+                      // paddingBottom: "22px",
+                      marginBottom: "22px",
+                    }}
+                    // style={{ zoom: "85%",  }}
+                  >
+                    <form className="card-header mb-3 text-center bg-gradient-muted">
+                      <span className="text-black font-weight-bold">
+                        {/* {this.state.groupChats.length} Friends online */}
+                        {t("Recent Chats")}
+
+                        {/* {"!"} */}
+                      </span>
+                    </form>
+                    {this.state.inboxUsersData.map((item, index) => (
+                      <div
+                        className="list-group list-group-chat list-group-flush"
+                        key={index}
+                      >
+                        <p
+                          className="list-group-item bg-gradient-white"
+                          // onMouseOver={() => this.onHover(user.idFrom)}
+                        >
+                          <Link to={`/chat/${item.peerid}`}>
+                            <div className="media">
+                              <Link to={`/friend/${item.peerid}`}>
+                                <img
+                                  alt="Image"
+                                  src={item.peerprofilePic}
+                                  className="avatar"
+                                />
+                              </Link>
+                              <div className="media-body ml-2">
+                                <div className="justify-content-between align-items-center">
+                                  <h6 className="mb-0 text-black font-weight-bold">
+                                    {item.peername}
+                                    <span className="badge badge-success"></span>
+                                  </h6>
+                                  <div>
+                                    <small className="text-muted">
+                                      {item.name == this.state.name
+                                        ? "You"
+                                        : item.name}
+                                      {/* {item.name} */}: {item.content}
+                                      <small
+                                        className="col-md-1 col-3"
+                                        style={{ right: "0px" }}
+                                      >
+                                        {moment(Number(item.timestamp)).format(
+                                          "ll"
+                                        )}
+                                      </small>
+                                    </small>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* <div
                     className="card bg-secondary"
                     style={{ overflow: "auto" }}
                   >
                     <form className="card-header mb-3 text-center bg-gradient-muted">
                       <span className="text-black font-weight-bold">
-                        {/* {this.state.followedUsers.length} Friends online */}
+                        {this.state.followedUsers.length} Friends online
                         {t("Say Hi")}
                         {"!"}
                       </span>
@@ -988,10 +1474,14 @@ avatar = doc.data().profilePic;
                       </div>
                     ))}
                   </div>
+              */}
                 </div>
                 <div className="col-lg-8">
-                  <div className="card">
-                    <div className="card-header d-inline-block">
+                  <div className="card" style={{ borderRadius: "20px" }}>
+                    <div
+                      className="card-header d-inline-block"
+                      style={{ borderRadius: "20px" }}
+                    >
                       <div className="row">
                         <div className="col-md-10">
                           <div className="media align-items-center">
@@ -1039,7 +1529,7 @@ avatar = doc.data().profilePic;
                               >
                                 <p
                                   className="dropdown-item"
-                                  href="javascript:;"
+                                  // href="javascript:;"
                                 >
                                   <i className="ni ni-single-02"></i>{" "}
                                   {t("Profile")}
@@ -1048,7 +1538,7 @@ avatar = doc.data().profilePic;
                               <DropdownItem onClick={this.clearChat}>
                                 <p
                                   className="dropdown-item"
-                                  href="javascript:;"
+                                  // href="javascript:;"
                                 >
                                   <i className="ni ni-fat-remove"></i>{" "}
                                   {t("Delete chat")}
@@ -1139,7 +1629,7 @@ avatar = doc.data().profilePic;
                       <Carousel
                         gifHeight={100}
                         gutter={6}
-                        fetchGifs={this.fetchGifs}  
+                        fetchGifs={this.fetchGifs}
                         onGifClick={(gif, e) => {
                           // console.log("gif", gif);
                           this.onSendMessage(gif.id, 2);
@@ -1153,7 +1643,8 @@ avatar = doc.data().profilePic;
                     <div className="viewBottom">
                       <img
                         className="icOpenGallery"
-                        src={images.ic_photo}
+                        // src={images.ic_photo}
+                        src={require("assets/img/icons/images/icon8_img.png")}
                         alt="icon open gallery"
                         onClick={() => this.refInput.click()}
                       />
@@ -1164,12 +1655,29 @@ avatar = doc.data().profilePic;
                         accept="image/*"
                         className="viewInputGallery"
                         type="file"
+                        // onChange={this.onChoosePhoto}
+                        onChange={event => this.handleImageUpload(event)}
+                      />
+                      <img
+                        className="icOpenGallery"
+                        src={require("assets/img/icons/images/icon8_vid.png")}
+                        alt="icon open gallery"
+                        onClick={() => this.refInput.click()}
+                      />
+                      <input
+                        ref={(el) => {
+                          this.refInput = el;
+                        }}
+                        accept="video/*"
+                        className="viewInputGallery"
+                        type="file"
                         onChange={this.onChoosePhoto}
                       />
 
                       <img
                         className="icOpenSticker"
-                        src={images.ic_sticker}
+                        // src={images.ic_sticker}
+                        src={require("assets/img/icons/images/icon8_gif.png")}
                         alt="icon open sticker"
                         onClick={this.openListSticker}
                       />
@@ -1201,6 +1709,7 @@ avatar = doc.data().profilePic;
           </section>
           <SimpleFooter />
         </main>
+        {/* <Update /> */}
       </>
     );
   }

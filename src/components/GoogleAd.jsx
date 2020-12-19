@@ -1,49 +1,49 @@
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
+// import React, { Component } from 'react';
+// import PropTypes from 'prop-types';
 
-const googleAdId = 'ca-pub-3206659815873877';
+// const googleAdId = 'ca-pub-3206659815873877';
 
-class GoogleAd extends Component {
-  googleInit = null;
+// class GoogleAd extends Component {
+//   googleInit = null;
 
-  componentDidMount() {
-    const { timeout } = this.props;
-    this.googleInit = setTimeout(() => {
-      if (typeof window !== 'undefined')
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-    }, timeout);
-  }
+//   componentDidMount() {
+//     const { timeout } = this.props;
+//     this.googleInit = setTimeout(() => {
+//       if (typeof window !== 'undefined')
+//         (window.adsbygoogle = window.adsbygoogle || []).push({});
+//     }, timeout);
+//   }
 
-  componentWillUnmount() {
-    if (this.googleInit) clearTimeout(this.googleInit);
-  }
+//   componentWillUnmount() {
+//     if (this.googleInit) clearTimeout(this.googleInit);
+//   }
 
-  render() {
-    const { classNames, slot } = this.props;
-    return (
-      <div className={classNames}>
-        <ins
-          className="adsbygoogle"
-          style={{ display: 'block' }}
-          data-ad-client={googleAdId}
-          data-ad-slot={slot}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        ></ins>
-      </div>
-    );
-  }
-}
+//   render() {
+//     const { classNames, slot } = this.props;
+//     return (
+//       <div className={classNames}>
+//         <ins
+//           className="adsbygoogle"
+//           style={{ display: 'block' }}
+//           data-ad-client={googleAdId}
+//           data-ad-slot={slot}
+//           data-ad-format="auto"
+//           data-full-width-responsive="true"
+//         ></ins>
+//       </div>
+//     );
+//   }
+// }
 
-GoogleAd.propTypes = {
-  classNames: PropTypes.string,
-  slot: PropTypes.string,
-  timeout: PropTypes.number,
-};
+// GoogleAd.propTypes = {
+//   classNames: PropTypes.string,
+//   slot: PropTypes.string,
+//   timeout: PropTypes.number,
+// };
 
-GoogleAd.defaultProps = {
-  classNames: '',
-  timeout: 200,
-};
+// GoogleAd.defaultProps = {
+//   classNames: '',
+//   timeout: 200,
+// };
 
-export default GoogleAd;
+// export default GoogleAd;

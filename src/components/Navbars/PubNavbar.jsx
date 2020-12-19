@@ -41,7 +41,7 @@ import Select from "@material-ui/core/Select";
 
 class UserNavbar extends React.Component {
   state = {
-    value: JSON.parse(localStorage.getItem("lang")),
+    value: localStorage.getItem("lang"),
   };
 
   handleChange = (event) => {
@@ -54,6 +54,8 @@ class UserNavbar extends React.Component {
   };
 
   componentDidMount() {
+    localStorage.setItem("lang", "en");
+
     this.props.i18n.changeLanguage(this.state.value);
     let headroom = new Headroom(document.getElementById("navbar-main"));
     // initialise

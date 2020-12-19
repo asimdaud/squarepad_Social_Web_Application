@@ -1,5 +1,10 @@
-import React from "react";
 
+import React from "react";
+import moment from "moment";
+
+import Loader from "react-loader-advanced";
+import LoaderSpinner from "react-loader-spinner";
+import FadeIn from "react-fade-in";
 // reactstrap components
 import {
   Button,
@@ -10,6 +15,7 @@ import {
   Modal,
   Badge,
   DropdownMenu,
+  Spinner,
   DropdownItem,
   DropdownToggle,
   ButtonDropdown,
@@ -29,7 +35,7 @@ import { Redirect, Link } from "react-router-dom";
 
 import UserNavbar from "components/Navbars/UserNavbar";
 import { withTranslation } from "react-i18next";
-import  { useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 // const friendId = JSON.parse(localStorage.getItem("Fuid"));
 // const currentUserUid = JSON.parse(localStorage.getItem("uid"));
@@ -38,7 +44,6 @@ class FriendsPage extends React.Component {
   firestoreUsersRef = firebase.firestore().collection("users");
   firestorePostRef = firebase.firestore().collection("posts");
 
-  
   // state = {
   //   // friendId: JSON.parse(localStorage.getItem("Fuid")),
   //   friendId: useParams(),
@@ -68,30 +73,33 @@ class FriendsPage extends React.Component {
     super(props);
 
     this.state = {
-         // friendId: JSON.parse(localStorage.getItem("Fuid")),
-    friendId: this.props.match.params.fuid ? this.props.match.params.fuid : '',
-    currentUserUid: JSON.parse(localStorage.getItem("uid")),
-    uid: this.props.match.params.fuid ? this.props.match.params.fuid : '',
-    profilePic:
-    require('assets/img/icons/user/user1.png'),
+      // friendId: JSON.parse(localStorage.getItem("Fuid")),
+      friendId: this.props.match.params.fuid
+        ? this.props.match.params.fuid
+        : "",
+      currentUserUid: JSON.parse(localStorage.getItem("uid")),
+      uid: this.props.match.params.fuid ? this.props.match.params.fuid : "",
+      profilePic: require("assets/img/icons/user/user1.png"),
       // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
-    username: "",
-    bio: "",
-    name: "",
-    email: "",
-    posts: [],
-    postCount: 0,
-    following: false,
-    pending: false,
-    publicProfile: true,
-    loading: true,
-    followingList: [],
-    followingListData: [],
-    followerList: [],
-    followerListData: [],
-    value: "en",
-    isOpen: false,
- 
+      username: "",
+      bio: "",
+      name: "",
+      email: "",
+      posts: [],
+      postCount: 0,
+      following: false,
+      pending: false,
+      publicProfile: true,
+      loading: true,
+      followingList: [],
+      followingListData: [],
+      followerList: [],
+      followerListData: [],
+      closeFriends: false,
+      value: "en",
+      isOpen: false,
+      loaderAdv: true,
+      currentUsername:undefined,
     };
   }
 
@@ -128,8 +136,8 @@ class FriendsPage extends React.Component {
 
     this.setState({ uid: this.props.match.params.fuid });
     this.setState({
-      friendId: this.props.match.params.fuid
-    })
+      friendId: this.props.match.params.fuid,
+    });
 
     this.getFriendId().then(() => {
       this.getFriendList();
@@ -137,23 +145,36 @@ class FriendsPage extends React.Component {
       this.getPosts();
 
       this.getProfilePic();
+      this.getCurrentUsername();
     });
   }
 
   componentDidUpdate(prevProps, prevState) {
-
     if (prevProps.match.params.fuid !== this.props.match.params.fuid) {
-
+      this.setState({ loaderAdv: true });
       this.setState({ uid: this.props.match.params.fuid });
 
-      console.log('pokemons state has changed. **************************')
       this.getFriendId().then(() => {
-      this.getFriendList();
-      this.checkFollow();
-      this.getPosts();
+        this.getFriendList();
+        this.checkFollow();
+        this.getPosts();
+        this.getProfilePic();
+        this.setState({
+          defaultModal3: false,
+          defaultModal2: false,
+          defaultModal: false,
+        });
+      });
+    }
 
-      this.getProfilePic();
-    });
+    if (prevState.following !== this.state.following) {
+      this.getFriendList();
+    }
+
+    if (prevState.closeFriends !== this.state.closeFriends) {
+      this.checkFollow();
+
+      this.renderFollow();
     }
   }
 
@@ -163,7 +184,6 @@ class FriendsPage extends React.Component {
   };
 
   getProfilePic = () => {
-
     firebase
       .firestore()
       .collection("users")
@@ -177,34 +197,74 @@ class FriendsPage extends React.Component {
           name: res.name,
           email: res.email,
           publicProfile: res.publicProfile,
-          profilePic: res.profilePic,
+          profilePic: res.profilePic
+            ? res.profilePic
+            : require("assets/img/icons/user/user1.png"),
         });
       });
+
     // profile pic
-    const firebaseProfilePic = firebase
-      .storage()
-      .ref()
-      .child("profilePics/(" + this.state.uid + ")ProfilePic");
-    firebaseProfilePic
-      .getDownloadURL()
-      .then((url) => {
-        // Inserting into an State and local storage incase new device:
-        this.setState({ profilePic: url });
-        console.log(this.state.profilePic)
-      })
-      .catch((error) => {
-        // Handle any errors
-        switch (error.code) {
-          case "storage/object-not-found":
-            // File doesn't exist
-            this.setState({
-              profilePic:
-              require('assets/img/icons/user/user1.png'),            });
-            break;
-        }
-        console.log(error);
-      });
+    // const firebaseProfilePic = firebase
+    //   .storage()
+    //   .ref()
+    //   .child("profilePics/(" + this.state.uid + ")ProfilePic");
+    // firebaseProfilePic
+    //   .getDownloadURL()
+    //   .then((url) => {
+    //     // Inserting into an State and local storage incase new device:
+    //     // this.setState({ profilePic: url });
+    //     console.log(this.state.profilePic);
+    //   })
+    //   .catch((error) => {
+    //     // Handle any errors
+    //     switch (error.code) {
+    //       case "storage/object-not-found":
+    //         // File doesn't exist
+    //         this.setState({
+    //           profilePic: require("assets/img/icons/user/user1.png"),
+    //         });
+    //         break;
+    //     }
+    //     console.log(error);
+    //   });
   };
+
+  getProfileInfo = () => {
+    const { t } = this.props;
+    return (
+      <>
+        <div className="card-profile-stats d-flex justify-content-center">
+          <div>
+            <span className="heading"> {this.state.posts.length}</span>
+            <span className="description">{t("Posts")}</span>
+          </div>
+          <div
+            onClick={
+              this.state.followerList < 1
+                ? ""
+                : () => this.toggleModal("defaultModal3")
+            }
+          >
+            {" "}
+            <span className="heading"> {this.state.followerList.length}</span>
+            <span className="description">{t("Followers")}</span>
+          </div>
+          <div
+            onClick={
+              this.state.followingList < 1
+                ? ""
+                : () => this.toggleModal("defaultModal2")
+            }
+          >
+            {" "}
+            <span className="heading"> {this.state.followingList.length}</span>
+            <span className="description">{t("Following")}</span>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   getPosts = () => {
     const cloudImages = [];
     firebase
@@ -258,9 +318,66 @@ class FriendsPage extends React.Component {
       .doc(this.state.uid)
       .get()
       .then((snapshot) => {
-        if (snapshot.exists) {
-          this.setState({ following: true, pending: false });
+        if (!snapshot.exists) {
+          this.firestoreUsersRef
+            .doc(this.state.currentUserUid)
+            .collection("sent")
+            .doc(this.state.uid)
+            .get()
+            .then((snapshot) => {
+              if (!snapshot.exists) {
+                this.setState({
+                  following: false,
+                  pending: false,
+                  closeFriends: false,
+                });
+              }
+              // else {
+              //   this.setState({ pending: false });
+              // }
+            });
         }
+      });
+    // this.firestoreUsersRef
+    //   .doc(this.state.currentUserUid)
+    //   .collection("closeFriends")
+    //   .doc(this.state.uid)
+    //   .get()
+    //   .then((snapshot) => {
+    //     if (snapshot.exists) {
+    //       this.setState({ closeFriends: true , following: true});
+    //     }
+    //   });
+
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .collection("following")
+      .doc(this.state.uid)
+      .get()
+      .then((snapshot) => {
+        // if (snapshot.exists) {
+        //   this.setState({ following: true, pending: false });
+        // }
+
+        this.firestoreUsersRef
+          .doc(this.state.currentUserUid)
+          .collection("closeFriends")
+          .doc(this.state.uid)
+          .get()
+          .then((snapshot2) => {
+            if (snapshot2.exists && snapshot.exists) {
+              this.setState({
+                closeFriends: true,
+                following: true,
+                pending: false,
+              });
+            } else if (snapshot.exists)
+              this.setState({
+                following: true,
+                pending: false,
+                closeFriends: false,
+              });
+          });
       });
 
     this.firestoreUsersRef
@@ -277,7 +394,11 @@ class FriendsPage extends React.Component {
             .get()
             .then((snapshot) => {
               if (snapshot.exists) {
-                this.setState({ following: false, pending: true });
+                this.setState({
+                  following: false,
+                  pending: true,
+                  closeFriends: false,
+                });
               } else {
                 this.setState({ pending: false });
               }
@@ -296,6 +417,13 @@ class FriendsPage extends React.Component {
         .doc(this.state.uid)
         .collection("received")
         .doc(this.state.currentUserUid)
+        .delete() && 
+        firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.uid)
+        .collection("userNotifications")     
+        .doc(this.state.currentUserUid)
         .delete()
         .then(() => {
           this.setState({ following: false, pending: false });
@@ -313,18 +441,33 @@ class FriendsPage extends React.Component {
         .doc(this.state.uid)
         .collection("followedBy")
         .doc(this.state.currentUserUid)
-
+        .delete() &&
+      this.firestoreUsersRef
+        .doc(this.state.currentUserUid)
+        .collection("closeFriends")
+        .doc(this.state.uid)
         .delete()
 
         .then(() => {
-          this.setState({ following: false });
-          console.log("UNFOLLOWED");
-          console.log("pending: " + this.state.pending);
+          this.setState({ following: false, closeFriends: false });
+          // console.log("UNFOLLOWED");
+          // console.log("pending: " + this.state.pending);
         });
   };
 
-  follow = () => {
+
+  getCurrentUsername() {
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .get()
+      .then((document) => {
+        this.setState({ currentUsername: document.data().username });
+      });
+  }
+
+   follow =  () => {
     //unknown private account
+
     if (!this.state.following && !this.state.publicProfile) {
       this.firestoreUsersRef
         .doc(this.state.currentUserUid)
@@ -339,6 +482,22 @@ class FriendsPage extends React.Component {
           .doc(this.state.currentUserUid)
           .set({
             userId: this.state.currentUserUid,
+          }) &&
+          firebase
+          .firestore()
+          .collection("notifications")
+          .doc(this.state.uid)
+          .collection("userNotifications")     
+          .doc(this.state.currentUserUid)
+          .set({
+            type:"request",
+            content: "sent you a follow request",
+            // postId: item.postId,
+            // postUserId: item.userId,
+            sender: this.state.currentUsername,
+            senderId: this.state.currentUserUid,
+            receiverId: this.state.uid,
+            time: moment().valueOf().toString(),
           })
           .then(() => {
             this.setState({ pending: true, following: false });
@@ -362,12 +521,53 @@ class FriendsPage extends React.Component {
           .set({
             userId: this.state.currentUserUid,
           })
+          &&    firebase
+          .firestore()
+          .collection("notifications")
+          .doc(this.state.uid)
+          .collection("userNotifications")     
+          .doc(this.state.currentUserUid)
+          .set({
+            type:"follow",
+            content: "started following you",
+            // postId: item.postId,
+            // postUserId: item.userId,
+            sender: this.state.currentUsername,
+            senderId: this.state.currentUserUid,
+            receiverId: this.state.uid,
+            time: moment().valueOf().toString(),
+          })
+       
           .then(() => {
             this.setState({ following: true, pending: false });
             console.log("followed");
             // console.log("pending: " + this.state.pending);
           });
     }
+  };
+
+  addCloseFriend = () => {
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .collection("closeFriends")
+      .doc(this.state.uid)
+      .set({
+        userId: this.state.uid,
+      })
+      .then(() => {
+        this.setState({ closeFriends: true });
+      });
+  };
+
+  removeCloseFriend = () => {
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .collection("closeFriends")
+      .doc(this.state.uid)
+      .delete()
+      .then(() => {
+        this.setState({ closeFriends: false });
+      });
   };
 
   renderFollow = () => {
@@ -400,35 +600,66 @@ class FriendsPage extends React.Component {
     } else if (this.state.following && !this.state.pending) {
       return (
         <>
-          <Link to={`/chat/${this.state.uid}`}>
+          {/* <Link to={`/chat/${this.state.uid}`}>
             <Button className="mr-4" color="outline-success" size="sm">
               {t("Message")}
             </Button>
-          </Link>
+          </Link> */}
 
           <ButtonDropdown isOpen={this.state.isOpen} toggle={this.toggle}>
-            <Button
-              // id="caret"
-              // color="info"
-              color="outline-info"
-              size="sm"
-              onClick={() => this.unfollow()}
-            >
-              {t("Following")}
-            </Button>
-            <DropdownToggle
-              caret
-              // color="info"
-              color="outline-info"
-              // className="mr-4"
-              size="sm"
-            />
+            {this.state.closeFriends ? (
+              <Button
+                // id="caret"
+                // color="info"
+                color="outline-success"
+                size="sm"
+                onClick={() => this.unfollow()}
+              >
+                {t("Close Friends")}
+              </Button>
+            ) : (
+              <Button
+                // id="caret"
+                // color="info"
+                color="outline-info"
+                size="sm"
+                onClick={() => this.unfollow()}
+              >
+                {t("Following")}
+              </Button>
+            )}
+
+            {this.state.closeFriends ? (
+              <DropdownToggle caret color="outline-success" size="sm" />
+            ) : (
+              <DropdownToggle
+                caret
+                color="outline-info"
+                // className="mr-4"
+                size="sm"
+              />
+            )}
             <DropdownMenu>
               {/* <DropdownItem header>Header</DropdownItem> */}
               {/* <DropdownItem disabled>Action</DropdownItem> */}
-              <DropdownItem>Add to Public Figure</DropdownItem>
+
+              <DropdownItem>
+                <Link to={`/chat/${this.state.uid}`}>
+                  {/* <Button className="mr-4" color="outline-success" size="sm"> */}
+                  {t("Send Message")}
+                  {/* </Button> */}
+                </Link>
+              </DropdownItem>
               <DropdownItem divider />
-              <DropdownItem>Add to Friends & Family</DropdownItem>
+              {this.state.closeFriends ? (
+                <DropdownItem onClick={() => this.removeCloseFriend()}>
+                  {t("Remove from Close Friends")}
+                </DropdownItem>
+              ) : (
+                <DropdownItem onClick={() => this.addCloseFriend()}>
+                  {t("Add to Close Friends")}
+                </DropdownItem>
+              )}
             </DropdownMenu>
           </ButtonDropdown>
         </>
@@ -514,15 +745,15 @@ class FriendsPage extends React.Component {
         });
       });
     this.setState({ followerList: follower, followingList: following });
+
     this.viewFriendListData();
   };
 
   viewFriendListData = () => {
     let followerArr = [];
-    let Fravatar =
-    require('assets/img/icons/user/user1.png');
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
-    let Frname;
+    let Fravatar = require("assets/img/icons/user/user1.png");
+    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
+    let Frname, Frusername;
     this.state.followerList.forEach((userId) => {
       //  avatar =  this.getUserPic(userId);
       this.firestoreUsersRef
@@ -530,11 +761,16 @@ class FriendsPage extends React.Component {
         .get()
         .then((doc) => {
           Frname = doc.data().username;
-Fravatar = doc.data().profilePic;
+          Fravatar = doc.data().profilePic
+            ? doc.data().profilePic
+            : require("assets/img/icons/user/user1.png");
+          Frusername = doc.data().username;
+
           let followerList = {
             userId: userId,
             Frname: Frname,
             Fravatar: Fravatar,
+            Frusername: Frusername,
           };
 
           followerArr.push(followerList);
@@ -547,9 +783,8 @@ Fravatar = doc.data().profilePic;
         });
     });
     let followingArr = [];
-    let avatar =
-    require('assets/img/icons/user/user1.png');
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
+    let avatar = require("assets/img/icons/user/user1.png");
+    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg";
     let name, username;
     this.state.followingList.forEach((userId) => {
       //  avatar =  this.getUserPic(userId);
@@ -559,13 +794,15 @@ Fravatar = doc.data().profilePic;
         .then((doc) => {
           username = doc.data().username;
           name = doc.data().name;
-          avatar = doc.data().profilePic;
+          avatar = doc.data().profilePic
+            ? doc.data().profilePic
+            : require("assets/img/icons/user/user1.png");
 
           let followingList = {
             userId: userId,
             name: name,
             username: username,
-            avatar:avatar,
+            avatar: avatar,
           };
 
           followingArr.push(followingList);
@@ -577,6 +814,7 @@ Fravatar = doc.data().profilePic;
           console.log(err);
         });
     });
+    this.setState({ loaderAdv: false });
   };
 
   onHover = (userId) => {
@@ -605,34 +843,73 @@ Fravatar = doc.data().profilePic;
             className="section section-blog-info"
             style={{ marginTop: "200px" }}
           >
-
             <Container>
-              <Card className="card-profile shadow">
-                <div className="px-4">
-                  <Row className="justify-content-center">
-                    <Col className="order-lg-2" lg="3">
-                      <div className="card-profile-image">
-                        {/* <a href="#pablo" onClick={(e) => e.preventDefault()}> */}
-                        <img
-                          style={{
-                            width: "200px",
-                            height: "200px",
-                            display: "block",
-                            objectFit: "cover",
-                          }}
-                          className="rounded-circle img-responsive"
-                          alt="..."
-                          src={this.state.profilePic}
-                        />
-                        {/* </a> */}
-                      </div>
-                    </Col>
-                    <Col
-                      className="order-lg-3 text-lg-right align-self-lg-center"
-                      lg="4"
-                    >
-                      <div className="card-profile-actions py-4 mt-lg-0">
-                        {/* <Button
+              {this.state.loaderAdv ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: "50px",
+                    marginBottom:"200px",
+                    // zoom:"60%"
+                  
+                    // mixBlendMode: "screen",
+                  }}
+                >
+                  <LoaderSpinner
+                    type="Puff"
+                    color="#00BFFF"
+                    height={100}
+                    width={100}
+                    // timeout={100000} //1 secs
+                  />
+                </div>
+              ) : (
+                <>
+                  <FadeIn transitionDuration={1100} delay={80}>
+                    <Card className="card-profile shadow">
+                      <div className="px-4">
+                        <Row className="justify-content-center">
+                          <Col className="order-lg-2" lg="3" style={{padding:"15px"}}>
+                            <div className="card-profile-image">
+                              <a
+                                href="#pablo"
+                                onClick={(e) => e.preventDefault()}
+                              >
+                                <img
+                                  style={
+                                    this.state.closeFriends
+                                      ? {
+                                          width: "200px",
+                                          height: "200px",
+                                          display: "table",
+                                          objectFit: "cover",
+                                          padding: "5px",
+                                        }
+                                      : {
+                                          width: "200px",
+                                          height: "200px",
+                                          display: "table",
+                                          objectFit: "cover",
+                                          // padding : "5px"
+                                        }
+                                  }
+                                  className={
+                                    this.state.closeFriends
+                                      ? "rounded-circle img-responsive border border-success"
+                                      : "rounded-circle img-responsive"
+                                  }
+                                  alt="..."
+                                  src={this.state.profilePic}
+                                />
+                              </a>
+                            </div>
+                          </Col>
+                          <Col
+                            className="order-lg-3 text-lg-right align-self-lg-center"
+                            lg="4"
+                          >
+                            <div className="card-profile-actions py-4 mt-lg-0">
+                              {/* <Button
                           className="mr-4"
                           color="info"
                           href="#pablo"
@@ -652,9 +929,9 @@ Fravatar = doc.data().profilePic;
                           {" " }
                         </Button> */}
 
-                        {this.renderFollow()}
+                              {this.renderFollow()}
 
-                        {/* <Button
+                              {/* <Button
                           onClick={this.toggleFollow}
                           className={
                             this.state.following === true ? (
@@ -682,10 +959,11 @@ Fravatar = doc.data().profilePic;
                         >
                           {" " + this.state.likes}
                         </Button> */}
-                      </div>
-                    </Col>
-                    <Col className="order-lg-1" lg="4">
-                      <div
+                            </div>
+                          </Col>
+                          <Col className="order-lg-1" lg="4">
+                            {this.getProfileInfo()}
+                            {/* <div
                         className="card-profile-stats d-flex justify-content-center"
                         onClick={() => this.toggleModal("notificationModal")}
                       >
@@ -711,32 +989,47 @@ Fravatar = doc.data().profilePic;
                           <span className="description">{t("Following")}</span>
                         </div>
                       </div>
-                    </Col>
-                  </Row>
-                  <div className="text-center mt-5">
-                    <h3>
-                      {this.state.username}{" "}
-                      {/* <span className="font-weight-light">, 27</span> */}
-                    </h3>
-                    {/* <div className="h6 font-weight-300">
+                   */}
+                          </Col>
+                        </Row>
+                        <div className="text-center mt-5">
+                          {/* <h3>
+                      @{this.state.username}{" "}
+                    </h3> */}
+
+                          <h3>{this.state.name} </h3>
+                          <span
+                            className="font-weight-light"
+
+                            // style={{
+                            //   color:"#2dce89",
+                            //   textShadow: "1px 1px 2px black, 0 0 25px blue, 0 0 5px darkblue"
+
+                            // }}
+                          >
+                            {"@"}
+                            {this.state.username}
+                          </span>
+
+                          {/* <div className="h6 font-weight-300">
                       <i className="ni location_pin mr-2" />
                       Bucharest, Romania
                     </div> */}
-                    <div className="h6 mt-4">
-                      <i className="ni business_briefcase-24 mr-2" />
-                      {this.state.bio}
-                    </div>
-                    {/* <div>
+                          <div className="h6 mt-4">
+                            <i className="ni business_briefcase-24 mr-2" />
+                            {this.state.bio}
+                          </div>
+                          {/* <div>
                       <i className="ni education_hat mr-2" />
                       University of Computer Science
                     </div> */}
-                  </div>
-                  <div className="mt-5 py-5 border-top text-center">
-                    <Row className="justify-content-center">
-                      <Col lg="11">
-                        {this.privateProfile()}
+                        </div>
+                        <div className="mt-5 py-5 border-top text-center">
+                          <Row className="justify-content-center">
+                            <Col lg="11">
+                              {this.privateProfile()}
 
-                        {/* 
+                              {/* 
                         
                         <div className="container-fluid bg-3 text-center">
                           <h3>Posts</h3>
@@ -762,19 +1055,23 @@ Fravatar = doc.data().profilePic;
                             ))}
                           </div>
                         </div> */}
-                        {/* <a
+                              {/* <a
                           href="#"
                           onClick={() => this.toggleModal("defaultModal")}
                         >
                           Show more
                         </a> */}
-                      </Col>
-                    </Row>
-                  </div>
-                </div>
-              </Card>
+                            </Col>
+                          </Row>
+                        </div>
+                      </div>
+                    </Card>
+                  </FadeIn>
+                </>
+              )}
             </Container>
           </section>
+          <SimpleFooter />
         </main>
 
         <Modal
@@ -788,148 +1085,30 @@ Fravatar = doc.data().profilePic;
         </Modal>
 
         <Modal
-          className="modal-dialog-centered modal-danger"
-          contentClassName="bg-gradient-danger"
-          isOpen={this.state.notificationModal}
-          toggle={() => this.toggleModal("notificationModal")}
-          size="lg"
+          size="md"
+          isOpen={this.state.defaultModal3}
+          toggle={() => this.toggleModal("defaultModal3")}
+          className="fluid"
         >
-          <div className="modal-header"></div>
+          {" "}
           <Row>
             <Col>
-              {" "}
               <ul>
-                <h3 className="mb-0 text-white font-weight-bold">
-                  {t("Following")}
-                </h3>
+                <h3 className="mb-0 text-dark">Followers</h3>
 
-                {
-                  // this.state.followedUsers.map((followedUsers) => {
-                  this.state.followingListData.map((user, postindex) => (
-                    <li key={postindex} item={this.state.followingList}>
-                      <Row
-                      // className="justify-content-center"
-                      >
-                        <Col
-                          lg="6"
-                          onMouseOver={() =>
-                            localStorage.setItem(
-                              "Fuid",
-                              JSON.stringify(user.groupId)
-                            )
-                          }
-                          onClick={() => {
-                            window.location.reload(false);
-                          }}
-                        >
-                          {/* <div className="card-profile-stats d-flex justify-content-center"> */}
-                          {/* <p className="mb-0 text-black font-weight-bold">
-                          <img
-            alt="Image placeholder"
-            className="media-comment-avatar avatar rounded-circle"
-            style={{
-              // width: "200px",
-              // height: "200px",
-              display: "block",
-              objectFit: "cover",
-            }}
-            // src={this.state.profilePic}
-            // className="rounded-circle img-responsive"
-
-            src={user.avatar}
-          />
-                            {user.name}
-                          </p> */}
-
+                {this.state.followerListData.map((user, postindex) => (
+                  <li key={postindex} item={this.state.followerList}>
+                    <Row
+                    // className="justify-content-center"
+                    >
+                      <Col lg="6">
+                        <Link to={`/friend/${user.userId}`}>
                           <div
-                            className="media media-comment"
+                            className="d-flex align-items-center"
                             style={{ margin: "5px" }}
                           >
                             <img
-                              alt="Image placeholder"
-                              className="media-comment-avatar avatar rounded-circle"
-                              style={{
-                                display: "block",
-                                objectFit: "cover",
-                                padding: "2px",
-                                margin: "5px",
-                              }}
-                              src={user.avatar}
-                            />
-                            <div className="media-body">
-                              <div className="media-comment-text">
-                                <h4>
-                                  <Badge
-                                    color="secondary"
-                                    style={{ padding: "2px" }}
-                                  >
-                                    {user.name}
-                                  </Badge>
-                                </h4>
-
-                                {/* <a href="/friend" className="description link">
-                                  {t("View profile")}
-                                </a> */}
-                              </div>
-                            </div>
-                          </div>
-                        </Col>
-                      </Row>
-                    </li>
-                  ))
-                }
-              </ul>
-            </Col>
-            <Col>
-              <ul>
-                <h3 className="mb-0 text-white font-weight-bold">
-                  {t("Followers")}
-                </h3>
-
-                {
-                  // this.state.followedUsers.map((followedUsers) => {
-                  this.state.followerListData.map((user, postindex) => (
-                    <li key={postindex} item={this.state.followerList}>
-                      <Row
-                      // className="justify-content-center"
-                      >
-                        <Col
-                          lg="6"
-                          onMouseOver={() =>
-                            localStorage.setItem(
-                              "Fuid",
-                              JSON.stringify(user.groupId)
-                            )
-                          }
-                          onClick={() => {
-                            window.location.reload(false);
-                          }}
-                        >
-                          {/* <div className="card-profile-stats d-flex justify-content-center"> */}
-                          {/* <p className="mb-0 text-black font-weight-bold">
-                          <img
-            alt="Image placeholder"
-            className="media-comment-avatar avatar rounded-circle"
-            style={{
-              // width: "200px",
-              // height: "200px",
-              display: "block",
-              objectFit: "cover",
-            }}
-            // src={this.state.profilePic}
-            // className="rounded-circle img-responsive"
-
-            src={user.avatar}
-          />
-                            {user.name}
-                          </p> */}
-
-                          <div
-                            className="media media-comment"
-                            style={{ margin: "5px" }}
-                          >
-                            <img
-                              alt="Image placeholder"
+                              alt="Image placeholder 2"
                               className="media-comment-avatar avatar rounded-circle"
                               style={{
                                 display: "block",
@@ -939,47 +1118,74 @@ Fravatar = doc.data().profilePic;
                               }}
                               src={user.Fravatar}
                             />
-                            <div className="media-body">
-                              <div className="media-comment-text">
-                                <h4>
-                                  <Badge
-                                    color="secondary"
-                                    style={{ padding: "2px" }}
-                                  >
-                                    {user.Frname}
-                                  </Badge>
-                                </h4>
-                                {/* <p className="description" onCLick={() => {}}>
-                                  View profile
-                                </p> */}
-                                {/* <a href="/friend" className="description link">
-                                  {t("View profile")}
-                                </a> */}
-                              </div>
+                            <div className="mx-3">
+                              <h5 className="mb-0 text-black">{user.Frname}</h5>
+                              <small className="text-muted">
+                                @{user.Frusername}
+                              </small>
                             </div>
                           </div>
-                        </Col>
-                      </Row>
-                    </li>
-                  ))
-                }
+                        </Link>
+                      </Col>
+                    </Row>
+                  </li>
+                ))}
               </ul>
             </Col>
           </Row>
-          <div className="modal-footer">
-            <Button
-              className="text-white ml-auto"
-              color="link"
-              data-dismiss="modal"
-              type="button"
-              onClick={() => this.toggleModal("notificationModal")}
-            >
-              {t("Close")}
-            </Button>
-          </div>
         </Modal>
 
-        <SimpleFooter />
+        <Modal
+          size="md"
+          isOpen={this.state.defaultModal2}
+          toggle={() => this.toggleModal("defaultModal2")}
+          className="fluid"
+          // style={{overflowWrap:"anywhere"}}
+        >
+          {" "}
+          <Row>
+            <Col>
+              <ul>
+                <h3 className="mb-0 text-dark">Following</h3>
+
+                {this.state.followingListData.map((user, postindex) => (
+                  <li key={postindex} item={this.state.followingList}>
+                    <Row
+                    // className="justify-content-center"
+                    >
+                      <Col lg="6">
+                        <Link to={`/friend/${user.userId}`}>
+                          <div
+                            className="d-flex align-items-center"
+                            style={{ margin: "5px" }}
+                          >
+                            <img
+                              alt="Image placeholder 2"
+                              className="media-comment-avatar avatar rounded-circle"
+                              style={{
+                                display: "block",
+                                objectFit: "cover",
+                                padding: "2px",
+                                margin: "5px",
+                              }}
+                              src={user.avatar}
+                            />
+                            <div className="mx-3">
+                              <h5 className="mb-0 text-black">{user.name}</h5>
+                              <small className="text-muted">
+                                @{user.username}
+                              </small>
+                            </div>
+                          </div>
+                        </Link>
+                      </Col>
+                    </Row>
+                  </li>
+                ))}
+              </ul>
+            </Col>
+          </Row>
+        </Modal>
       </>
     );
   }

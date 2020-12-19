@@ -3,6 +3,11 @@ import { Link, Redirect } from "react-router-dom";
 // JavaScript plugin that hides or shows a component based on your scroll
 import Headroom from "headroom.js";
 // reactstrap components
+import IconButton from "@material-ui/core/IconButton";
+import Badge from "@material-ui/core/Badge";
+
+import NotificationsIcon from "@material-ui/icons/Notifications";
+import AccountCircle from "@material-ui/icons/AccountCircle";
 import {
   // Button,
   UncontrolledCollapse,
@@ -11,7 +16,6 @@ import {
   DropdownToggle,
   UncontrolledDropdown,
   // Media,
-  Badge,
   NavbarBrand,
   Navbar,
   NavItem,
@@ -31,6 +35,7 @@ import {
   InputGroupText,
   FormGroup,
   Label,
+  UncontrolledTooltip,
   Modal,
   Button,
 } from "reactstrap";
@@ -49,22 +54,31 @@ import { withTranslation } from "react-i18next";
 // import { Route, Redirect } from "react-router-dom";
 
 class UserNavbar extends React.Component {
+  firestoreUsersRef = firebase.firestore().collection("users");
+
   state = {
     user3: JSON.parse(localStorage.getItem("uid")),
     user: {},
     searchWord: "",
     searchResults: [],
-    profilePic:require('assets/img/brand/logo.png'),
- 
-
-    userProfilePic:
-    require('assets/img/icons/user/user1.png'),
+    profilePic: require("assets/img/brand/logo.png"),
+    username: undefined,
+    name: undefined,
+    friendReq: [],
+    currentName: undefined,
+    userProfilePic: require("assets/img/icons/user/user1.png"),
 
     // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
     foundUser: "",
     found: false,
+    userChecked: false,
     reqNotify: false,
-    value: JSON.parse(localStorage.getItem("lang")),
+    value: localStorage.getItem("lang") ? localStorage.getItem("lang") : "en",
+
+    collapseClasses: "",
+    collapseOpen: false,
+
+    // value:"esp"
   };
 
   handleChange = (event) => {
@@ -104,18 +118,34 @@ class UserNavbar extends React.Component {
   //     });
   // };
 
+  toggleModal = (state) => {
+    this.setState({
+      [state]: !this.state[state],
+    });
+  };
+
   searchUser(word) {
     let userCollectionRef = firebase.firestore().collection("users");
     console.log(word);
+    if (word.length > 3) this.setState({ userChecked: true });
     let users = [];
     userCollectionRef
+      // .where("username", "==", word.toLowerCase())
       .where("username", "==", word)
       .get()
       .then((querySnapshot) => {
         querySnapshot.forEach((documentSnapshot) => {
           users.push(documentSnapshot.data());
           //   console.log(documentSnapshot.id);
-          this.setState({ foundUser: documentSnapshot.id, found: true });
+          this.setState({
+            foundUser: documentSnapshot.id,
+            found: true,
+            username: documentSnapshot.data().username,
+            name: documentSnapshot.data().name,
+            profilePic: documentSnapshot.data().profilePic
+              ? documentSnapshot.data().profilePic
+              : require("assets/img/icons/user/user1.png"),
+          });
           // console.log(this.state.foundUser)
           // console.log(users);
         });
@@ -124,48 +154,48 @@ class UserNavbar extends React.Component {
 
         if (users.length == 0) {
           this.setState({
-            profilePic:
-            require('assets/img/icons/user/user1.png'),
-              // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
+            profilePic: require("assets/img/icons/user/user1.png"),
             searchResults: [],
             foundUser: "",
             found: false,
           });
-          console.log(this.state.found);
+          // console.log(this.state.found);
         } else {
-          let profilePic = firebase
-            .storage()
-            .ref()
-            .child("profilePics/(" + this.state.foundUser + ")ProfilePic");
-          profilePic.getDownloadURL().then((url) => {
-            this.setState({ profilePic: url });
+          // let profilePic = firebase
+          //   .storage()
+          //   .ref()
+          //   .child("profilePics/(" + this.state.foundUser + ")ProfilePic");
+          // profilePic.getDownloadURL().then((url) => {
+          //   this.setState({ profilePic: url });
+          // });
+          this.setState({
+            searchResults: users,
           });
-          this.setState({ searchResults: users });
-          console.log(this.state.searchResults);
+          // console.log(this.state.searchResults);
         }
       });
   }
 
-  renderAvatar() {
-    // const {
-    //   //  avatar, styles,
-    //   item
-    // } = this.props;
+  // renderAvatar() {
+  //   // const {
+  //   //   //  avatar, styles,
+  //   //   item
+  //   // } = this.props;
 
-    // if (!item.avatar) return null;
-    return (
-      <Link to={`/friend/${this.state.foundUser}`}>
-        <img
-          // className="rounded-circle"
-          className="avatar"
-          width="45"
-          src={this.state.profilePic}
-          alt=""
-          // onClick={localStorage.setItem('Fuid', JSON.stringify(this.state.userId))}
-        />
-      </Link>
-    );
-  }
+  //   // if (!item.avatar) return null;
+  //   return (
+  //     <Link to={`/friend/${this.state.foundUser}`}>
+  //       <img
+  //         // className="rounded-circle"
+  //         className="avatar"
+  //         width="45"
+  //         src={this.state.profilePic}
+  //         alt=""
+  //         // onClick={localStorage.setItem('Fuid', JSON.stringify(this.state.userId))}
+  //       />
+  //     </Link>
+  //   );
+  // }
 
   // renderAvatar() {
   //   const { avatar, styles, item } = this.props;
@@ -209,17 +239,29 @@ class UserNavbar extends React.Component {
 
   renderUserItem = () => {
     // const { item } = this.props;
-    if (this.state.found) {
-      return (
-        <div onMouseOver={() => this.onHover()} 
-        // href="javascript:;"
-        >
-          {this.renderAvatar()}
+    // if (this.state.found) {
+    return (
+      <Link to={`/friend/${this.state.foundUser}`}>
+        <div className="d-flex align-items-center">
+          <img
+            // className="rounded-circle"
+            className="avatar"
+            width="45"
+            src={this.state.profilePic}
+            alt=""
+            // onClick={localStorage.setItem('Fuid', JSON.stringify(this.state.userId))}
+          />
+          <div className="mx-3">
+            <h6 className="mb-0 text-black font-weight-bold">
+              {this.state.name}{" "}
+            </h6>
 
-          {/* {this.state.searchWord} */}
+            <small className="text-muted">@{this.state.username} </small>
+          </div>
         </div>
-      );
-    } else return null;
+      </Link>
+    );
+    // } else return null;
   };
 
   toggleModal = (state) => {
@@ -306,22 +348,22 @@ class UserNavbar extends React.Component {
   renderSearchBar = () => {
     const { t } = this.props;
     return (
-      <InputGroup className="input-group-alternative">
-        <InputGroupAddon addonType="prepend">
-          <InputGroupText>
-            <i className="ni ni-zoom-split-in" />
-          </InputGroupText>
-        </InputGroupAddon>
-        <input
-          className="form-control-alternative"
-          placeholder={t("Search")}
-          type="text"
-          // onChange={this.textInput}
-          // value={this.state.searchWord}
-          onChange={(word) => this.textInput(word)}
-          // value={this.state.searchWord}
-        />
-      </InputGroup>
+      <>
+        <InputGroup className="input-group-alternative">
+          <InputGroupAddon addonType="prepend">
+            <InputGroupText>@</InputGroupText>
+          </InputGroupAddon>
+          <input
+            className="form-control-alternative"
+            placeholder={t("Search")}
+            type="text"
+            // onChange={this.textInput}
+            // value={this.state.searchWord}
+            onChange={(word) => this.textInput(word)}
+            // value={this.state.searchWord}
+          />
+        </InputGroup>
+      </>
     );
   };
 
@@ -329,7 +371,20 @@ class UserNavbar extends React.Component {
     logOutUser();
   }
 
+  noUserFound = () => {
+    if (this.state.userChecked) {
+      return (
+        <DropdownMenu aria-labelledby="navbar-success_dropdown_1" right>
+          {" "}
+          <DropdownItem>No user found!</DropdownItem>
+        </DropdownMenu>
+      );
+    }
+  };
+
   componentDidMount() {
+    localStorage.setItem("lang", "en");
+
     this.props.i18n.changeLanguage(this.state.value);
 
     firebase.auth().onAuthStateChanged((user) => {
@@ -340,22 +395,58 @@ class UserNavbar extends React.Component {
         .collection("users")
         .doc(user.uid)
         .onSnapshot((doc) => {
-          const res = doc.data();
-          if (res != null) {
+          if (!doc.exists) {
+            alert("User does not exist");
+            logOutUser();
+            // localStorage.clear();
+          } else {
+            const res = doc.data().profilePic;
+            if (res != null) {
+              this.setState({
+                userProfilePic: res,
+              });
+            }
             this.setState({
-              userProfilePic: res.profilePic,
+              currentName: doc.data().name,
             });
           }
-          // console.log(res);
         });
     });
-    // let headroom = new Headroom(document.getElementById("navbar-main"));
-    // // initialise
-    // headroom.init();
+    let headroom = new Headroom(document.getElementById("navbar-main"));
+    // initialise
+    headroom.init();
     // this.checkReqNotification();
     this.renderUserItem();
     this.renderSearchBar();
+    this.getFriendReq();
   }
+
+  getFriendReq = async () => {
+    let users = [];
+    await this.firestoreUsersRef
+      .doc(this.state.user3)
+      .collection("received")
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((docSnap) => {
+          users.push(docSnap.id);
+        });
+      });
+    this.setState({ friendReq: users });
+  };
+
+  onExiting = () => {
+    this.setState({
+      collapseClasses: "collapsing-out",
+    });
+  };
+
+  onExited = () => {
+    this.setState({
+      collapseClasses: "",
+    });
+  };
+
   render() {
     const { t } = this.props;
     return (
@@ -364,20 +455,32 @@ class UserNavbar extends React.Component {
           className="navbar-main navbar-transparent navbar-light headroom"
           expand="lg"
           id="navbar-main"
-          style={{
-            padding: "0px",
-            // borderBottom: "0.001rem solid black",
-            // backgroundColor: "#f0f3f4",
-          }}
+          style={
+            {
+              // padding: "0px",
+              // borderBottom: "0.001rem solid black",
+              // backgroundColor: "#f0f3f4",
+            }
+          }
         >
           <Container>
             <NavbarBrand className="mr-lg-5" to="/home" tag={Link}>
-              <img alt="..." src={require("assets/img/brand/logo.png")} />
+              <img
+                style={{ height: "45px" }}
+                alt="..."
+                src={require("assets/img/brand/logo.png")}
+              />
             </NavbarBrand>
             <button className="navbar-toggler" id="navbar_global">
               <span className="navbar-toggler-icon" />
             </button>
-            <UncontrolledCollapse navbar toggler="#navbar_global">
+            <UncontrolledCollapse
+              toggler="#navbar_global"
+              navbar
+              className={this.state.collapseClasses}
+              onExiting={this.onExiting}
+              onExited={this.onExited}
+            >
               <div className="navbar-collapse-header">
                 <Row>
                   <Col className="collapse-brand" xs="6">
@@ -397,300 +500,248 @@ class UserNavbar extends React.Component {
                 </Row>
               </div>
 
-              <Nav className="navbar-nav-hover justify-content-center" navbar>
-                {/* <form> */}
-                {this.renderSearchBar()}
-                {this.renderUserItem()}
-                {/* {this.renderDropdown()} */}
-                {/* </form> */}
-              </Nav>
+              {/* <Nav className="navbar-nav-hover align-items-lg-center" navbar>
+        
+        </Nav> */}
 
-              {/* <Nav>
-                <FormGroup>
-        <Label for="exampleSelect">Select</Label>
-        <Input type="select" name="select" id="exampleSelect">
-
-           {this.toggleDropdown}
-          
-        </Input>
-      </FormGroup>
-                </Nav> */}
-
-              <Nav
-                className="navbar-nav-hover align-items-lg-center ml-lg-auto"
-                navbar
-              >
-                <NavItem>
-                  <NavLink
-                    className="nav-link-icon"
-                    to="/home"
-                    tag={Link}
-                    // href="#pablo"
-                    // onClick={(e) => e.preventDefault()}
-                  >
-                    <i
-                      className="ni ni-world"
-                      // style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                      style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
-                    />
-                    <span
-                      className="nav-link-inner--text description"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    >
-                      {t("Wall")}
-                    </span>
-                  </NavLink>
-                </NavItem>
-
-                {/* <NavItem>
-                  <NavLink
-                    className="nav-link-icon"
-                    to="/profile"
-                    tag={Link}
-                    // href="#pablo"
-                    // onClick={(e) => e.preventDefault()}
-                  >
-                    <i
-                      className="ni ni-circle-08"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    />
-                    <span
-                      className="nav-link-inner--text description"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    >
-                      {t("Profile")}
-                    </span>
-                  </NavLink>
-                </NavItem> */}
-
-                {/* <NavItem>
-                  <NavLink className="nav-link-icon" to="/group" tag={Link}>
-                    <i
-                      className="ni ni-planet"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    />
-                    <span
-                      className="nav-link-inner--text description"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    >
-                      {t("Groups")}
-                    </span>
-                  </NavLink>
-                </NavItem> */}
-                {/* <NavItem className="nav-link-icon">
-                  <NavLink
-                    // style={{ color: "red" }}
-                    className="nav-link-icon"
-                    onClick={() => this.toggleModal("notificationModal")}
-                  >
-                    <i
-                      className="ni ni-bell-55"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    />
-
-                    <span
-                      className="nav-link-inner--text description"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    >
-                      {" "}
-                      {t("Follow Requests")}
-                    </span>
-
-                    <Modal
-                      className="modal-dialog-centered modal-danger"
-                      contentClassName="bg-gradient-danger"
-                      isOpen={this.state.notificationModal}
-                      toggle={() => this.toggleModal("notificationModal")}
-                      size="lg"
-                    >
-                      <div className="modal-header"></div>
-                      <Friendreq />
-
-                  
-
-                      <div className="modal-footer">
-                        <Button
-                          className="text-white ml-auto"
-                          color="link"
-                          data-dismiss="modal"
-                          type="button"
-                          onClick={() => this.toggleModal("notificationModal")}
-                        >
-                          {t("Close")}
-                        </Button>
-                      </div>
-                    </Modal>
-                  </NavLink>
-                </NavItem> */}
-
-                <UncontrolledDropdown nav>
-                  <DropdownToggle nav className="nav-link-icon">
-                    <i
-                      className="ni ni-bell-55"
-                      style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
-                    />
-
-                    <span
-                      className="nav-link-inner--text description"
-                      style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
-                    >
-                      {" "}
-                      {t("Follow Requests")}
-                    </span>
-                  </DropdownToggle>
-                  <DropdownMenu
-                    aria-labelledby="navbar-success_dropdown_1"
-                    right
-                  >
-                    <DropdownItem
-                      style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
-                    >
-                      <Friendreq />
-                    </DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-
-                {/* <NavItem>
-                    <NavLink className="nav-link-icon" to="/heatmap" tag={Link}>
-                      <i className="ni ni-pin-3" />
-                      <span className="nav-link-inner--text description">
-                        Heatmaps
-                      </span>
-                    </NavLink>
-                  </NavItem> */}
-
-                {/* <NavItem className="nav-link-icon" style={{ color: "white" }}>
-                  <FormControl style={{ color: "white" }}>
-
-                    <Select
-                      labelId="demo-controlled-open-select-label"
-                      id="demo-simple-open-select"
-                      value={this.state.value}
-                      onChange={this.handleChange}
-                      displayEmpty
-                      inputProps={{ "aria-label": "Without label" }}
-                      style={{ color: "white" }}
-                    >
-                      <MenuItem value="en">English</MenuItem>
-                      <MenuItem value="esp">Spanish</MenuItem>
-                      <MenuItem value="fre">French</MenuItem>
-                      <MenuItem value="ger">German</MenuItem>
-                      <MenuItem value="jap">Japanese</MenuItem>
-                    </Select>
-                  </FormControl>
-                </NavItem> */}
-
-                <UncontrolledDropdown nav>
-                  <DropdownToggle
-                    nav
-                    className="nav-link-icon"
-                    style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}>
-                   <i className="fa fa-language" aria-hidden="true"></i>
-                  </DropdownToggle>
+              <UncontrolledDropdown>
+                <DropdownToggle
+                  nav
+                  className="nav-link-icon"
+                  // style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
+                >
+                  {this.renderSearchBar()}
+                </DropdownToggle>
+                {this.state.found ? (
                   <DropdownMenu
                     aria-labelledby="navbar-success_dropdown_1"
                     right
                   >
                     {" "}
-                    <DropdownItem onClick={this.handleChange} value="en">
-                      English
-                    </DropdownItem>
-                    <DropdownItem onClick={this.handleChange} value="esp">
-                      Spanish
-                    </DropdownItem>
-                    <DropdownItem onClick={this.handleChange} value="fre">
-                      French
-                    </DropdownItem>
-                    <DropdownItem onClick={this.handleChange} value="ger">
-                      German
-                    </DropdownItem>
-                    <DropdownItem onClick={this.handleChange} value="jap">
-                      Japanese
-                    </DropdownItem>
+                    <DropdownItem>{this.renderUserItem()}</DropdownItem>
                   </DropdownMenu>
-                </UncontrolledDropdown>
+                ) : (
+                  this.noUserFound()
+                )}
+              </UncontrolledDropdown>
 
-                <UncontrolledDropdown nav>
-                  <DropdownToggle
-                    nav
-                    className="nav-link-icon"
-                    to="/profile"
-                    tag={Link}
-                  >
+              <Nav
+                className="navbar-nav-hover align-items-lg-center ml-lg-auto"
+                navbar
+              >
+              </Nav>
+
+              {/* <NavItem> */}
+
+              <div style={{ display: "block" }}>
+                <NavLink
+                  className="nav-link-icon"
+                  to="/home"
+                  tag={Link}
+                  id="tooltip333589074"
+                  style={{ padding: "10px 10px" }}
+                >
+                  {/* <i
+                        className="ni ni-world"
+                      /> */}
+
+                  <IconButton aria-label="show feed" color="inherit">
                     <img
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        display: "block",
-                        objectFit: "cover",
-                        border: "1",
-                      }}
-                      className="rounded-circle img-responsive"
-                      src={
-                        this.state.userProfilePic
-                          ? this.state.userProfilePic
-                          : 
-                          
-                          require('assets/img/icons/user/user1.png')
-
-                          // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg"
-                      }
+                      src={require("assets/img/icons/48px/world.svg")}
+                      width="21px"
+                      height="21px"
                     />
+                  </IconButton>
+
+                  <span className="nav-link-inner--text d-lg-none ml-2 description">
+                    {t("Wall")}
+                    <UncontrolledTooltip delay={0} target="tooltip333589074">
+                      {t("Wall")}
+                    </UncontrolledTooltip>
+                  </span>
+                </NavLink>
+              </div>
+
+              <div style={{ display: "block" }}>
+                <UncontrolledDropdown nav id="tooltip333589072">
+                  <DropdownToggle nav style={{ padding: "10px 8px" }}>
+                    <IconButton aria-label="follow requests" color="inherit">
+                      {this.state.friendReq.length > 0 ? (
+                        <Badge
+                          badgeContent={this.state.friendReq.length}
+                          color="secondary"
+                        >
+                          {/* <i className="ni ni-bell-55" /> */}
+                          <img
+                            src={require("assets/img/icons/48px/bell-53.svg")}
+                            width="20px"
+                            height="20px"
+                          />
+                        </Badge>
+                      ) : (
+                        // <i className="ni ni-bell-55" />
+                        <img
+                          src={require("assets/img/icons/48px/bell-53.svg")}
+                          width="20px"
+                          height="20px"
+                        />
+                      )}
+                    </IconButton>
+                    <span className="nav-link-inner--text d-lg-none ml-2 description">
+                      {t("Follow requests")}
+                      <UncontrolledTooltip delay={0} target="tooltip333589072">
+                        {t("Follow requests")}
+                      </UncontrolledTooltip>
+                    </span>
+                    {/* <span
+                    className="nav-link-inner--text description"
+                    style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
+                    >
+                    {" "}
+                    {t("Follow Requests")}
+                  </span> */}
                   </DropdownToggle>
                   <DropdownMenu
                     aria-labelledby="navbar-success_dropdown_1"
                     right
                   >
-                    {/* <DropdownItem
-                        to="/group"
-                        tag={Link}
-                        // onClick={this.logOut}
-                      >
-                        <i className="ni ni-planet" />
-                        Groups
-                      </DropdownItem> */}
+                    <DropdownItem
+                    // style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
+                    >
+                      <Friendreq />
+                    </DropdownItem>
+                  </DropdownMenu>
+                </UncontrolledDropdown>
+              </div>
+
+              {/* </NavItem> */}
+
+              <div style={{ display: "block" }}>
+                <UncontrolledDropdown nav id="tooltip333589070">
+                  <DropdownToggle nav style={{ padding: "10px 10px" }}>
+                    <IconButton aria-label="user profile" color="inherit">
+                      <img
+                        style={{
+                          // display: "block",
+                          objectFit: "cover",
+                        }}
+                        width="21"
+                        height="21"
+                        className="rounded-circle img-responsive"
+                        src={
+                          this.state.userProfilePic
+                            ? this.state.userProfilePic
+                            : require("assets/img/icons/user/user1.png")
+                        }
+                      />
+                    </IconButton>
+                    <span className="nav-link-inner--text d-lg-none ml-2 description">
+                      {t("My Profile")}
+                      <UncontrolledTooltip delay={0} target="tooltip333589070">
+                        {t("My profile")}
+                      </UncontrolledTooltip>
+                    </span>
+                  </DropdownToggle>
+
+                  <DropdownMenu
+                    aria-labelledby="navbar-success_dropdown_1"
+                    right
+                  >
+                    <DropdownItem to="/profile" tag={Link}>
+                      <div className="d-flex align-items-center">
+                        <img
+                          className="avatar"
+                          width="45"
+                          src={
+                            this.state.userProfilePic
+                              ? this.state.userProfilePic
+                              : require("assets/img/icons/user/user1.png")
+                          }
+                          alt=""
+                        />
+                        <div className="mx-3">
+                          <h6 className="mb-0 text-black font-weight-bold">
+                            {this.state.currentName
+                              ? this.state.currentName
+                              : "Name"}
+                          </h6>
+
+                          <small className="text-muted">My Profile </small>
+                        </div>
+                      </div>
+                    </DropdownItem>
 
                     <DropdownItem
-                      to="/edit-profile"
-                      tag={Link}
-                      style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
+                      onClick={() => this.toggleModal("languageModal")}
                     >
+                      <i className="fa fa-language" aria-hidden="true"></i>
+                      {t("Language")}
+                    </DropdownItem>
+
+                    <DropdownItem to="/edit-profile" tag={Link}>
                       <i className="ni ni-settings" />
                       {t("Edit Profile")}
                     </DropdownItem>
 
-                    <DropdownItem
-                      to="/login"
-                      tag={Link}
-                      onClick={this.logOut}
-                      style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
-                    >
+                    <DropdownItem to="/login" tag={Link} onClick={this.logOut}>
                       <i className="ni ni-button-power" />
                       {t("Log Out")}
                     </DropdownItem>
-
-                    {/* <DropdownItem
-                        //   to="/timeline"
-                        onClick={this.logOut}
-                      >
-                       <Button
-                      className="btn-neutral btn-icon"
-                      color="default"
-                      href="https://www.creative-tim.com/product/argon-design-system-react?ref=adsr-navbar"
-                      target="_blank"
-                    >
-                      <span className="btn-inner--icon">
-                      <i className="ni ni-fat-remove" />
-                      </span>
-                      <span className="nav-link-inner--text ml-1">Log Out</span>
-                    </Button>
-                      </DropdownItem> */}
                   </DropdownMenu>
                 </UncontrolledDropdown>
-              </Nav>
+              </div>
             </UncontrolledCollapse>
           </Container>
         </Navbar>
+        <Modal
+          size="sm"
+          isOpen={this.state.languageModal}
+          toggle={() => this.toggleModal("languageModal")}
+          className="fluid"
+        >
+          <Row>
+            <Col>
+              <Card
+                style={{
+                  padding: "20px",
+                  fontFamily: "system-ui",
+                  fontWeight: "normal",
+                }}
+              >
+                <h4>Change Language</h4>
+
+                <FormGroup tag="fieldset">
+                  {/* <legend>Radio Buttons</legend> */}
+                  <FormGroup check onClick={this.handleChange}>
+                    <Label check>
+                      <Input type="radio" name="lang" value="en" /> English
+                    </Label>
+                  </FormGroup>
+                  <FormGroup check onClick={this.handleChange}>
+                    <Label check>
+                      <Input type="radio" name="lang" value="esp" /> Spanish
+                    </Label>
+                  </FormGroup>
+                  <FormGroup check onClick={this.handleChange}>
+                    <Label check>
+                      <Input type="radio" name="lang" value="fre" /> French
+                    </Label>
+                  </FormGroup>
+                  <FormGroup check onClick={this.handleChange}>
+                    <Label check>
+                      <Input type="radio" name="lang" value="ger" /> German
+                    </Label>
+                  </FormGroup>
+                  <FormGroup check onClick={this.handleChange}>
+                    <Label check>
+                      <Input type="radio" name="lang" value="jap" /> Japanese
+                    </Label>
+                  </FormGroup>
+                </FormGroup>
+              </Card>
+            </Col>
+          </Row>
+        </Modal>
       </>
     );
   }

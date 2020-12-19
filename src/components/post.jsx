@@ -41,6 +41,7 @@ import CommentItem from "../components/CommentItem";
 
 class Post extends React.Component {
   user = firebase.auth().currentUser;
+  ismounted = false;
 
   state = {
     user: firebase.auth().currentUser,
@@ -52,9 +53,8 @@ class Post extends React.Component {
     commentsArray: [],
     getComments: false,
     // openCommentInput: false,
-    profilePic:
-    require('assets/img/icons/user/user1.png'),
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
+    profilePic: require("assets/img/icons/user/user1.png"),
+    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
     commentInput: "",
     currentUsername: "",
     defaultModal: false,
@@ -72,11 +72,15 @@ class Post extends React.Component {
   firestoreUsersRef = firebase.firestore().collection("users");
 
   componentWillUnmount = () => {
+    this.ismounted = false;
+    clearInterval(CommentItem);
+    // clearInterval(this.getCommentData());
     this.getProfilePic();
+    // console.warn("ASIM UNMOINT POST");
   };
 
-
   componentDidMount = () => {
+    this.ismounted = true;
     this.renderAvatar();
     this.getProfilePic();
     const { item } = this.props;
@@ -95,6 +99,7 @@ class Post extends React.Component {
       });
     // this.renderComments();
     this.getCommentData();
+    this.getCurrentUsername();
 
     // const { item2 } = this.props;
     //     console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
@@ -116,29 +121,122 @@ class Post extends React.Component {
       });
   };
 
-  // this.renderComments();
-  //   this.getCommentData();
+  componentDidUpdate(prevProps, prevState) {
+    this.ismounted = true;
+    const { item } = this.props;
 
-  //   // const { item2 } = this.props;
-  //   //     console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-  //   // // console.log(new Date())
-  //   // console.log(props.post)
-  //   // console.log("hahahaha" + item.image);
+      if (prevProps.item.postId !== item.postId) {
+        
+        this.getCommentData();
+        this.toggleLike();
+        this.firestorePostRef
+        .doc(item.postId)
+        .collection("likes")
+        .get()
+        .then((querySnapshot) => {
+          if (querySnapshot.size > 0) {
+            this.setState({ likes: querySnapshot.size });
+          }
+        });
+  
+      this.firestorePostRef
+        .doc(item.postId)
+        .collection("likes")
+        .doc(this.state.newLikeDocId)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.exists) {
+            this.setState({ ifLiked: true });
+          } else {
+            this.setState({ ifLiked: false });
+          }
+        });
+       }
+  
+    
+          if (prevState.commentsArray !== this.state.commentsArray) {
+            this.getCommentData();
+    
+      }
+    
 
-  //   this.firestorePostRef
-  //     .doc(item.postId)
-  //     .collection("likes")
-  //     .doc(this.state.newLikeDocId)
-  //     .get()
-  //     .then((snapshot) => {
-  //       if (snapshot.exists) {
-  //         this.setState({ ifLiked: true });
-  //       } else {
-  //         this.setState({ ifLiked: false });
-  //       }
-  //     });
 
-  // }
+    // this.renderAvatar();
+    // this.getProfilePic();
+    // const { item } = this.props;
+
+    // // this.setState({userId: item.userId});
+
+    // // console.log("state userId: " + this.state.userId);
+    // this.firestorePostRef
+    //   .doc(item.postId)
+    //   .collection("likes")
+    //   .get()
+    //   .then((querySnapshot) => {
+    //     if (querySnapshot.size > 0) {
+    //       this.setState({ likes: querySnapshot.size });
+    //     }
+    //   });
+    // // this.renderComments();
+    // this.getCommentData();
+
+    // // const { item2 } = this.props;
+    // //     console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    // // // console.log(new Date())
+    // // console.log(props.post)
+    // // console.log("hahahaha" + item.image);
+
+    // this.firestorePostRef
+    //   .doc(item.postId)
+    //   .collection("likes")
+    //   .doc(this.state.newLikeDocId)
+    //   .get()
+    //   .then((snapshot) => {
+    //     if (snapshot.exists) {
+    //       this.setState({ ifLiked: true });
+    //     } else {
+    //       this.setState({ ifLiked: false });
+    //     }
+    //   });
+    // // if(prevState.userId!==this.state.userId){
+    // //   this.getCommentData();
+    // // }
+    // // if(prevProps.item !== this.props){
+    // //   this.renderAvatar();
+    // //   this.getProfilePic();
+    // //   const { item } = this.props;
+    // //   // this.setState({userId: item.userId});
+    // //   // console.log("state userId: " + this.state.userId);
+    // //   this.firestorePostRef
+    // //     .doc(item.postId)
+    // //     .collection("likes")
+    // //     .get()
+    // //     .then((querySnapshot) => {
+    // //       if (querySnapshot.size > 0) {
+    // //         this.setState({ likes: querySnapshot.size });
+    // //       }
+    // //     });
+    // //   // this.renderComments();
+    // //   this.getCommentData();
+    // //   // const { item2 } = this.props;
+    // //   //     console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    // //   // // console.log(new Date())
+    // //   // console.log(props.post)
+    // //   // console.log("hahahaha" + item.image);
+    // //   this.firestorePostRef
+    // //     .doc(item.postId)
+    // //     .collection("likes")
+    // //     .doc(this.state.newLikeDocId)
+    // //     .get()
+    // //     .then((snapshot) => {
+    // //       if (snapshot.exists) {
+    // //         this.setState({ ifLiked: true });
+    // //       } else {
+    // //         this.setState({ ifLiked: false });
+    // //       }
+    // //     });
+    // }
+  }
 
   toggleModal = (state) => {
     this.setState({
@@ -168,29 +266,19 @@ class Post extends React.Component {
     //   });
   };
 
-  getProfilePic = (friendId) => {
-    const firebaseProfilePic = firebase
-      .storage()
-      .ref()
-      .child("profilePics/(" + this.user.uid + ")ProfilePic");
-    firebaseProfilePic
-      .getDownloadURL()
-      .then((url) => {
-        // Inserting into an State and local storage incase new device:
-        this.setState({ profilePic: url });
-      })
-      .catch((error) => {
-        // Handle any errors
-        switch (error.code) {
-          case "storage/object-not-found":
-            // File doesn't exist
-            this.setState({
-              profilePic:
-              require('assets/img/icons/user/user1.png'),                });
-            break;
-          default:
+  getProfilePic = () => {
+    firebase
+      .firestore()
+      .collection("users")
+      .doc(this.user.uid)
+      .onSnapshot((doc) => {
+        const res = doc.data().profilePic;
+
+        if (res != null) {
+          this.setState({
+            profilePic: res ? res : require("assets/img/icons/user/user1.png"),
+          });
         }
-        //   alert(error);
       });
   };
 
@@ -199,12 +287,37 @@ class Post extends React.Component {
     const noOfLikes = this.state.likes;
     const { item } = this.props;
     if (!this.state.ifLiked) {
+      // this.firestoreUsersRef
+      // .doc(this.user.uid)
+      // .get()
+      // .then((document) => {
+      //   this.setState({ currentUsername: document.data().username });
+      //   console.log(this.state.currentUsername)
+      // });
+
+
+
       this.firestorePostRef
         .doc(item.postId)
         .collection("likes")
         .doc(this.state.newLikeDocId)
         .set({
           userId: this.user.uid,
+        }) && 
+        firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.userId)
+        .collection("userNotifications")     
+        .doc("("+item.postId+")like")
+        .set({
+          type:"like",
+          content: "liked your post",
+          postId: item.postId,
+          postUserId: item.userId,
+          user: this.state.currentUsername,
+          userId: this.user.uid,
+          time: moment().valueOf().toString(),
         })
         .then(() => {
           this.state.likes = noOfLikes + 1;
@@ -215,7 +328,15 @@ class Post extends React.Component {
         .doc(item.postId)
         .collection("likes")
         .doc(this.state.newLikeDocId)
-        .delete()
+        .delete() &&
+
+        firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.userId)
+        .collection("userNotifications")     
+        .doc("("+item.postId+")like")
+        .delete() 
         .then(() => {
           if (noOfLikes === 0) this.state.likes = 0;
           this.state.likes = noOfLikes - 1;
@@ -242,11 +363,27 @@ class Post extends React.Component {
     let myuserId = this.user.uid;
 
     if (myComment != "") {
+      // firebase
+      //   .firestore()
+      //   .collection("comments")
+      //   .doc(item.postId)
+      //   .collection("userComments")
+      //   .doc(timestamp)
+      //   .set({
+      //     commentId: timestamp,
+      //     username: myusername,
+      //     userId: myuserId,
+      //     comment: myComment,
+      //     timestamp: timestamp,
+      //   })
+
       firebase
         .firestore()
-        .collection("comments")
+        .collection("posts")
+        .doc(item.userId)
+        .collection("userPosts")
         .doc(item.postId)
-        .collection("userComments")
+        .collection("comments")
         .doc(timestamp)
         .set({
           commentId: timestamp,
@@ -254,6 +391,22 @@ class Post extends React.Component {
           userId: myuserId,
           comment: myComment,
           timestamp: timestamp,
+        }) &&
+
+        firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.userId)
+        .collection("userNotifications")     
+        .doc(timestamp)
+        .set({
+          type:"comment",
+          content: "commented on your post",
+          postId: item.postId,
+          postUserId: item.userId,
+          user: this.state.currentUsername,
+          userId: this.user.uid,
+          time: moment().valueOf().toString(),
         })
         .then(() => {
           this.setState({ commentInput: "" });
@@ -264,94 +417,36 @@ class Post extends React.Component {
           console.log(err);
         });
     }
-
-    // if (myComment != "") {
-    //   firebase
-    //     .firestore()
-    //     .collection("comments")
-    //     .doc(item.postId)
-    //     .collection("userComments")
-    //     .add({})
-    //     .then((comment) => {
-    //       firebase
-    //         .firestore()
-    //         .collection("comments")
-    //         .doc(item.postId)
-    //         .collection("userComments")
-    //         .doc(comment.id)
-    //         .set({
-    //           commentId: comment.id,
-    //           username: myusername,
-    //           userId: myuserId,
-    //           comment: myComment,
-    //           timestamp: timestamp
-    //         })
-    //         .then(() => {
-    //           this.setState({ commentInput: "" });
-
-    //           this.getCommentData();
-    //         });
-    //     })
-    //     .catch((err) => {
-    //       console.log(err);
-    //     });
-    // }
   };
 
-  getCommentData() {
+  getCommentData= async () => {
     let commArray = [];
     const { item } = this.props;
-    // this.firestorePostRef.doc(this.state.userId).collection("userPosts").doc(this.props.item.postId).collection("comments").
-    //POST K hisab sa lao
-
-
     // firebase
     //   .firestore()
     //   .collection("comments")
     //   .doc(item.postId)
-    //   .collection("userComments").on('value', function(snapshot) {
-    //   updateStarCount(postElement, snapshot.val());
-    // });
-
-
-    // var commentsRef =   firebase
-    //   .firestore()
-    //   .collection("comments")
-    //   .doc(item.postId)
-    //   .collection("userComments");
-
-    // commentsRef.on('child_added', function(data) {
-    //   addCommentElement(postElement, data.key, data.val().text, data.val().author);
-    // });
-    
-    // commentsRef.on('child_changed', function(data) {
-    //   setCommentValues(postElement, data.key, data.val().text, data.val().author);
-    // });
-    
-    // commentsRef.on('child_removed', function(data) {
-    //   deleteComment(postElement, data.key);
-    // });
-
+    //   .collection("userComments")
 
     firebase
       .firestore()
-      .collection("comments")
+      .collection("posts")
+      .doc(item.userId)
+      .collection("userPosts")
       .doc(item.postId)
-      .collection("userComments")
+      .collection("comments")
       .get()
       .then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           let article = {
             commentData: doc.data(),
             postId: item.postId,
+            authorId: item.userId
           };
 
           commArray.push(article);
-
-          // console.log(doc.data()+commArray);
         });
         this.setState({ commentsArray: commArray });
-        // console.log(this.state.commentsArray)
       })
       .catch((err) => {
         console.log(err);
@@ -360,10 +455,8 @@ class Post extends React.Component {
 
   renderAvatar() {
     const { item } = this.props;
-
-    // if (!item.avatar) return null;
     return (
-              <Link to={`/friend/${item.userId}`}>
+      <Link to={`/friend/${item.userId}`}>
         <img
           style={{
             width: "55px",
@@ -372,9 +465,7 @@ class Post extends React.Component {
             objectFit: "cover",
           }}
           className="rounded-circle img-responsive"
-          // className="avatar"
           src={item.profilePic}
-          // src={item.avatar}
         />
       </Link>
     );
@@ -382,9 +473,7 @@ class Post extends React.Component {
 
   togglePage = () => {
     // document.body.style.color = "red";
-    // const frndId = this.state.userId;
     const { item } = this.props;
-    // if (!this.state.ifLiked) {
     this.firestorePostRef
       .doc(item.postId)
       .collection("likes")
@@ -400,78 +489,9 @@ class Post extends React.Component {
   };
 
   handleChange = (e) => {
-    // this.setState({
-    //   [e.target.id]: e.target.value
-    // });
     this.setState({ commentInput: e.target.value });
     this.setState({ username: this.getCurrentUsername() });
   };
-
-  // commentFunc = () => (
-  //   <>
-  //     {/* <Button   color="outline-info"
-  //           size="sm"
-  //           className="mr-4"
-  //          id="toggler" style={{ marginBottom: '1rem' }}>
-  //       Comment
-  //     </Button> */}
-  //     <UncontrolledCollapse toggler="#toggler">
-  //       <Card>
-  //         <Input
-  //           // className="form-control-alternative"
-  //           // defaultValue=""
-  //           id="commentInput"
-  //           placeholder="Add a comment!"
-  //           type="text"
-  //           onChange={this.handleChange}
-  //           // onChange={word => this.setState({commentInput: word})}
-  //           value={this.state.commentInput}
-  //         />
-  //         <Button type="submit" onClick={this.postComment}>
-  //           Comment
-  //         </Button>
-  //       </Card>
-  //     </UncontrolledCollapse>
-  //   </>
-  // );
-
-  //   renderComments = () =>{
-
-  //     // const {navigation} = this.props;
-  //     {this.state.commentsArray.map((comment, postindex) => (
-  //       <CommentItem item={comment} key={postindex} />
-
-  //     ))}
-
-  //     if(this.state.commentsArray.length){
-  //       console.log(this.state.commentsArray);
-
-  //     return (
-  //       <div>
-
-  // {this.state.commentsArray.map((comment, postindex) => (
-  //                   <CommentItem item={comment} key={postindex} />
-
-  //                 ))}
-
-  //         {/* <FlatList
-  //         data={this.state.commentsArray}
-  //         renderItem={({ item}) => (
-  //           <CommentItem
-  //             updateComments={this.getCommentData}
-  //             comment = {item}
-  //             postId = {this.props.item.postId}
-  //             userId = {this.state.userId}
-  //             // navigation = {navigation}
-  //             />
-  //             )}
-  //             keyExtractor={item => item.commentId}
-  //         /> */}
-  //       </div>
-
-  //     )
-  //   }
-  //   }
 
   returnPostId() {
     const { item } = this.props;
@@ -519,15 +539,25 @@ class Post extends React.Component {
     const { item } = this.props;
     return (
       <>
-        <div style={{ 
-          // padding: "16px",
-           borderRadius: "20px" }}>
+        <div
+          style={{
+            // padding: "16px",
+            borderRadius: "20px",
+            marginBottom: "25px",
+          }}
+          key={item.time}
+        >
           <div
             className="shadow"
+            // style={{
+            //   // padding: "16px",
+            //   borderRadius: "20px",
+            // }}
             style={{
-              // padding: "16px",
-              borderRadius: "20px",
+              borderTopLeftRadius: "50px",
+              borderTopRightRadius: "50px",
             }}
+            key={item.time}
           >
             {/* <div className="card-header">
                 <h5 className="h3 mb-0">Timeline</h5>
@@ -535,16 +565,27 @@ class Post extends React.Component {
             <div
               className="card-header d-flex align-items-center "
               // style={{  MozBorderRadiusTopleft:"20px",MozBorderRadiusTopright:"20px"  }}
+              style={{
+                borderTopLeftRadius: "50px",
+                borderTopRightRadius: "50px",
+              }}
               // onClick={this.togglePage()}
+              key={item.time}
             >
               <div
                 className="d-flex align-items-center"
                 // onClick={() => {this.togglePage();}}
                 // onClick={() => {this.togglePage();}}
                 onMouseOver={() => this.onHover()}
-
+                key={item.time}
+                // href="javascript:;"
               >
-        
+                {/* <i
+                        href="javascript:;"
+                        onClick={this.togglePage()}
+                        // onMouseOver={this.mOver()}
+                        // id={this.returnPostId()}
+                      > */}
                 {this.renderAvatar()}
                 {/* {this.togglePage()} */}
 
@@ -557,7 +598,11 @@ class Post extends React.Component {
                       >
 
                        <PopoverBody>
-
+    
+<a href="javascript:;">
+<Link to="friendspage">View profile</Link>
+                          
+</a>
                         </PopoverBody>
                       </UncontrolledPopover> */}
 
@@ -570,12 +615,11 @@ class Post extends React.Component {
                     {/* {"     @"} {item.username} */}
                     {"on "}
                     {moment(Number(item.timeStamp)).format("dddd")}
+                    {/* {moment(Number(item.timeStamp)).format("ll")} */}
                   </small>
                   <small className="opacity-60">
                     <small className="d-block text-muted">
-                      {/* {moment(Number(item.timeStamp.toDate())).format(
-                              "ll"
-                            )} */}
+                      {moment(Number(item.timeStamp.toDate())).format("ll")}
                       {/* {item.timeStamp} */}
                     </small>
                   </small>
@@ -599,8 +643,10 @@ class Post extends React.Component {
               className="justify-content-between align-items-center"
               style={{
                 // backgroundColor: "#F7F7F7",
-                backgroundColor:"rgba(var(--b3f,250,250,250),1)"
+                backgroundColor: "rgba(var(--b3f,250,250,250),1)",
                 //  MozBorderRadiusBottomleft:"20px",MozBorderRadiusBottomright:"20px"
+                //    borderBottomLeftRadius: "50px",
+                // borderBottomRightRadius: "50px",
               }}
             >
               <h6
@@ -626,9 +672,9 @@ class Post extends React.Component {
                   zoom: "90%",
                 }}
               />
-              <div className="row align-items-center my-3 pb-3 border-bottom">
+              <div className="row align-items-center  ">
                 <div className="col-sm-12">
-                  <div className="icon-actions">
+                  <div className="icon-actions my-3 pb-3 border-bottom">
                     {this.state.ifLiked === true ? (
                       <Favorite color="error" onClick={this.toggleLike} />
                     ) : (
@@ -695,6 +741,10 @@ class Post extends React.Component {
                 </div>
               </div>
             </div>
+            <div>
+              
+            </div>
+
           </div>
         </div>
 
@@ -741,9 +791,5 @@ class Post extends React.Component {
     );
   }
 }
-
-// Post.propTypes = {
-//   item: PropTypes.object
-// };
 
 export default Post;

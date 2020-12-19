@@ -4,46 +4,33 @@ import * as firebase from "firebase";
 
 const db = firebase.firestore();
 const auth = firebase.auth();
+// const messaging = firebase.messaging();
 
-export const CreateUser = (username, name, email, password, bio) => {
-   auth.createUserWithEmailAndPassword(email, password).then((cred) => {
-    db.collection("users")
-      .doc(cred.user.uid)
-      .set({
-        username: username.toLowerCase(),
-        name: name,
-        email: email,
-        password: password,
-        bio: bio,
-        publicProfile: true,
-        emailAlert: true,
-        // profilePic: profilePic,
-      });
+// messaging.getToken({vapidKey: "BDWVpEf0UwqgZOMqaEPCm5K05kmeC_UQVH1qp2HSIpOZR1ihy2X2q8dikWDS7wp3dfpPZ1zKD51hHtAFjk2rZrw"});
+
+export const CreateUser = async (username, name, email, password, bio) => {
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    db.collection("users").doc(cred.user.uid).set({
+      username: username.toLowerCase(),
+      name: name,
+      email: email,
+      password: password,
+      bio: bio,
+      publicProfile: true,
+      emailAlert: true,
+    });
     localStorage.setItem(
       "uid",
       JSON.stringify(firebase.auth().currentUser.uid)
     );
     localStorage.setItem("user", JSON.stringify(firebase.auth().currentUser));
-    // alert(localStorage.getItem("uid"));
-    console.log(cred);
-  })
-  .catch((err) => {
+    localStorage.setItem("lang", "en");
+  } catch (err) {
     // alert(err);
     console.log(err);
-  });
-
-  // }
-  // else{
-  //   // catch((err) => {
-  //     alert("Error!");
-
-  //   // })
-  // }
+  }
 };
-
-
-
-
 
 export const SigninUser = (email, password) => {
   return auth.signInWithEmailAndPassword(email, password).then((cred) => {
@@ -216,3 +203,4 @@ export const EditUser = (
 //       return true;
 //     });
 // };
+// timestamp: Firestore.FieldValue.serverTimestamp(),
