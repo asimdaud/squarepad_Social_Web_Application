@@ -543,14 +543,8 @@ class Post extends React.Component {
                 // onClick={() => {this.togglePage();}}
                 onMouseOver={() => this.onHover()}
 
-                // href="javascript:;"
               >
-                {/* <i
-                        href="javascript:;"
-                        onClick={this.togglePage()}
-                        // onMouseOver={this.mOver()}
-                        // id={this.returnPostId()}
-                      > */}
+        
                 {this.renderAvatar()}
                 {/* {this.togglePage()} */}
 
@@ -563,11 +557,7 @@ class Post extends React.Component {
                       >
 
                        <PopoverBody>
-    
-<a href="javascript:;">
-<Link to="friendspage">View profile</Link>
-                          
-</a>
+
                         </PopoverBody>
                       </UncontrolledPopover> */}
 

@@ -211,7 +211,9 @@ class UserNavbar extends React.Component {
     // const { item } = this.props;
     if (this.state.found) {
       return (
-        <div onMouseOver={() => this.onHover()} href="javascript:;">
+        <div onMouseOver={() => this.onHover()} 
+        // href="javascript:;"
+        >
           {this.renderAvatar()}
 
           {/* {this.state.searchWord} */}
@@ -583,7 +585,7 @@ class UserNavbar extends React.Component {
                     nav
                     className="nav-link-icon"
                     style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}>
-                   <i class="fa fa-language" aria-hidden="true"></i>
+                   <i className="fa fa-language" aria-hidden="true"></i>
                   </DropdownToggle>
                   <DropdownMenu
                     aria-labelledby="navbar-success_dropdown_1"

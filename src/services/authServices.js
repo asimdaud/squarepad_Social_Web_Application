@@ -10,7 +10,7 @@ export const CreateUser = (username, name, email, password, bio) => {
     db.collection("users")
       .doc(cred.user.uid)
       .set({
-        username: username,
+        username: username.toLowerCase(),
         name: name,
         email: email,
         password: password,
@@ -127,7 +127,7 @@ export const EditUser = (
     .currentUser.updateProfile(
       // updateProfile
       {
-        username: username,
+        username: username.toLowerCase(),
         name: name,
         bio: bio,
         publicProfile: publicProfile,
@@ -137,7 +137,7 @@ export const EditUser = (
     )
     .then((cred) => {
       db.collection("users").doc(auth.currentUser.uid).update({
-        username: username,
+        username: username.toLowerCase(),
         name: name,
         bio: bio,
         publicProfile: publicProfile,

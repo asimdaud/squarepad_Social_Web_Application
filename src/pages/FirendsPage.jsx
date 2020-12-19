@@ -867,9 +867,9 @@ Fravatar = doc.data().profilePic;
                                   </Badge>
                                 </h4>
 
-                                <a href="/friend" class="description link">
+                                {/* <a href="/friend" className="description link">
                                   {t("View profile")}
-                                </a>
+                                </a> */}
                               </div>
                             </div>
                           </div>
@@ -952,9 +952,9 @@ Fravatar = doc.data().profilePic;
                                 {/* <p className="description" onCLick={() => {}}>
                                   View profile
                                 </p> */}
-                                <a href="/friend" class="description link">
+                                {/* <a href="/friend" className="description link">
                                   {t("View profile")}
-                                </a>
+                                </a> */}
                               </div>
                             </div>
                           </div>

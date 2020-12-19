@@ -126,7 +126,7 @@ class chat extends React.Component {
 
   componentDidUpdate(prevProps, prevState) {
 
-    if (prevProps.inputValue !== this.state.inputValue) {
+    if (prevState.inputValue !== this.state.inputValue) {
       this.getFriendId().then(() => {
 this.fetchGifs();
 this.scrollToBottom();

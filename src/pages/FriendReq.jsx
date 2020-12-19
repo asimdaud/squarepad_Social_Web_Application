@@ -198,7 +198,7 @@ avatar = doc.data().profilePic;
                     <Col className="justify-content-center">
                       {/* <div className="card-profile-stats d-flex justify-content-center"> */}
 
-                      <a href="/friend" class="description link">
+                      <a href="/friend" className="description link">
                         {user.name}
                       </a>
                       <p className="mb-0 text-black font-weight-bold small">

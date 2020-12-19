@@ -63,7 +63,7 @@ ReactDOM.render(
         render={(props) => <Timeline {...props} />}
         exact
       />
-      <Redirect to="/profile" />
+      {/* <Redirect to="/profile" /> */}
     </Switch>
   </BrowserRouter>
   </I18nextProvider>,
