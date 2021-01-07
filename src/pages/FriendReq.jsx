@@ -127,12 +127,16 @@ class FriendReq extends React.Component {
         .collection("userNotifications")
         .doc(this.state.currentUserUid)
         .set({
-          type: "requestAccepted",
+          userId: this.state.currentUserUid,
+          username: this.state.currentUsername,
+          avatar: this.state.currentUserUid,
           content: "accepted your follow request",
-          accepter: this.state.currentUsername,
-          accepterId: this.state.currentUserUid,
-          userId: uId,
+          source:this.state.currentUserUid,
+          type: "requestAccepted",
           time: moment().valueOf().toString(),
+
+
+
         }) &&
         firebase
         .firestore()

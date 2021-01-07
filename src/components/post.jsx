@@ -125,11 +125,10 @@ class Post extends React.Component {
     this.ismounted = true;
     const { item } = this.props;
 
-      if (prevProps.item.postId !== item.postId) {
-        
-        this.getCommentData();
-        this.toggleLike();
-        this.firestorePostRef
+    if (prevProps.item.postId !== item.postId) {
+      this.getCommentData();
+      this.toggleLike();
+      this.firestorePostRef
         .doc(item.postId)
         .collection("likes")
         .get()
@@ -138,7 +137,7 @@ class Post extends React.Component {
             this.setState({ likes: querySnapshot.size });
           }
         });
-  
+
       this.firestorePostRef
         .doc(item.postId)
         .collection("likes")
@@ -151,15 +150,11 @@ class Post extends React.Component {
             this.setState({ ifLiked: false });
           }
         });
-       }
-  
-    
-          if (prevState.commentsArray !== this.state.commentsArray) {
-            this.getCommentData();
-    
-      }
-    
+    }
 
+    if (prevState.commentsArray !== this.state.commentsArray) {
+      this.getCommentData();
+    }
 
     // this.renderAvatar();
     // this.getProfilePic();
@@ -295,53 +290,50 @@ class Post extends React.Component {
       //   console.log(this.state.currentUsername)
       // });
 
-
-
       this.firestorePostRef
         .doc(item.postId)
         .collection("likes")
         .doc(this.state.newLikeDocId)
         .set({
           userId: this.user.uid,
-        }) && 
+        }) &&
         firebase
-        .firestore()
-        .collection("notifications")
-        .doc(this.state.userId)
-        .collection("userNotifications")     
-        .doc("("+item.postId+")like")
-        .set({
-          type:"like",
-          content: "liked your post",
-          postId: item.postId,
-          postUserId: item.userId,
-          user: this.state.currentUsername,
-          userId: this.user.uid,
-          time: moment().valueOf().toString(),
-        })
-        .then(() => {
-          this.state.likes = noOfLikes + 1;
-          this.setState({ ifLiked: true });
-        });
+          .firestore()
+          .collection("notifications")
+          .doc(this.state.userId)
+          .collection("userNotifications")
+          .doc("(" + item.postId + ")like")
+          .set({
+            userId: this.user.uid,
+            username: this.state.currentUsername,
+            avatar: this.state.profilePic,
+            content: "liked your post",
+            source: item.postId,
+            type: "like",
+            time: moment().valueOf().toString(),
+          })
+          .then(() => {
+            this.state.likes = noOfLikes + 1;
+            this.setState({ ifLiked: true });
+          });
     } else {
       this.firestorePostRef
         .doc(item.postId)
         .collection("likes")
         .doc(this.state.newLikeDocId)
         .delete() &&
-
         firebase
-        .firestore()
-        .collection("notifications")
-        .doc(this.state.userId)
-        .collection("userNotifications")     
-        .doc("("+item.postId+")like")
-        .delete() 
-        .then(() => {
-          if (noOfLikes === 0) this.state.likes = 0;
-          this.state.likes = noOfLikes - 1;
-          this.setState({ ifLiked: false });
-        });
+          .firestore()
+          .collection("notifications")
+          .doc(this.state.userId)
+          .collection("userNotifications")
+          .doc("(" + item.postId + ")like")
+          .delete()
+          .then(() => {
+            if (noOfLikes === 0) this.state.likes = 0;
+            this.state.likes = noOfLikes - 1;
+            this.setState({ ifLiked: false });
+          });
     }
   };
 
@@ -392,34 +384,33 @@ class Post extends React.Component {
           comment: myComment,
           timestamp: timestamp,
         }) &&
-
         firebase
-        .firestore()
-        .collection("notifications")
-        .doc(this.state.userId)
-        .collection("userNotifications")     
-        .doc(timestamp)
-        .set({
-          type:"comment",
-          content: "commented on your post",
-          postId: item.postId,
-          postUserId: item.userId,
-          user: this.state.currentUsername,
-          userId: this.user.uid,
-          time: moment().valueOf().toString(),
-        })
-        .then(() => {
-          this.setState({ commentInput: "" });
+          .firestore()
+          .collection("notifications")
+          .doc(this.state.userId)
+          .collection("userNotifications")
+          .doc(timestamp)
+          .set({
+            userId: this.user.uid,
+            username: this.state.currentUsername,
+            avatar: this.state.profilePic,
+            content: "commented on your post",
+            source: item.postId,
+            type: "comment",
+            time: moment().valueOf().toString(),
+         })
+          .then(() => {
+            this.setState({ commentInput: "" });
 
-          this.getCommentData();
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+            this.getCommentData();
+          })
+          .catch((err) => {
+            console.log(err);
+          });
     }
   };
 
-  getCommentData= async () => {
+  getCommentData = async () => {
     let commArray = [];
     const { item } = this.props;
     // firebase
@@ -441,7 +432,7 @@ class Post extends React.Component {
           let article = {
             commentData: doc.data(),
             postId: item.postId,
-            authorId: item.userId
+            authorId: item.userId,
           };
 
           commArray.push(article);
@@ -451,7 +442,7 @@ class Post extends React.Component {
       .catch((err) => {
         console.log(err);
       });
-  }
+  };
 
   renderAvatar() {
     const { item } = this.props;
@@ -741,10 +732,7 @@ class Post extends React.Component {
                 </div>
               </div>
             </div>
-            <div>
-              
-            </div>
-
+            <div></div>
           </div>
         </div>
 

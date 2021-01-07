@@ -490,13 +490,12 @@ class FriendsPage extends React.Component {
           .collection("userNotifications")     
           .doc(this.state.currentUserUid)
           .set({
-            type:"request",
+            userId: this.state.currentUserUid,
+            username: this.state.currentUsername,
+            avatar: this.state.profilePic,
             content: "sent you a follow request",
-            // postId: item.postId,
-            // postUserId: item.userId,
-            sender: this.state.currentUsername,
-            senderId: this.state.currentUserUid,
-            receiverId: this.state.uid,
+            source: this.state.currentUserUid,
+            type:"request",
             time: moment().valueOf().toString(),
           })
           .then(() => {
@@ -528,13 +527,12 @@ class FriendsPage extends React.Component {
           .collection("userNotifications")     
           .doc(this.state.currentUserUid)
           .set({
-            type:"follow",
+            userId: this.state.currentUserUid,
+            username: this.state.currentUsername,
+            avatar: this.state.profilePic,
             content: "started following you",
-            // postId: item.postId,
-            // postUserId: item.userId,
-            sender: this.state.currentUsername,
-            senderId: this.state.currentUserUid,
-            receiverId: this.state.uid,
+            source:this.state.currentUserUid,
+            type:"follow",
             time: moment().valueOf().toString(),
           })
        
