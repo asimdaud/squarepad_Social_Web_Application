@@ -26,15 +26,12 @@ import { SigninUser } from "../services/authServices";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import { withTranslation } from "react-i18next";
 
-
 class Login extends React.Component {
   state = {
     email: "",
     password: "",
     isSignedIn: false,
-    value: localStorage.getItem("lang")
-        ? localStorage.getItem("lang")
-        : "en",
+    value: localStorage.getItem("lang") ? localStorage.getItem("lang") : "en",
     error: "",
   };
 
@@ -58,7 +55,6 @@ class Login extends React.Component {
   };
 
   componentDidMount = () => {
-
     localStorage.setItem("lang", "en");
 
     firebase.auth().onAuthStateChanged((user) => {
@@ -101,8 +97,11 @@ class Login extends React.Component {
     return (
       <>
         <PubNavbar />
-        <main ref="main">
-          <section className="section-shaped" style={{paddingTop: "4rem"}}>
+        <main ref="main" style={{ height: "100%" }}>
+          <section
+            className="section-shaped"
+            style={{ paddingTop: "4rem", height: "100%" }}
+          >
             <div className="shape shape-style-1 bg-gradient-default">
               <span />
               <span />
@@ -126,7 +125,6 @@ class Login extends React.Component {
                           firebaseAuth={firebase.auth()}
                         />
                       </div>
-
                     </CardHeader>
                     <CardBody className="px-lg-5 py-lg-5">
                       <div className="text-center text-muted mb-4">
@@ -172,7 +170,7 @@ class Login extends React.Component {
                             </span>
                           </small>
                         </div>
-                     
+
                         <div className="text-center">
                           <Button
                             className="my-4"
@@ -188,10 +186,10 @@ class Login extends React.Component {
                   </Card>
                   <Row className="mt-3">
                     <Col xs="6">
-                       <a
+                      <a
                         className="text-light"
                         href="#pablo"
-                        onClick={e => e.preventDefault()}
+                        onClick={(e) => e.preventDefault()}
                       >
                         <small>Forgot password?</small>
                       </a>
@@ -205,7 +203,7 @@ class Login extends React.Component {
                   </Row>
                 </Col>
               </Row>
-        <SimpleFooter />
+              <SimpleFooter />
             </Container>
           </section>
         </main>

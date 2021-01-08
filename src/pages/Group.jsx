@@ -1,4 +1,5 @@
 import React from "react";
+import {connect} from "react-redux";
 import moment from "moment";
 
 import AdSense from "react-adsense";
@@ -260,6 +261,10 @@ console.log(indexOfFirstPost,indexOfLastPost)
 
   }
 
+increment=()=>{
+  this.props.dispatch({type:"increment"})
+}
+
   render() {
     return (
       <>
@@ -293,7 +298,18 @@ console.log(indexOfFirstPost,indexOfLastPost)
                   style={{ zoom: "85%" }}
                 >
 
-{this.renderPosts()}
+{/* {this.renderPosts()} */}
+
+
+
+<Button onClick={this.increment}>
+  +
+</Button>
+
+{this.props.user3}
+
+<Button>
+-</Button>
 
                 </Col>
 
@@ -399,5 +415,7 @@ class="adsbygoogle"
     );
   }
 }
-
-export default Group;
+const mapStateToProps=(state) => ({
+  user3: state.user3
+});
+export default connect(mapStateToProps)(Group);

@@ -1,5 +1,6 @@
 // import { firebase } from "./firebase";
 import * as firebase from "firebase";
+import moment from "moment";
 // var firebaseui = require('firebaseui');
 
 const db = firebase.firestore();
@@ -19,6 +20,7 @@ export const CreateUser = async (username, name, email, password, bio) => {
       bio: bio,
       publicProfile: true,
       emailAlert: true,
+      lastOnline: moment().valueOf().toString()
     });
     localStorage.setItem(
       "uid",

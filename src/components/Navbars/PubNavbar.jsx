@@ -73,7 +73,11 @@ class UserNavbar extends React.Component {
           >
             <Container>
               <NavbarBrand className="mr-lg-5" to="/timeline" tag={Link}>
-                <img alt="..." src={require("assets/img/brand/logo.png")} />
+                <img
+                  alt="..."
+                  src={require("assets/img/brand/logo.png")}
+                  style={{ height: "45px" }}
+                />
               </NavbarBrand>
               <button className="navbar-toggler" id="navbar_global">
                 <span className="navbar-toggler-icon" />
@@ -141,7 +145,6 @@ class UserNavbar extends React.Component {
                         <MenuItem value="fre">French</MenuItem>
                         <MenuItem value="ger">German</MenuItem>
                         <MenuItem value="jap">Japanese</MenuItem>
-                        
                       </Select>
                       {/* <FormHelperText>Placeholder</FormHelperText> */}
                     </FormControl>

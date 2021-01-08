@@ -2,11 +2,11 @@
 
 import React from "react";
 import moment from "moment";
-import FadeIn from 'react-fade-in';
+import FadeIn from "react-fade-in";
 import { Favorite, FavoriteBorder, Comment } from "@material-ui/icons";
 import SmoothImage from "react-smooth-image";
-import Loader from 'react-loader-advanced';
-import LoaderSpinner from 'react-loader-spinner';
+import Loader from "react-loader-advanced";
+import LoaderSpinner from "react-loader-spinner";
 // reactstrap components
 import {
   // UncontrolledCollapse,
@@ -20,6 +20,7 @@ import {
   // CardHeader,
   CardBody,
   // FormGroup,
+  Badge as Badged,
   // Form,
   Input,
   UncontrolledTooltip,
@@ -57,8 +58,8 @@ class Inbox extends React.Component {
       //        user: firebase.auth().currentUser,
       // userId: this.props.item.userId,
       //   progress: 0,
-        userName: "username",
-        name: "name",
+      userName: "username",
+      name: "name",
       numOfChat: 0,
       inboxUsersData: [],
       inboxData: [],
@@ -66,7 +67,8 @@ class Inbox extends React.Component {
       groupChats: [],
       isLoading: false,
       value: "en",
-      loaderInbox:true,
+      loaderInbox: true,
+      unseenChats: 0,
     };
     this.currentUserId = JSON.parse(localStorage.getItem("uid"));
     this.listInbox = [];
@@ -76,10 +78,10 @@ class Inbox extends React.Component {
   }
 
   handleChange = (event) => {
-    console.log("selected val is ", event.target.value);
+    // console.log("selected val is ", event.target.value);
     let newlang = event.target.value;
     this.setState((prevState) => ({ value: newlang }));
-    console.log("state value is", newlang, this.props.i18n.changeLanguage);
+    // console.log("state value is", newlang, this.props.i18n.changeLanguage);
     this.props.i18n.changeLanguage(newlang);
   };
 
@@ -105,7 +107,6 @@ class Inbox extends React.Component {
     // For first render, it's not go through componentWillReceiveProps
     this.getInboxUsers();
 
-
     firestoreUsersRef.doc(this.currentUserId).onSnapshot((doc) => {
       const res = doc.data();
       if (res != null) {
@@ -115,7 +116,6 @@ class Inbox extends React.Component {
         });
       }
     });
-
   }
 
   componentWillMount = () => {
@@ -157,13 +157,14 @@ class Inbox extends React.Component {
       .collection("fake")
       .get()
       .then((querySnapshot2) => {
-        console.log(querySnapshot2.size);
+        // console.log(querySnapshot2.size);
       });
     this.setState({ groupChats: users });
     this.getInboxUsersData();
   };
 
   getInboxUsersData = () => {
+    let counter = 0;
     let inboxUsersDataArr = [];
     let name,
       username,
@@ -182,8 +183,8 @@ class Inbox extends React.Component {
         .doc(id.groupChatId)
         .get()
         .then((doc) => {
-          console.log(doc.data().latestMessage);
-          console.log(doc.data().messageSender);
+          // console.log(doc.data().latestMessage);
+          // console.log(doc.data().messageSender);
 
           this.firestoreUsersRef
             .doc(id.peer)
@@ -198,17 +199,24 @@ class Inbox extends React.Component {
                     username: docot.data().username,
                     peername: doco.data().name,
                     peerusername: doco.data().username,
-                    peerprofilePic: doco.data().profilePic?doco.data().profilePic:require("assets/img/icons/user/user1.png"),
+                    peerprofilePic: doco.data().profilePic
+                      ? doco.data().profilePic
+                      : require("assets/img/icons/user/user1.png"),
                     content: doc.data().latestMessage,
                     timestamp: doc.data().timestamp,
                     peerid: id.peer,
                     idFrom: doc.data().messageSender,
                     groupChatId: id.groupChatId,
+                    unseen: doc.data().unseen,
                   };
+                  if (doc.data().unseen == this.currentUserId) {
+                    counter = counter + 1;
+                  }
                   inboxUsersDataArr.push(inboxUsersData);
                   this.listInbox.push(inboxUsersData);
                   this.setState({
                     inboxUsersData: inboxUsersDataArr,
+                    unseenChats: counter,
                   });
                   // console.log(this.listInbox);
                   // console.log(this.state.inboxUsersData);
@@ -217,8 +225,11 @@ class Inbox extends React.Component {
             .catch((err) => {
               alert(err);
             });
-          this.setState({ inboxData: this.listInbox, numOfChat: this.state.groupChats.length });
-          this.setState({loaderInbox:false});
+          this.setState({
+            inboxData: this.listInbox,
+            numOfChat: this.state.groupChats.length,
+          });
+          this.setState({ loaderInbox: false });
         });
 
       // firebase
@@ -287,100 +298,112 @@ class Inbox extends React.Component {
     const { numOfChat } = this.state;
     return (
       <>
+        <Loader
+          // foregroundStyle={{color: 'white'}}
+          backgroundStyle={{ backgroundColor: "white", borderRadius: "10px" }}
+          show={this.state.loaderInbox}
+          message={
+            <LoaderSpinner
+              visible={this.state.loaderInbox}
+              type="Rings"
+              color="#00BFFF"
+              height={50}
+              width={50}
+              timeout={1000} //1 sec
+            />
+          }
+          contentBlur={225}
+          hideContentOnLoad={true}
+        >
+          {numOfChat > 0 ? (
+            <FadeIn>
+              <div
+                className="card bg-secondary"
+                style={{
+                  //  borderRadius:"35px",
+                  overflow: "hidden",
+                }}
+              >
+                <form className="card-header mb-3 text-center bg-gradient-muted">
+                  <span className="text-black font-weight-bold">
+                    {/* {this.state.groupChats.length} Friends online */}
+                    {t("Inbox")}
 
-<Loader 
-
-// foregroundStyle={{color: 'white'}}
-backgroundStyle={{ backgroundColor:"white",borderRadius:"10px"}}
-
-
-show={this.state.loaderInbox} 
-message={
-
-  <LoaderSpinner
-visible={this.state.loaderInbox}
-  type="Rings"
-  color="#00BFFF"
-  height={50}
-  width={50}
-  timeout={1000} //1 sec
-/>
-
-} 
-contentBlur={225} 
-hideContentOnLoad={true} >
-
-      
-        {numOfChat > 0 ? (
-              <FadeIn>
-                
-          <div className="card bg-secondary" style={{ borderRadius:"35px", 
-         overflow: "hidden"
-         }}>
-            <form className="card-header mb-3 text-center bg-gradient-muted">
-              <span className="text-black font-weight-bold">
-                {/* {this.state.groupChats.length} Friends online */}
-                {t("Inbox")}
-
-                {/* {"!"} */}
-              </span>
-            </form>
-            {this.state.inboxUsersData.map((user) => (
-              
-              
-              <div className="list-group list-group-chat list-group-flush" style={{zoom:"85%"}}>
-                <FadeIn transitionDuration={1000} delay={50}>
-         
-                <a
-                  className="list-group-item bg-gradient-white"
-                  // onMouseOver={() => this.onHover(user.idFrom)}
-                >
-                    <Link to={`/chat/${user.peerid}`}>
-                  <div className="media">
-                    <Link to={`/friend/${user.peerid}`}>
-                      <img
-                        alt="peerPic"
-                        src={user.peerprofilePic}
-                        className="avatar"
-                      />
-                    </Link>
-                    <div className="media-body ml-2">
-                      <div className="justify-content-between align-items-center">
-                        <h6 className="mb-0 text-black font-weight-bold">
-                          {user.peername}
-                          <span className="badge badge-success"></span>
-                        </h6>
-                        <div>
-                          <small className="text-muted">
-
-
-                          {user.name==this.state.name?"You":user.name}
-
-                            {/* {user.name} */}
-                            
-                             : {user.content}
-                          </small>
-                        </div>
-                      </div>
-                    </div>
+                    {/* {"!"} */}
+                  </span>
+                </form>
+                {this.state.inboxUsersData.map((user) => (
+                  <div
+                    className="list-group list-group-chat list-group-flush"
+                    style={{ zoom: "85%" }}
+                  >
+                    <FadeIn transitionDuration={1000} delay={50}>
+                      <a
+                        className="list-group-item bg-gradient-white"
+                        // onMouseOver={() => this.onHover(user.idFrom)}
+                      >
+                        <Link to={`/chat/${user.peerid}`}>
+                          <div className="media">
+                            <Link to={`/friend/${user.peerid}`}>
+                              <img
+                                alt="peerPic"
+                                src={user.peerprofilePic}
+                                className="avatar"
+                              />
+                            </Link>
+                            <div className="media-body ml-2">
+                              <div className="justify-content-between align-items-center">
+                                <h6 className="mb-0 text-black font-weight-bold">
+                                  {user.peername}
+                                  <span className="badge badge-success"></span>
+                                </h6>
+                                <div>
+                                  <small className="text-muted">
+                                    {user.name == this.state.name
+                                      ? "You"
+                                      : user.name}
+                                    {/* {user.name} */}: {user.content}
+                                  </small>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      </a>
+                    </FadeIn>
                   </div>
-                  </Link>
-                </a>
-              </FadeIn>
+                ))}
               </div>
-            ))}
-          </div>
-          </FadeIn>
-        ) : (
-          <div className="card bg-secondary" style={{ overflow: "auto", borderRadius:"35px"}}>
-            <Card className="card-header text-center bg-gradient-muted">
-              <span className="text-black font-weight-bold">
-                {t("No Recent Chats")}
-              </span>
-              {/* </form> */}
-            </Card>
-          </div>
-        )}
+            </FadeIn>
+          ) : (
+            <div
+              className="card bg-secondary"
+              style={{ overflow: "auto", borderRadius: "35px" }}
+            >
+              <Card className="card-header text-center bg-gradient-muted">
+                <span className="text-black font-weight-bold">
+                  {this.state.unseenChats != "0" ? (
+                    <>
+                      {t("Unread Chats")}
+                      <Badged
+                        color="info"
+                        style={{
+                          padding: "5px",
+                          margin: "4px",
+                          borderRadius: "30px",
+                        }}
+                      >
+                        {this.state.unseenChats}
+                      </Badged>
+                    </>
+                  ) : (
+                    t("Recent Chats")
+                  )}
+                </span>
+                {/* </form> */}
+              </Card>
+            </div>
+          )}
         </Loader>
       </>
     );

@@ -1,4 +1,3 @@
-
 import React from "react";
 import moment from "moment";
 
@@ -99,7 +98,8 @@ class FriendsPage extends React.Component {
       value: "en",
       isOpen: false,
       loaderAdv: true,
-      currentUsername:undefined,
+      currentUsername: undefined,
+      userProfilePic:undefined,
     };
   }
 
@@ -116,13 +116,14 @@ class FriendsPage extends React.Component {
       [state]: !this.state[state],
     });
   };
-  componentWillMount = () => {
+ UNSAFE_componentWillMount = () => {
     // this.getFriendId().then(() => {
     //   this.getFriendList();
     //   this.getPosts();
-    //   this.checkFollow();
-    //   this.getProfilePic();
+      // this.checkFollow();
+      // this.getProfilePic();
     // });
+
   };
 
   getFriendId = async () => {
@@ -139,14 +140,28 @@ class FriendsPage extends React.Component {
       friendId: this.props.match.params.fuid,
     });
 
-    this.getFriendId().then(() => {
-      this.getFriendList();
+    // this.getFriendId().then(() => {
+      this.getProfilePic();
       this.checkFollow();
       this.getPosts();
+      this.getFriendList();
 
-      this.getProfilePic();
-      this.getCurrentUsername();
+    // });
+      // this.getProfilePic();
+    firebase
+    .firestore()
+    .collection("users")
+    .doc(this.state.currentUserUid)
+    .onSnapshot((doc) => {
+    
+        const res = doc.data().profilePic;
+        if (res != null) {
+          this.setState({
+            userProfilePic: res,
+          });
+      }
     });
+
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -277,18 +292,18 @@ class FriendsPage extends React.Component {
         snapshot.forEach((doc) => {
           let article = {
             username: this.state.username,
+            profilePic: this.state.profilePic,
             userId: this.state.uid,
             title: "post",
-            profilePic: this.state.profilePic,
             image: doc.data().image,
-            // cta: "cta",
             caption: doc.data().caption,
-            location: doc.data().location.coordinates,
-            locName: doc.data().location.locationName,
             postId: doc.data().postId,
             timeStamp: doc.data().time,
+            // cta: "cta",
+            // location: doc.data().location.coordinates,
+            // locName: doc.data().location.locationName,
             // likes:0,
-            locLatLng: "Address",
+            // locLatLng: "Address",
           };
           cloudImages.push(article);
         });
@@ -405,6 +420,14 @@ class FriendsPage extends React.Component {
             });
         }
       });
+    let un = undefined;
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .get()
+      .then((snapshot) => {
+        un = snapshot.data().username ? snapshot.data().username : "username";
+        this.setState({ currentUsername: un });
+      });
   };
 
   cancelRequest = () => {
@@ -417,12 +440,12 @@ class FriendsPage extends React.Component {
         .doc(this.state.uid)
         .collection("received")
         .doc(this.state.currentUserUid)
-        .delete() && 
-        firebase
+        .delete() &&
+      firebase
         .firestore()
         .collection("notifications")
         .doc(this.state.uid)
-        .collection("userNotifications")     
+        .collection("userNotifications")
         .doc(this.state.currentUserUid)
         .delete()
         .then(() => {
@@ -446,8 +469,21 @@ class FriendsPage extends React.Component {
         .doc(this.state.currentUserUid)
         .collection("closeFriends")
         .doc(this.state.uid)
-        .delete()
-
+        .delete() &&
+        // firebase
+        // .firestore()
+        // .collection("notifications")
+        // .doc(this.state.uid)
+        // .collection("userNotifications")
+        // .doc("("+this.state.currentUserUid+")requestAccepted")
+        // .delete() &&
+        firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.uid)
+        .collection("userNotifications")
+        .doc(this.state.currentUserUid)
+        .delete() 
         .then(() => {
           this.setState({ following: false, closeFriends: false });
           // console.log("UNFOLLOWED");
@@ -455,17 +491,17 @@ class FriendsPage extends React.Component {
         });
   };
 
+  // getCurrentUsername() {
+  //   this.firestoreUsersRef
+  //     .doc(this.state.currentUserUid)
+  //     .get()
+  //     .then((document) => {
+  //       this.setState({ currentUsername: document.data().username });
+  //     });
+  //   console.log(this.state.currentUsername);
+  // }
 
-  getCurrentUsername() {
-    this.firestoreUsersRef
-      .doc(this.state.currentUserUid)
-      .get()
-      .then((document) => {
-        this.setState({ currentUsername: document.data().username });
-      });
-  }
-
-   follow =  () => {
+  follow = () => {
     //unknown private account
 
     if (!this.state.following && !this.state.publicProfile) {
@@ -483,19 +519,17 @@ class FriendsPage extends React.Component {
           .set({
             userId: this.state.currentUserUid,
           }) &&
-          firebase
+        firebase
           .firestore()
           .collection("notifications")
           .doc(this.state.uid)
-          .collection("userNotifications")     
+          .collection("userNotifications")
           .doc(this.state.currentUserUid)
           .set({
             userId: this.state.currentUserUid,
-            username: this.state.currentUsername,
-            avatar: this.state.profilePic,
-            content: "sent you a follow request",
             source: this.state.currentUserUid,
-            type:"request",
+            content: "sent you a follow request",
+            type: "request",
             time: moment().valueOf().toString(),
           })
           .then(() => {
@@ -519,23 +553,21 @@ class FriendsPage extends React.Component {
           .doc(this.state.currentUserUid)
           .set({
             userId: this.state.currentUserUid,
-          })
-          &&    firebase
+          }) &&
+        firebase
           .firestore()
           .collection("notifications")
           .doc(this.state.uid)
-          .collection("userNotifications")     
+          .collection("userNotifications")
           .doc(this.state.currentUserUid)
           .set({
             userId: this.state.currentUserUid,
-            username: this.state.currentUsername,
-            avatar: this.state.profilePic,
+            source: this.state.currentUserUid,
             content: "started following you",
-            source:this.state.currentUserUid,
-            type:"follow",
+            type: "follow",
             time: moment().valueOf().toString(),
           })
-       
+
           .then(() => {
             this.setState({ following: true, pending: false });
             console.log("followed");
@@ -698,6 +730,7 @@ class FriendsPage extends React.Component {
                 onClick={() => {
                   this.setState({ modalItem: post });
                   this.setState({ defaultModal: true });
+                  console.log(this.state.modalItem)
                 }}
               >
                 <img
@@ -822,7 +855,7 @@ class FriendsPage extends React.Component {
   render() {
     const { t } = this.props;
     //console.log(this.state.friendId);
-    console.log(this.state.uid);
+    // console.log(this.state.uid);
     //console.log(this.props.match.params.fuid);
 
     return (
@@ -833,6 +866,7 @@ class FriendsPage extends React.Component {
           ref="main"
           style={{
             // backgroundColor:"black",
+            height:"100%",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
@@ -847,9 +881,9 @@ class FriendsPage extends React.Component {
                   style={{
                     textAlign: "center",
                     padding: "50px",
-                    marginBottom:"200px",
+                    marginBottom: "200px",
                     // zoom:"60%"
-                  
+
                     // mixBlendMode: "screen",
                   }}
                 >
@@ -867,7 +901,11 @@ class FriendsPage extends React.Component {
                     <Card className="card-profile shadow">
                       <div className="px-4">
                         <Row className="justify-content-center">
-                          <Col className="order-lg-2" lg="3" style={{padding:"15px"}}>
+                          <Col
+                            className="order-lg-2"
+                            lg="3"
+                            style={{ padding: "15px" }}
+                          >
                             <div className="card-profile-image">
                               <a
                                 href="#pablo"
@@ -878,14 +916,14 @@ class FriendsPage extends React.Component {
                                     this.state.closeFriends
                                       ? {
                                           width: "200px",
-                                          height: "200px",
+                                          // height: "200px",
                                           display: "table",
                                           objectFit: "cover",
                                           padding: "5px",
                                         }
                                       : {
                                           width: "200px",
-                                          height: "200px",
+                                          // height: "200px",
                                           display: "table",
                                           objectFit: "cover",
                                           // padding : "5px"

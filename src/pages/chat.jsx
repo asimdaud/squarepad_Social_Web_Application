@@ -5,9 +5,11 @@ import React from "react";
 import "react-toastify/dist/ReactToastify.css";
 import { BrowserRouter, Switch, Route } from "react-router-dom";
 // reactstrap components
+import Badge from "@material-ui/core/Badge";
 import {
   Card,
   Container,
+  Badge as Badged,
   Row,
   Button,
   FormGroup,
@@ -20,7 +22,7 @@ import {
   DropdownToggle,
   UncontrolledDropdown,
 } from "reactstrap";
-import imageCompression from 'browser-image-compression';
+import imageCompression from "browser-image-compression";
 import ReactPlayer from "react-player/lazy";
 import ReactLoading from "react-loading";
 import ReactShadowScroll from "react-shadow-scroll";
@@ -44,6 +46,37 @@ import { Carousel } from "@giphy/react-components";
 import { GiphyFetch } from "@giphy/js-fetch-api";
 import Inbox from "components/inbox";
 import Update from "./Update";
+
+import { makeStyles, withStyles } from "@material-ui/core/styles";
+
+const StyledBadge = withStyles((theme) => ({
+  badge: {
+    backgroundColor: "#44b700",
+    color: "#44b700",
+    boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
+    "&::after": {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      borderRadius: "50%",
+      animation: "$ripple 1.2s infinite ease-in-out",
+      border: "1px solid currentColor",
+      content: '""',
+    },
+  },
+  "@keyframes ripple": {
+    "0%": {
+      transform: "scale(.8)",
+      opacity: 1,
+    },
+    "100%": {
+      transform: "scale(2.4)",
+      opacity: 0,
+    },
+  },
+}))(Badge);
 
 const userId = JSON.parse(localStorage.getItem("uid"));
 const firestoreUsersRef = firebase.firestore().collection("users");
@@ -81,6 +114,7 @@ class chat extends React.Component {
       groupChats: [],
       peerName: "peer",
       peerUserName: "peer username",
+      peerLastOnline: "0",
       friendName: "friend name",
       friendUserName: "friend username",
       profilePic: require("assets/img/icons/user/user1.png"),
@@ -92,6 +126,13 @@ class chat extends React.Component {
       inputValue: "",
       isShowSticker: false,
       value: "en",
+      firstUserLastSeen: undefined,
+      secondUserLastSeen: undefined,
+      latestMessageTime: undefined,
+      latestMessageSender: undefined,
+      peerUserLastSeen: undefined,
+      time: undefined,
+      unseenChats: 0,
     };
     this.currentUserId = JSON.parse(localStorage.getItem("uid"));
     this.currentUserAvatar = this.state.profiePic;
@@ -129,6 +170,10 @@ class chat extends React.Component {
       this.fetchGifs();
     }
 
+    // if (prevState.peerUserLastSeen !== this.state.peerUserLastSeen) {
+    //   this.fetchGifs();
+    // }
+
     //     functions.firestore()
     //     .collection("messages")
     //     .where("members", "array-contains", this.currentUserId)
@@ -145,19 +190,25 @@ class chat extends React.Component {
     if (prevProps.match.params.fuid !== this.props.match.params.fuid) {
       this.currentPeerUserId = this.props.match.params.fuid;
 
-      firestoreUsersRef.doc(this.props.match.params.fuid).onSnapshot((doc) => {
-        const res = doc.data();
-        if (res != null) {
-          this.setState({
-            peerUserName: res.username,
-            peerName: res.name,
-            peerPic: res.profilePic
-              ? res.profilePic
-              : require("assets/img/icons/user/user1.png"),
-          });
-        }
-      });
+      firestoreUsersRef
+        .doc(this.props.match.params.fuid)
+        .get()
+        .then((doc) => {
+          const res = doc.data();
+
+          if (res != null) {
+            this.setState({
+              peerLastOnline: res.lastOnline ? res.lastOnline : "",
+              peerUserName: res.username,
+              peerName: res.name,
+              peerPic: res.profilePic
+                ? res.profilePic
+                : require("assets/img/icons/user/user1.png"),
+            });
+          }
+        });
       this.getListHistory();
+      this.getUserLastSeen();
     }
     this.scrollToBottom();
   }
@@ -165,11 +216,32 @@ class chat extends React.Component {
   componentDidMount() {
     // For first render, it's not go through componentWillReceiveProps
 
+    firebase
+      .firestore()
+      .collection("users")
+      .doc(this.currentUserId)
+      .get()
+      .then((doc) => {
+        const res = doc.data();
+
+        if (res != null) {
+          this.setState({
+            username: res.username,
+            name: res.name,
+            profilePic: res.profilePic,
+          });
+        }
+      });
+
     this.getListHistory();
     this.scrollToBottom();
 
-    this.getInboxUsers();
+    this.interval = setInterval(
+      () => this.setState({ time: Date.now() }),
+      30000
+    );
 
+    this.getInboxUsers();
     // this.getFollowedUsers();
   }
 
@@ -213,10 +285,12 @@ class chat extends React.Component {
       .collection("messages")
       .where("members", "array-contains", this.currentUserId)
       .orderBy("timestamp", "desc")
-      .limit(6)
+      // .limit(6)
       .get()
       .then((querySnapshot) => {
+        // console.log(querySnapshot)
         querySnapshot.forEach((docSnap) => {
+          // console.log(docSnap)
           firebase
             .firestore()
             .collection("messages")
@@ -224,6 +298,7 @@ class chat extends React.Component {
             .onSnapshot((doc) => {
               const groupChatId = docSnap.id;
               let res = "";
+              // console.log(this.currentUserId)
               if (this.currentUserId == doc.data().members[0]) {
                 res = doc.data().members[1];
               } else res = doc.data().members[0];
@@ -231,7 +306,24 @@ class chat extends React.Component {
                 peer: res,
                 groupChatId: groupChatId,
               };
+              // console.log(inboxData);
               users.push(inboxData);
+              this.setState({
+                firstUserLastSeen: doc.data().firstUserLastSeen,
+                secondUserLastSeen: doc.data().secondUserLastSeen,
+                latestMessageSender: doc.data().messageSender,
+                latestMessageTime: doc.data().timestamp,
+              });
+
+              if (this.currentUserId <= this.currentPeerUserId) {
+                this.setState({
+                  peerUserLastSeen: this.state.secondUserLastSeen,
+                });
+              } else {
+                this.setState({
+                  peerUserLastSeen: this.state.firstUserLastSeen,
+                });
+              }
             });
         });
       });
@@ -240,13 +332,28 @@ class chat extends React.Component {
       .collection("fake")
       .get()
       .then((querySnapshot2) => {
-        console.log(querySnapshot2.size);
+        // console.log(querySnapshot2.size);
       });
     this.setState({ groupChats: users });
+    console.log(this.state.groupChats);
     this.getInboxUsersData();
+
+    firebase
+      .firestore()
+      .collection("messages")
+      .doc(this.groupChatId)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          this.getUserLastSeen();
+        }
+      });
+
+    // this.getget();
   };
 
   getInboxUsersData = () => {
+    let counter = 0;
     let inboxUsersDataArr = [];
     let name,
       username,
@@ -265,8 +372,8 @@ class chat extends React.Component {
         .doc(id.groupChatId)
         .get()
         .then((doc) => {
-          console.log(doc.data().latestMessage);
-          console.log(doc.data().messageSender);
+          // console.log(doc.data().unseen);
+          // console.log(doc.data().messageSender);
 
           this.firestoreUsersRef
             .doc(id.peer)
@@ -281,6 +388,10 @@ class chat extends React.Component {
                     username: docot.data().username,
                     peername: doco.data().name,
                     peerusername: doco.data().username,
+                    peerLastOnline: doco.data().lastOnline
+                      ? doco.data().lastOnline
+                      : "",
+
                     peerprofilePic: doco.data().profilePic
                       ? doco.data().profilePic
                       : require("assets/img/icons/user/user1.png"),
@@ -289,12 +400,18 @@ class chat extends React.Component {
                     peerid: id.peer,
                     idFrom: doc.data().messageSender,
                     groupChatId: id.groupChatId,
+                    unseen: doc.data().unseen,
                   };
                   inboxUsersDataArr.push(inboxUsersData);
                   this.listInbox.push(inboxUsersData);
+                  if (doc.data().unseen == this.currentUserId) {
+                    counter = counter + 1;
+                  }
                   this.setState({
                     inboxUsersData: inboxUsersDataArr,
+                    unseenChats: counter,
                   });
+                  // console.log(this.state.unseenChats);
                   // console.log(this.listInbox);
                   // console.log(this.state.inboxUsersData);
                 });
@@ -458,33 +575,96 @@ class chat extends React.Component {
   //   // // return url;
   // };
 
+  // getget = () => {
+  //   firebase
+  //     .firestore()
+  //     .collection("messages")
+  //     .doc(this.groupChatId)
+  //     .get()
+  //     .then((doc) => {
+  //       this.setState({
+  //         latestMessageTime: doc.data().timestamp,
+  //         latestMessageSender: doc.data().messageSender,
+  //       });
+  //     });
+  //   if (!this.state.latestMessageSender == this.state.currentUserId) {
+  //     alert("notme");
+  //   }
+  // };
+
+  getUserLastSeen = async () => {
+    await firebase
+      .firestore()
+      .collection("messages")
+      .doc(this.groupChatId)
+      .get()
+      .then((doc) => {
+        this.setState({
+          latestMessageTime: doc.data().timestamp,
+          latestMessageSender: doc.data().messageSender,
+        });
+      });
+
+    if (this.currentUserId <= this.currentPeerUserId) {
+      firebase.firestore().collection("messages").doc(this.groupChatId).update({
+        firstUserLastSeen: moment().valueOf().toString(),
+      });
+      this.setState({ firstUserLastSeen: moment().valueOf().toString() });
+    } else {
+      firebase.firestore().collection("messages").doc(this.groupChatId).update({
+        secondUserLastSeen: moment().valueOf().toString(),
+      });
+      this.setState({ secondUserLastSeen: moment().valueOf().toString() });
+    }
+  };
+
   componentWillMount = () => {
     // this.getFollowedUsers();
-    this.getInboxUsersData();
+    // this.getInboxUsersData();
     // this.getProfilePic();
+    // this.getInboxUsers();
 
-    firestoreUsersRef.doc(this.currentUserId).onSnapshot((doc) => {
-      const res = doc.data();
-      if (res != null) {
-        this.setState({
-          username: res.username,
-          name: res.name,
-        });
-      }
-    });
+    firestoreUsersRef
+      .doc(this.currentUserId)
+      .get()
+      .then((doc) => {
+        const res = doc.data();
+        if (res != null) {
+          this.setState({
+            username: res.username,
+            name: res.name,
+          });
+        }
+      });
 
-    firestoreUsersRef.doc(this.currentPeerUserId).onSnapshot((doc) => {
-      const res = doc.data();
-      if (res != null) {
-        this.setState({
-          peerUserName: res.username,
-          peerName: res.name,
-          peerPic: res.profilePic
-            ? res.profilePic
-            : require("assets/img/icons/user/user1.png"),
-        });
-      }
-    });
+    firestoreUsersRef
+      .doc(this.currentPeerUserId)
+      .get()
+      .then((doc) => {
+        const res = doc.data();
+        if (res != null) {
+          this.setState({
+            // peerLastOnline: res.lastOnline ? res.lastOnline : "",
+            peerUserName: res.username,
+            peerName: res.name,
+            peerPic: res.profilePic
+              ? res.profilePic
+              : require("assets/img/icons/user/user1.png"),
+          });
+        }
+      });
+    firestoreUsersRef
+      .doc(this.currentPeerUserId)
+      // .get()
+      .onSnapshot((doc) => {
+        const res = doc.data().lastOnline;
+        // console.log(res)
+        if (res != null) {
+          this.setState({
+            peerLastOnline: res,
+          });
+        }
+      });
 
     // // profile pic
     // const firebaseProfilePic = firebase
@@ -516,6 +696,8 @@ class chat extends React.Component {
     if (this.removeListener) {
       this.removeListener();
     }
+
+    clearInterval(this.interval);
   }
 
   componentWillReceiveProps(newProps) {
@@ -557,7 +739,75 @@ class chat extends React.Component {
         }
       );
 
+    firebase
+      .firestore()
+      .collection("messages")
+      .doc(this.groupChatId)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          this.checkUnseenStatus();
+        }
+      });
+
+    // firebase
+    //   .firestore()
+    //   .collection("messages")
+    //   .doc(this.groupChatId)
+    //   .get()
+    //   .then((doc) => {
+    //     let chatLatestSender = doc.data().messageSender;
+    //     if (this.currentUserId != chatLatestSender) {
+    //       firebase
+    //         .firestore()
+    //         .collection("messages")
+    //         .doc(this.groupChatId)
+    //         .update({
+    //           unseen: "",
+    //         });
+    //       firebase
+    //         .firestore()
+    //         .collection("notifications")
+    //         .doc(this.currentUserId)
+    //         .collection("userNotifications")
+    //         .doc(this.groupChatId)
+    //         .delete();
+    //     }
+    //   });
+
     console.log("listmesg:", this.listMessage);
+  };
+
+  checkUnseenStatus = () => {
+    firebase
+      .firestore()
+      .collection("messages")
+      .doc(this.groupChatId)
+      .get()
+
+      // .then((doc) => {
+      // chatLatestMessage: doc.data().latestMessage
+      // });
+
+      .then((doc) => {
+        let chatLatestSender = doc.data().messageSender;
+        if (this.currentUserId != chatLatestSender) {
+          firebase
+            .firestore()
+            .collection("messages")
+            .doc(this.groupChatId)
+            .update({
+              unseen: "",
+            });
+          firebase
+            .firestore()
+            .collection("notifications")
+            .doc(this.currentUserId)
+            .collection("userNotifications")
+            .doc(this.groupChatId)
+            .delete();
+        }
+      });
   };
 
   onSendMessage = (content, type) => {
@@ -598,29 +848,100 @@ class chat extends React.Component {
       itemMessage.content = itemMessage.content.substring(0, 11) + "..";
     }
 
+    firebase
+      .firestore()
+      .collection("messages")
+      .doc(this.groupChatId)
+      .get()
+      .then((doc) => {
+        if (!doc.exists) {
+          firebase
+            .firestore()
+            .collection("messages")
+            .doc(this.groupChatId)
+            .set({
+              members: [this.currentUserId, this.currentPeerUserId],
+              timestamp: timestamp,
+              latestMessage: itemMessage.content,
+              messageSender: itemMessage.idFrom,
+              firstUserLastSeen: "0",
+              secondUserLastSeen: "0",
+              unseen: null,
+            });
+        }
+      });
+
     if (this.currentUserId <= this.currentPeerUserId) {
       firebase
         .firestore()
         .collection("messages")
         .doc(this.groupChatId)
-        .set({
+        .update({
           members: [this.currentUserId, this.currentPeerUserId],
           timestamp: timestamp,
           latestMessage: itemMessage.content,
           messageSender: itemMessage.idFrom,
+          firstUserLastSeen: moment().valueOf().toString(),
+          // secondUserLastSeen: moment().valueOf().toString()
         });
+      // if (
+      //   itemMessage.idFrom !== this.state.currentUserId &&
+      //   timestamp > this.state.secondUserLastSeen
+      // ) {
+      //   firebase
+      //     .firestore()
+      //     .collection("messages")
+      //     .doc(this.groupChatId)
+      //     .update({
+      //       unseen: this.currentPeerUserId,
+      //     });
+      // }
     } else {
       firebase
         .firestore()
         .collection("messages")
         .doc(this.groupChatId)
-        .set({
+        .update({
           members: [this.currentUserId, this.currentPeerUserId],
           timestamp: timestamp,
           latestMessage: itemMessage.content,
           messageSender: itemMessage.idFrom,
+          // firstUserLastSeen: moment().valueOf().toString(),
+          secondUserLastSeen: moment().valueOf().toString(),
+        });
+      // if (
+      //   itemMessage.idFrom !== this.state.currentUserId &&
+      //   timestamp > this.state.firstUserLastSeen
+      // ) {
+      //   firebase
+      //     .firestore()
+      //     .collection("messages")
+      //     .doc(this.groupChatId)
+      //     .update({
+      //       unseen: this.currentPeerUserId,
+      //     });
+      // }
+    }
+
+    if (this.state.peerUserLastSeen < timestamp) {
+      firebase.firestore().collection("messages").doc(this.groupChatId).update({
+        unseen: this.currentPeerUserId,
+      });
+      firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.currentPeerUserId)
+        .collection("userNotifications")
+        .doc(this.groupChatId)
+        .set({
+          userId: this.currentUserId,
+          source: this.currentUserId,
+          content: "sent you a message",
+          type: "chat",
+          time: moment().valueOf().toString(),
         });
     }
+
     this.getInboxUsers();
   };
   getGifImage = (value) => {
@@ -641,7 +962,7 @@ class chat extends React.Component {
         // if (prefixFiletype.indexOf("image/") === 0) {
         //   this.uploadPhoto();
         // } else
-        
+
         if (prefixFiletype.indexOf("video/") === 0) {
           this.uploadVideo();
         } else {
@@ -793,22 +1114,25 @@ class chat extends React.Component {
   //   // this.getFollowedUsersData();
   // };
 
-
-   handleImageUpload = async  (event) => {
-
+  handleImageUpload = async (event) => {
     const imageFile = event.target.files[0];
-    console.log('originalFile instanceof Blob', imageFile instanceof Blob); // true
+    console.log("originalFile instanceof Blob", imageFile instanceof Blob); // true
     console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
 
     const options = {
       maxSizeMB: 1,
       maxWidthOrHeight: 1920,
-      useWebWorker: true
-    }
+      useWebWorker: true,
+    };
     try {
       const compressedFile = await imageCompression(imageFile, options);
-      console.log('compressedFile instanceof Blob', compressedFile instanceof Blob); // true
-      console.log(`compressedFile size ${compressedFile.size / 1024 / 1024} MB`); // smaller than maxSizeMB
+      console.log(
+        "compressedFile instanceof Blob",
+        compressedFile instanceof Blob
+      ); // true
+      console.log(
+        `compressedFile size ${compressedFile.size / 1024 / 1024} MB`
+      ); // smaller than maxSizeMB
 
       await this.uploadPhoto(compressedFile);
       // console.log(compressedFile)
@@ -816,9 +1140,7 @@ class chat extends React.Component {
     } catch (error) {
       console.log(error);
     }
-
-  }
-
+  };
 
   renderListMessage = () => {
     const { t } = this.props;
@@ -837,8 +1159,12 @@ class chat extends React.Component {
                 <div className="col-auto">
                   {/* <ReactShadowScroll> */}
                   <div
-                    className="card bg-gradient-muted text-primary shadow"
-                    style={{ borderRadius: "10px", marginBottom: "10px" }}
+                    className="card                    text-white shadow"
+                    style={{
+                      borderRadius: "10px",
+                      marginBottom: "10px",
+                      backgroundColor: "#005fb2",
+                    }}
                   >
                     <div
                       className="card-body p-2"
@@ -854,9 +1180,23 @@ class chat extends React.Component {
                       </p>
                       <div>
                         <small className="opacity-60">
-                          {moment(Number(item.timestamp)).format("lll")}
+                          {/* {moment(Number(item.timestamp)).format("lll")} */}
+                          {moment(Number(item.timestamp)).calendar()}
                         </small>
-                        <i className="ni ni-check-bold"></i>
+                        <small style={{ zoom: "90%", padding: "2px" }}>
+                          {!item.timestamp || !this.state.peerUserLastSeen ? (
+                            <i className="ni ni-send"></i>
+                          ) : this.state.peerUserLastSeen < item.timestamp ? (
+                            <i className="ni ni-send"></i>
+                          ) : (
+                            <i className="ni ni-check-bold"></i>
+                          )}
+                          {/* {this.state.peerUserLastSeen < item.timestamp ? (
+                            <i className="ni ni-send"></i>
+                          ) : (
+                            <i className="ni ni-check-bold"></i>
+                          )} */}
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -873,8 +1213,12 @@ class chat extends React.Component {
                 >
                   {/* <ReactShadowScroll> */}
                   <div
-                    className="card bg-gradient-muted text-primary shadow"
-                    style={{ borderRadius: "10px", marginBottom: "10px" }}
+                    className="card text-white shadow"
+                    style={{
+                      borderRadius: "10px",
+                      marginBottom: "10px",
+                      backgroundColor: "#005fb2",
+                    }}
                   >
                     <div className="card-body p-2 ml-auto" key={item.timestamp}>
                       <p className="mb-1 font-weight-bold">
@@ -891,9 +1235,15 @@ class chat extends React.Component {
                       </p>
                       <div>
                         <small className="opacity-60">
-                          {moment(Number(item.timestamp)).format("lll")}
+                          {moment(Number(item.timestamp)).calendar()}
                         </small>
-                        <i className="ni ni-check-bold"></i>
+                        <small style={{ zoom: "90%", padding: "2px" }}>
+                          {this.state.peerUserLastSeen < item.timestamp ? (
+                            <i className="ni ni-send"></i>
+                          ) : (
+                            <i className="ni ni-check-bold"></i>
+                          )}
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -906,8 +1256,12 @@ class chat extends React.Component {
                 <div className="col-auto">
                   {/* <ReactShadowScroll> */}
                   <div
-                    className="card bg-gradient-muted text-primary shadow"
-                    style={{ borderRadius: "10px", marginBottom: "10px" }}
+                    className="card text-white shadow"
+                    style={{
+                      borderRadius: "10px",
+                      marginBottom: "10px",
+                      backgroundColor: "#005fb2",
+                    }}
                   >
                     <div
                       className="card-body p-2 "
@@ -926,9 +1280,15 @@ class chat extends React.Component {
                       />
                       <div>
                         <small className="opacity-60">
-                          {moment(Number(item.timestamp)).format("lll")}
+                          {moment(Number(item.timestamp)).calendar()}
                         </small>
-                        <i className="ni ni-check-bold"></i>
+                        <small style={{ zoom: "90%", padding: "2px" }}>
+                          {this.state.peerUserLastSeen < item.timestamp ? (
+                            <i className="ni ni-send"></i>
+                          ) : (
+                            <i className="ni ni-check-bold"></i>
+                          )}
+                        </small>
                       </div>
                     </div>
                   </div>
@@ -1006,9 +1366,9 @@ class chat extends React.Component {
                         </p>
                         <div>
                           <small className="opacity-60">
-                            {moment(Number(item.timestamp)).format("lll")}
+                            {moment(Number(item.timestamp)).calendar()}
                           </small>
-                          <i className="ni ni-check-bold"></i>
+                          {/* <i className="ni ni-check-bold"></i> */}
                         </div>
                       </div>
                     </div>
@@ -1064,9 +1424,9 @@ class chat extends React.Component {
                         </p>
                         <div>
                           <small className="opacity-60">
-                            {moment(Number(item.timestamp)).format("lll")}
+                            {moment(Number(item.timestamp)).calendar()}
                           </small>
-                          <i className="ni ni-check-bold"></i>
+                          {/* <i className="ni ni-check-bold"></i> */}
                         </div>
                       </div>
                     </div>
@@ -1131,9 +1491,9 @@ class chat extends React.Component {
                         {/* </p> */}
                         <div>
                           <small className="opacity-60">
-                            {moment(Number(item.timestamp)).format("lll")}
+                            {moment(Number(item.timestamp)).calendar()}
                           </small>
-                          <i className="ni ni-check-bold"></i>
+                          {/* <i className="ni ni-check-bold"></i> */}
                         </div>
                       </div>
                     </div>
@@ -1228,35 +1588,38 @@ class chat extends React.Component {
       return;
     }
 
-    firestoreUsersRef.doc(uid).onSnapshot((doc) => {
-      const res = doc.data();
-      if (res != null) {
-        // if (item.type === 0) {
-        if (type.trim() === "user") {
-          this.setState({
-            userName: res.username,
-            name: res.name,
-            profilePic: res.profilePic
-              ? res.profilePic
-              : require("assets/img/icons/user/user1.png"),
-          });
-        } else if (type.trim() === "peer") {
-          this.setState({
-            peerUserName: res.username,
-            peerName: res.name,
-            peerPic: res.profilePic,
-          });
-        } else if (type.trim() === "friend") {
-          this.setState({
-            friendUserName: res.username,
-            friendName: res.name,
-            friendPic: res.profilePic
-              ? res.profilePic
-              : require("assets/img/icons/user/user1.png"),
-          });
+    firestoreUsersRef
+      .doc(uid)
+      .get()
+      .then((doc) => {
+        const res = doc.data();
+        if (res != null) {
+          // if (item.type === 0) {
+          if (type.trim() === "user") {
+            this.setState({
+              userName: res.username,
+              name: res.name,
+              profilePic: res.profilePic
+                ? res.profilePic
+                : require("assets/img/icons/user/user1.png"),
+            });
+          } else if (type.trim() === "peer") {
+            this.setState({
+              peerUserName: res.username,
+              peerName: res.name,
+              peerPic: res.profilePic,
+            });
+          } else if (type.trim() === "friend") {
+            this.setState({
+              friendUserName: res.username,
+              friendName: res.name,
+              friendPic: res.profilePic
+                ? res.profilePic
+                : require("assets/img/icons/user/user1.png"),
+            });
+          }
         }
-      }
-    });
+      });
   };
 
   hashString = (str) => {
@@ -1341,6 +1704,7 @@ class chat extends React.Component {
           className="profile-page"
           ref="main"
           style={{
+            height:"100%",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
@@ -1366,7 +1730,7 @@ class chat extends React.Component {
                   <div
                     className="card bg-secondary"
                     style={{
-                      overflow: "auto",
+                      overflowX: "hidden",
                       borderRadius: "20px",
                       // paddingBottom: "22px",
                       marginBottom: "22px",
@@ -1376,7 +1740,24 @@ class chat extends React.Component {
                     <form className="card-header mb-3 text-center bg-gradient-muted">
                       <span className="text-black font-weight-bold">
                         {/* {this.state.groupChats.length} Friends online */}
-                        {t("Recent Chats")}
+
+                        {this.state.unseenChats != "0" ? (
+                          <>
+                            {t("Unread Chats")}
+                            <Badged
+                              color="info"
+                              style={{
+                                padding: "5px",
+                                margin: "4px",
+                                borderRadius: "30px",
+                              }}
+                            >
+                              {this.state.unseenChats}
+                            </Badged>
+                          </>
+                        ) : (
+                          t("Recent Chats")
+                        )}
 
                         {/* {"!"} */}
                       </span>
@@ -1400,28 +1781,94 @@ class chat extends React.Component {
                                 />
                               </Link>
                               <div className="media-body ml-2">
-                                <div className="justify-content-between align-items-center">
-                                  <h6 className="mb-0 text-black font-weight-bold">
-                                    {item.peername}
-                                    <span className="badge badge-success"></span>
-                                  </h6>
-                                  <div>
-                                    <small className="text-muted">
-                                      {item.name == this.state.name
-                                        ? "You"
-                                        : item.name}
-                                      {/* {item.name} */}: {item.content}
+                                {/* badge here */}
+
+                                {item.unseen == this.currentUserId ? (
+                                  <div className="justify-content-between align-items-center">
+                                    <h6 className="mb-0 text-black font-weight-bold">
+                                      {item.peername}
+                                      <span className="badge badge-success"></span>
+                                    </h6>
+
+                                    <div
+                                      style={{
+                                        // outline:"groove",
+                                        width: "272px",
+                                      }}
+                                    >
                                       <small
-                                        className="col-md-1 col-3"
-                                        style={{ right: "0px" }}
+                                        className="font-weight-bold"
+                                        style={{
+                                          color: "rgb(0, 95, 178)",
+                                          display: "inline-block",
+                                          WebkitTextStrokeWidth: "thin",
+                                        }}
                                       >
-                                        {moment(Number(item.timestamp)).format(
-                                          "ll"
-                                        )}
+                                        <Badge
+                                          color="primary"
+                                          // anchorOrigin={{
+                                          //   vertical: "top",
+                                          //   horizontal: "right",
+                                          // }}
+                                          // overlap="circle"
+                                          badgeContent=" "
+                                          variant="dot"
+                                        >
+                                          <div style={{ padding: "2px" }}>
+                                            {item.name == this.state.name
+                                              ? "You"
+                                              : item.name}
+                                            {/* {item.name} */}: {item.content}
+                                          </div>
+                                        </Badge>
+                                        <small
+                                          className="col-md-8 col-3 text-right
+                                          d-lg-none d-xl-block 
+                                          "
+                                          style={{
+                                            right: "0px",
+                                            position: "absolute",
+                                          }}
+                                        >
+                                          {moment(
+                                            Number(item.timestamp)
+                                          ).calendar()}
+                                        </small>
                                       </small>
-                                    </small>
+                                    </div>
+                                    {/* </Badge> */}
                                   </div>
-                                </div>
+                                ) : (
+                                  <div className="justify-content-between align-items-center">
+                                    <h6 className="mb-0 text-black font-weight-bold">
+                                      {item.peername}
+                                      <span className="badge badge-success"></span>
+                                    </h6>
+                                    <div>
+                                      <small
+                                        className="text-muted"
+                                        style={{ display: "inline-block" }}
+                                      >
+                                        {item.name == this.state.name
+                                          ? "You"
+                                          : item.name}
+                                        {/* {item.name} */}: {item.content}
+                                        <small
+                                          className="col-md-8 col-3 text-right
+                                          d-lg-none d-xl-block "
+                                          style={{
+                                            right: "0px",
+                                            position: "absolute",
+                                          }}
+                                        >
+                                          {moment(
+                                            Number(item.timestamp)
+                                          ).calendar()}
+                                        </small>
+                                      </small>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </Link>
@@ -1485,26 +1932,79 @@ class chat extends React.Component {
                       <div className="row">
                         <div className="col-md-10">
                           <div className="media align-items-center">
-                            <img
-                              alt="Image"
-                              src={this.state.peerPic}
-                              className="avatar shadow img-responsive"
-                              style={{
-                                width: "44px",
-                                height: "44px",
-                                display: "block",
-                                objectFit: "cover",
-                                margin: "5px",
-                              }}
-                            />
-                            <div className="media-body">
+                            {moment(
+                              Number(this.state.peerLastOnline)
+                            ).fromNow() == "a few seconds ago" ? (
+                              // <Badge
+
+                              // color="secondary"
+                              // // color="primary"
+                              // overlap="circle" badgeContent=" " variant="dot">
+
+                              <StyledBadge
+                                overlap="circle"
+                                anchorOrigin={{
+                                  vertical: "top",
+                                  horizontal: "right",
+                                }}
+                                variant="dot"
+                              >
+                                <img
+                                  alt="Image"
+                                  src={this.state.peerPic}
+                                  className="avatar shadow img-responsive"
+                                  style={{
+                                    width: "44px",
+                                    height: "44px",
+                                    display: "block",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              </StyledBadge>
+                            ) : (
+                              // </Badge>
+                              <img
+                                alt="Image"
+                                src={this.state.peerPic}
+                                className="avatar shadow img-responsive"
+                                style={{
+                                  width: "44px",
+                                  height: "44px",
+                                  display: "block",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            )}
+
+                            <div
+                              className="media-body"
+                              style={{ padding: "5px", margin: "3px" }}
+                            >
                               <h6 className="mb-0 d-block">
                                 {this.state.peerName}
                               </h6>
-                              <span className="text-muted text-small">
+                              {/* <span className="text-muted text-small">
                                 {" "}
-                                {this.state.peerUserName}
-                              </span>
+                              </span> */}
+
+                              <small className="opacity-60">
+                                {/* {moment(
+                                  Number(this.state.peerLastOnline)
+                                ).fromNow()} */}
+                                {/* {"@"} {this.state.peerUserName} */}
+                                <small className="d-block text-muted">
+                                  {this.state.peerLastOnline !== "0" &&
+                                  this.state.peerLastOnline
+                                    ? moment(
+                                        Number(this.state.peerLastOnline)
+                                      ).fromNow() == "a few seconds ago"
+                                      ? "Online"
+                                      : moment(
+                                          Number(this.state.peerLastOnline)
+                                        ).fromNow()
+                                    : "@" + this.state.peerUserName}
+                                </small>
+                              </small>
                             </div>
                           </div>
                         </div>
@@ -1523,7 +2023,7 @@ class chat extends React.Component {
                               right
                             >
                               <DropdownItem
-                                to="/friendspage"
+                                to={`/friend/${this.currentPeerUserId}`}
                                 tag={Link}
                                 // onClick={this.logOut}
                               >
@@ -1535,7 +2035,7 @@ class chat extends React.Component {
                                   {t("Profile")}
                                 </p>
                               </DropdownItem>
-                              <DropdownItem onClick={this.clearChat}>
+                              {/* <DropdownItem onClick={this.clearChat}>
                                 <p
                                   className="dropdown-item"
                                   // href="javascript:;"
@@ -1543,10 +2043,10 @@ class chat extends React.Component {
                                   <i className="ni ni-fat-remove"></i>{" "}
                                   {t("Delete chat")}
                                 </p>
-                              </DropdownItem>
-                              <DropdownItem>
+                              </DropdownItem> */}
+                              {/* <DropdownItem>
                                 <DeleteOutline onClick={this.clearChat} />
-                              </DropdownItem>
+                              </DropdownItem> */}
                             </DropdownMenu>
                           </UncontrolledDropdown>
                         </div>
@@ -1656,7 +2156,7 @@ class chat extends React.Component {
                         className="viewInputGallery"
                         type="file"
                         // onChange={this.onChoosePhoto}
-                        onChange={event => this.handleImageUpload(event)}
+                        onChange={(event) => this.handleImageUpload(event)}
                       />
                       <img
                         className="icOpenGallery"

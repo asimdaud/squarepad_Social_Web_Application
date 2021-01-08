@@ -125,18 +125,13 @@ class FriendReq extends React.Component {
         .collection("notifications")
         .doc(uId)
         .collection("userNotifications")
-        .doc(this.state.currentUserUid)
+        .doc("("+this.state.currentUserUid+")requestAccepted")
         .set({
           userId: this.state.currentUserUid,
-          username: this.state.currentUsername,
-          avatar: this.state.currentUserUid,
+          source: this.state.currentUserUid,
           content: "accepted your follow request",
-          source:this.state.currentUserUid,
           type: "requestAccepted",
           time: moment().valueOf().toString(),
-
-
-
         }) &&
         firebase
         .firestore()
@@ -207,7 +202,7 @@ class FriendReq extends React.Component {
       return (
         // <Card className="card-profile shadow">
         <div>
-          <Row>
+          {/* <Row>
             <Col lg="4">
               <h2
                 // className="description"
@@ -218,6 +213,7 @@ class FriendReq extends React.Component {
               </h2>
             </Col>
           </Row>{" "}
+     */}
           <ul>
             {
               // this.state.followedUsers.map((followedUsers) => {

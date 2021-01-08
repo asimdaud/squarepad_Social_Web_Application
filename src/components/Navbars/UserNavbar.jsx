@@ -1,4 +1,5 @@
 import React from "react";
+import moment from "moment";
 import { Link, Redirect } from "react-router-dom";
 // JavaScript plugin that hides or shows a component based on your scroll
 import Headroom from "headroom.js";
@@ -8,8 +9,10 @@ import Badge from "@material-ui/core/Badge";
 
 import NotificationsIcon from "@material-ui/icons/Notifications";
 import AccountCircle from "@material-ui/icons/AccountCircle";
+import Inbox from "components/inbox";
 import {
   // Button,
+  Alert,
   UncontrolledCollapse,
   DropdownMenu,
   DropdownItem,
@@ -28,6 +31,7 @@ import {
   // TabPane,
   // UncontrolledTooltip,
   Card,
+  UncontrolledAlert,
   CardBody,
   Input,
   InputGroup,
@@ -65,6 +69,9 @@ class UserNavbar extends React.Component {
     username: undefined,
     name: undefined,
     friendReq: [],
+    notifications: [],
+    alert: [],
+
     currentName: undefined,
     userProfilePic: require("assets/img/icons/user/user1.png"),
 
@@ -78,7 +85,9 @@ class UserNavbar extends React.Component {
     collapseClasses: "",
     collapseOpen: false,
 
-    // value:"esp"
+    currentUserUid: JSON.parse(localStorage.getItem("uid")),
+    currentUsername: undefined,
+    unseenChats: 0,
   };
 
   handleChange = (event) => {
@@ -235,6 +244,96 @@ class UserNavbar extends React.Component {
   onHover = () => {
     // localStorage.setItem("Fuid", JSON.stringify(this.state.foundUser));
     // this.setState({fuid:})
+  };
+
+  handleAccept = (uId, username, avatar) => {
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .collection("followedBy")
+      .doc(uId)
+      .set({
+        userId: uId,
+      }) &&
+      this.firestoreUsersRef
+        .doc(uId)
+        .collection("following")
+        .doc(this.state.currentUserUid)
+        .set({
+          userId: uId,
+        }) &&
+      this.firestoreUsersRef
+        .doc(this.state.currentUserUid)
+        .collection("received")
+        .doc(uId)
+        .delete() &&
+      this.firestoreUsersRef
+        .doc(uId)
+        .collection("sent")
+        .doc(this.state.currentUserUid)
+        .delete() &&
+      firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.currentUserUid)
+        .collection("userNotifications")
+        .doc(uId)
+        .delete() &&
+      firebase
+        .firestore()
+        .collection("notifications")
+        .doc(uId)
+        .collection("userNotifications")
+        .doc("(" + this.state.currentUserUid + ")requestAccepted")
+        .set({
+          userId: this.state.currentUserUid,
+
+          source: this.state.currentUserUid,
+          content: "accepted your follow request",
+          type: "requestAccepted",
+          time: moment().valueOf().toString(),
+        }) &&
+      firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.currentUserUid)
+        .collection("userNotifications")
+        .doc(uId)
+        .set({
+          userId: uId,
+          source: uId,
+          content: "started following you",
+          type: "follow",
+          time: moment().valueOf().toString(),
+        });
+
+    console.log("accepted");
+    // .then(() => {
+    //     this.setState({ following: true });
+    //   });
+  };
+
+  handleReject = (uId) => {
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .collection("received")
+      .doc(uId)
+      .delete() &&
+      this.firestoreUsersRef
+        .doc(uId)
+        .collection("sent")
+        .doc(this.state.currentUserUid)
+        .delete() &&
+      firebase
+        .firestore()
+        .collection("notifications")
+        .doc(this.state.currentUserUid)
+        .collection("userNotifications")
+        .doc(uId)
+        .delete();
+    console.log("rejected");
+    // .then(() => {
+    //     this.setState({ following: true });
+    //   });
   };
 
   renderUserItem = () => {
@@ -394,7 +493,8 @@ class UserNavbar extends React.Component {
         .firestore()
         .collection("users")
         .doc(user.uid)
-        .onSnapshot((doc) => {
+        .get()
+        .then((doc) => {
           if (!doc.exists) {
             alert("User does not exist");
             logOutUser();
@@ -419,7 +519,61 @@ class UserNavbar extends React.Component {
     this.renderUserItem();
     this.renderSearchBar();
     this.getFriendReq();
+    this.getNotifications();
+
+    this.firestoreUsersRef
+      .doc(this.state.currentUserUid)
+      .get()
+      .then((document) => {
+        this.setState({ currentUsername: document.data().username });
+      });
   }
+
+  getNotifications = () => {
+    let chatCounter = 0;
+    firebase
+      .firestore()
+      .collection("notifications")
+      .doc(this.state.user3)
+      .collection("userNotifications")
+      .orderBy("time", "desc")
+      .onSnapshot((snapshot) => {
+        const notificationsArray = [];
+
+        // snapshot.docChanges().forEach((change) => {
+        //   if (change.type === "added") {
+        //  this.state.alert.push(change.doc.data());
+
+        // }
+        // });
+
+        snapshot.forEach((doc) => {
+          firebase
+            .firestore()
+            .collection("users")
+            .doc(doc.data().userId)
+            .get()
+            .then((doco) => {
+              let pp = {
+                avatar: doco.data().profilePic,
+                content: doc.data().content,
+                source: doc.data().source,
+                time: doc.data().time,
+                type: doc.data().type,
+                userId: doc.data().userId,
+                username: doco.data().username,
+              };
+              notificationsArray.push(pp);
+              this.setState({ notifications: notificationsArray });
+              if (doc.data().type == "chat") {
+                chatCounter = chatCounter + 1;
+              }
+              this.setState({ unseenChats: chatCounter });
+              // console.log(this.state.unseenChats)
+            });
+        });
+      });
+  };
 
   getFriendReq = async () => {
     let users = [];
@@ -529,6 +683,12 @@ class UserNavbar extends React.Component {
                 className="navbar-nav-hover align-items-lg-center ml-lg-auto"
                 navbar
               >
+                {/* {this.state.alert.map((item, index) => (
+      <UncontrolledAlert color="info">
+      {item.content}
+      
+    </UncontrolledAlert>
+      ))} */}
               </Nav>
 
               {/* <NavItem> */}
@@ -562,13 +722,68 @@ class UserNavbar extends React.Component {
                 </NavLink>
               </div>
 
+              {/* messages */}
               <div style={{ display: "block" }}>
-                <UncontrolledDropdown nav id="tooltip333589072">
+                <UncontrolledDropdown nav id="tooltip233583072">
                   <DropdownToggle nav style={{ padding: "10px 8px" }}>
                     <IconButton aria-label="follow requests" color="inherit">
-                      {this.state.friendReq.length > 0 ? (
+                      {this.state.unseenChats > 0 ? (
                         <Badge
-                          badgeContent={this.state.friendReq.length}
+                          badgeContent={this.state.unseenChats}
+                          color="secondary"
+                        >
+                          {/* <i className="ni ni-bell-55" /> */}
+                          <img
+                            src={require("assets/img/icons/48px/chat-46.svg")}
+                            width="20px"
+                            height="20px"
+                          />
+                        </Badge>
+                      ) : (
+                        // <i className="ni ni-bell-55" />
+                        <img
+                          src={require("assets/img/icons/48px/chat-46.svg")}
+                          width="20px"
+                          height="20px"
+                        />
+                      )}
+                    </IconButton>
+                    <span className="nav-link-inner--text d-lg-none ml-2 description">
+                      {t("Chat")}
+                      <UncontrolledTooltip delay={0} target="tooltip233583072">
+                        {t("Chat")}
+                      </UncontrolledTooltip>
+                    </span>
+                    {/* <span
+                    className="nav-link-inner--text description"
+                    style={{ textShadow: "3px 2px 5px rgba(0, 5, 9, 1)" }}
+                    >
+                    {" "}
+                    {t("Follow Requests")}
+                  </span> */}
+                  </DropdownToggle>
+                  <DropdownMenu
+                    aria-labelledby="navbar-success_dropdown_1"
+                    right
+                  >
+                    {/* <DropdownItem to="/profile" tag={Link}> */}
+
+                    <div style={{ padding: "2px" }}>
+                      <Inbox />
+                    </div>
+                    {/* </DropdownItem> */}
+                  </DropdownMenu>
+                </UncontrolledDropdown>
+              </div>
+
+              {/* notifications */}
+              <div style={{ display: "block" }}>
+                <UncontrolledDropdown nav id="tooltip333583072">
+                  <DropdownToggle nav style={{ padding: "10px 8px" }}>
+                    <IconButton aria-label="notifications" color="inherit">
+                      {this.state.notifications.length > 0 ? (
+                        <Badge
+                          badgeContent={this.state.notifications.length}
                           color="secondary"
                         >
                           {/* <i className="ni ni-bell-55" /> */}
@@ -588,9 +803,9 @@ class UserNavbar extends React.Component {
                       )}
                     </IconButton>
                     <span className="nav-link-inner--text d-lg-none ml-2 description">
-                      {t("Follow requests")}
-                      <UncontrolledTooltip delay={0} target="tooltip333589072">
-                        {t("Follow requests")}
+                      {t("Notifications")}
+                      <UncontrolledTooltip delay={0} target="tooltip333583072">
+                        {t("Notifications")}
                       </UncontrolledTooltip>
                     </span>
                     {/* <span
@@ -605,11 +820,118 @@ class UserNavbar extends React.Component {
                     aria-labelledby="navbar-success_dropdown_1"
                     right
                   >
-                    <DropdownItem
-                    // style={{ textShadow: "3px 2px 0px rgba(0, 0, 0, 0.23)" }}
-                    >
-                      <Friendreq />
-                    </DropdownItem>
+                    {this.state.notifications.length < 1 ? (
+                      <DropdownItem>No notifications</DropdownItem>
+                    ) : (
+                      <>
+                        {/* // <DropdownItem> */}
+                        {this.state.notifications.map((item, index) => (
+                          <>
+                            <DropdownItem
+                              to={
+                                item.type == "request" ||
+                                item.type == "follow" ||
+                                item.type == "requestAccepted"
+                                  ? `/friend/${item.source}`
+                                  : item.type == "chat"
+                                  ? `/chat/${item.source}`
+                                  : `/post/${item.source}`
+                              }
+                              tag={Link}
+                            >
+                              <div className="d-flex align-items-center">
+                                <Badge
+                                  // overlap="circle"
+                                  anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "right",
+                                  }}
+                                  badgeContent={
+                                    <img
+                                      src={
+                                        item.type == "like"
+                                          ? require("assets/img/icons/bnw/like.png")
+                                          : item.type == "comment"
+                                          ? require("assets/img/icons/bnw/comment.png")
+                                          : item.type == "chat"
+                                          ? require("assets/img/icons/bnw/chat.png")
+                                          : require("assets/img/icons/bnw/friend.png")
+                                      }
+                                      width="16px"
+                                      height="16px"
+                                      // className="avatar"
+                                    />
+                                  }
+                                  //  color="primary"
+                                >
+                                  <img
+                                    className="avatar"
+                                    width="45"
+                                    src={item.avatar}
+                                    alt=""
+                                  />
+                                </Badge>
+                                <div className="mx-3">
+                                  <h6 className="mb-0 text-black">
+                                    {"@"}
+                                    {item.username} {item.content}
+                                  </h6>
+
+                                  <small className="text-muted">
+                                    {" "}
+                                    {moment(Number(item.time)).format(
+                                      "lll"
+                                    )}{" "}
+                                  </small>
+                                </div>
+
+                                {item.type == "chat" ? (
+                                  <IconButton aria-label="chat" color="inherit">
+                                    <img
+                                      src={require("assets/img/icons/48px/chat-46.svg")}
+                                      // src={require("assets/img/icons/bnw/chat.png")}
+                                      width="30px"
+                                      height="30px"
+                                      // className="avatar"
+                                    />
+                                  </IconButton>
+                                ) : null}
+
+                                {item.type == "request" ? (
+                                  <>
+                                    <Button
+                                      color="info"
+                                      size="sm"
+                                      onClick={() =>
+                                        this.handleAccept(
+                                          item.userId,
+                                          item.username,
+                                          item.avatar
+                                        )
+                                      }
+                                    >
+                                      {" "}
+                                      {t("accept")}{" "}
+                                    </Button>
+                                    <Button
+                                      // className="mr-4"
+                                      color="danger"
+                                      size="sm"
+                                      onClick={() =>
+                                        this.handleReject(item.userId)
+                                      }
+                                    >
+                                      {t("reject")}
+                                    </Button>
+                                  </>
+                                ) : null}
+                              </div>
+                            </DropdownItem>
+                          </>
+                        ))}
+                        {/* </DropdownItem> */}
+                      </>
+                    )}
                   </DropdownMenu>
                 </UncontrolledDropdown>
               </div>

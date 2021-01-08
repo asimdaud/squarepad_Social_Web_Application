@@ -347,6 +347,7 @@ class EditProfile extends React.Component {
           ref="main"
           style={{
             // backgroundColor:"black",
+            height:"100%",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}

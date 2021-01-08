@@ -101,6 +101,7 @@
     "react-map-gl-heatmap-overlay": "^1.1.4",
     "react-player": "^2.6.2",
     "react-rater": "^5.1.1",
+    "react-redux": "^7.2.2",
     "react-responsive-carousel": "^3.2.10",
     "react-router": "5.0.0",
     "react-router-dom": "^5.2.0",
@@ -109,6 +110,7 @@
     "react-shadow-scroll": "^1.0.1",
     "react-smooth-image": "^1.1.0",
     "reactstrap": "^8.4.1",
+    "redux": "^4.0.5",
     "reverse-geocoding": "^3.0.2",
     "semantic-ui-react": "^0.88.2",
     "semver": "^7.3.2"

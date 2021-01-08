@@ -1,4 +1,6 @@
 import React from "react";
+import { createStore } from "redux";
+import { Provider } from "react-redux";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
 
@@ -16,72 +18,98 @@ import Update from "pages/Update";
 import Admin from "pages/Admin";
 import PrivateRoute from "./privateRoute";
 import FriendsPage from "pages/FirendsPage";
+import PostPage from "pages/PostPage";
 import Chat from "pages/chat";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 
-ReactDOM.render(
+const initialState = { user3: 8 };
 
-  <I18nextProvider i18n={i18n}>
+function reducer(state = initialState, action) {
+  switch (action.type) {
+    case "increment":
+      return {
+        user3: state.user3 + 1,
+      };
+    default:
+      return state;
+  }
+}
+
+const store = createStore(reducer);
+
+// store.dispatch({ type: "increment" });
+
+ReactDOM.render(
+  <Provider store={store}>
+    <I18nextProvider i18n={i18n}>
       <BrowserRouter>
-    <Switch>
-      <Route path="/login" exact render={(props) => <Login {...props} />} />
-      <PrivateRoute
-        path="/profile"
-        render={(props) => <Profile {...props} />}
-        exact
-      />
-      <PrivateRoute
-        path="/group"
-        render={(props) => <Group {...props} />}
-        exact
-      />
-      <PrivateRoute
-        path="/edit-profile"
-        render={(props) => <EditProfile {...props} />}
-        exact
-      />
-      {/* <PrivateRoute
+        <Switch>
+          <Route path="/login" exact render={(props) => <Login {...props} />} />
+          <PrivateRoute
+            path="/profile"
+            render={(props) => <Profile {...props} />}
+            exact
+          />
+          <PrivateRoute
+            path="/group"
+            render={(props) => <Group {...props} />}
+            exact
+          />
+          <PrivateRoute
+            path="/edit-profile"
+            render={(props) => <EditProfile {...props} />}
+            exact
+          />
+          {/* <PrivateRoute
         path="/update"
         render={(props) => <Update {...props} />}
         exact
       /> */}
 
-      <Route
-        path="/register"
-        exact
-        render={(props) => <Register {...props} />}
-      />
+          <Route
+            path="/register"
+            exact
+            render={(props) => <Register {...props} />}
+          />
 
+          <PrivateRoute
+            path="/admin"
+            exact
+            render={(props) => <Admin {...props} />}
+          />
 
+          <PrivateRoute
+            path="/chat/:fuid"
+            exact
+            render={(props) => <Chat {...props} />}
+          />
 
-<PrivateRoute
-        path="/admin"
-        exact
-        render={(props) => <Admin {...props} />}
-      />
-
-
-      <PrivateRoute
-        path="/chat/:fuid"
-        exact
-        render={(props) => <Chat {...props} />}
-      />
-      {/* <PrivateRoute
+          <PrivateRoute
+            path="/post/:pId"
+            exact
+            render={(props) => <PostPage {...props} />}
+          />
+          {/* <PrivateRoute
         path="/friend"
         render={(props) => <FriendsPage {...props} />}
         exact
       /> */}
-        <PrivateRoute path="/friend/:fuid" exact render={props => <FriendsPage {...props} />} />
+          <PrivateRoute
+            path="/friend/:fuid"
+            exact
+            render={(props) => <FriendsPage {...props} />}
+          />
 
-      <PrivateRoute
-        path="/home"
-        render={(props) => <Timeline {...props} />}
-        exact
-      />
-      <Redirect to="/profile" />
-    </Switch>
-  </BrowserRouter>
-  </I18nextProvider>,
+          <PrivateRoute
+            path="/home"
+            render={(props) => <Timeline {...props} />}
+            exact
+          />
+          <Redirect to="/profile" />
+        </Switch>
+      </BrowserRouter>
+    </I18nextProvider>
+  </Provider>,
   document.getElementById("root")
 );

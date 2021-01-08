@@ -1,5 +1,6 @@
 import React from "react";
 import moment from "moment";
+import FadeIn from "react-fade-in";
 
 // reactstrap components
 import { Button, Card, Container, Row, Col, Modal, Badge } from "reactstrap";
@@ -110,12 +111,14 @@ class Profile extends React.Component {
   componentDidMount() {
     firebase.auth().onAuthStateChanged((user) => {
       this.setState({ user: user });
+      // moment().valueOf().toString()
 
       firebase
         .firestore()
         .collection("users")
         .doc(user.uid)
-        .onSnapshot((doc) => {
+        .get()
+        .then((doc) => {
           const res = doc.data();
 
           if (res != null) {
@@ -135,6 +138,16 @@ class Profile extends React.Component {
 
           console.log(res, this.state.userdb);
         });
+
+
+        // this.interval = setInterval(
+        //   () => 
+        //   firebase.firestore().collection("users").doc(user.uid).update({
+        //     lastOnline: moment().valueOf().toString(),
+        //   }),
+        //   30000
+        // );
+
     });
 
     // localStorage.setItem("groupId", JSON.stringify("TCeQwxQ2DprIpZpr431V"));
@@ -151,6 +164,7 @@ class Profile extends React.Component {
     // this.getFollowCount();
     // this.getPosts();
     // this.getProfilePic();
+    // clearInterval(this.interval);
   }
 
   getPosts = () => {
@@ -164,17 +178,17 @@ class Profile extends React.Component {
           let article = {
             username: this.state.username,
             userId: this.state.user3,
+            profilePic: this.state.profilePic,
             title: "post",
-            avatar: this.state.profilePic,
-            image: doc.data().image,
             // cta: "cta",
+            // location: doc.data().location.coordinates,
+            // locName: doc.data().location.locationName,
             caption: doc.data().caption,
-            location: doc.data().location.coordinates,
-            locName: doc.data().location.locationName,
+            image: doc.data().image,
             postId: doc.data().postId,
             timeStamp: doc.data().time,
             // likes:0,
-            locLatLng: "Address",
+            // locLatLng: "Address",
           };
           cloudImages.push(article);
         });
@@ -288,6 +302,7 @@ class Profile extends React.Component {
                 onClick={() => {
                   this.setState({ modalItem: post });
                   this.setState({ defaultModal: true });
+                  console.log(this.state.modalItem);
                 }}
               >
                 <img
@@ -326,9 +341,9 @@ class Profile extends React.Component {
     localStorage.clear();
   }
 
-  onHover = (userId) => {
-    localStorage.setItem("Fuid", JSON.stringify(userId));
-  };
+  // onHover = (userId) => {
+  //   localStorage.setItem("Fuid", JSON.stringify(userId));
+  // };
 
   onMouseOverColor = (event) => {
     event.target.backgroudColor = "#FFFFFF";
@@ -350,134 +365,139 @@ class Profile extends React.Component {
           ref="main"
           style={{
             // backgroundColor:"black",
-
+            height:"100%",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
         >
           <section className="section" style={{ marginTop: "200px" }}>
             <Container>
-              <Card className="card-profile shadow">
-                <div className="px-4">
-                  <Row className="justify-content-center">
-                    <Col
-                      className="order-lg-2"
-                      lg="3"
-                      style={{ padding: "15px" }}
-                    >
-                      <div className="card-profile-image">
-                        <a href="#pablo" onClick={(e) => e.preventDefault()}>
-                          <img
-                            className="rounded-circle"
-                            style={{
-                              width: "200px",
-                              height: "200px",
-                              display: "table",
-                              objectFit: "cover",
-                            }}
-                            src={
-                              this.state.userdb.profilePic
-                                ? this.state.userdb.profilePic
-                                : require("assets/img/icons/user/user1.png")
-                            }
-                          />
-                        </a>
-                      </div>
-                    </Col>
-                    <Col
-                      className="order-lg-3 text-lg-right align-self-lg-center"
-                      lg="4"
-                    >
-                      <div
-                        className="card-profile-actions py-4 mt-lg-0"
-                        style={{ padding: "5px" }}
+              <FadeIn transitionDuration={2100} delay={80}>
+                <Card className="card-profile shadow">
+                  <div className="px-4">
+                    <Row className="justify-content-center">
+                      <Col
+                        className="order-lg-2"
+                        lg="3"
+                        style={{ padding: "15px" }}
                       >
-                        <Button
-                          className="mr-4"
-                          color="default"
-                          size="sm"
-                          to="/edit-profile"
-                          tag={Link}
+                        <div className="card-profile-image">
+                          <a href="#pablo" onClick={(e) => e.preventDefault()}>
+                            <img
+                              className="rounded-circle"
+                              style={{
+                                width: "200px",
+                                // height: "200px",
+                                // display: "table",
+                                objectFit: "cover",
+                              }}
+                              src={
+                                this.state.userdb.profilePic
+                                  ? this.state.userdb.profilePic
+                                  : require("assets/img/icons/user/user1.png")
+                              }
+                            />
+                          </a>
+                        </div>
+                      </Col>
+                      <Col
+                        className="order-lg-3 text-lg-right align-self-lg-center"
+                        lg="4"
+                      >
+                        <div
+                          className="card-profile-actions py-4 mt-lg-0"
+                          style={{ padding: "5px" }}
                         >
-                          {t("Edit Profile")}
-                        </Button>
-
-                        {this.state.admin ? (
                           <Button
-                            className="float-right"
-                            color="danger
- "
+                            className="mr-4"
+                            color="default"
                             size="sm"
-                            to="/admin"
+                            to="/edit-profile"
                             tag={Link}
                           >
-                            {t("Admin Panel")}
+                            {t("Edit Profile")}
                           </Button>
-                        ) : (
-                          ""
-                        )}
-                      </div>
-                    </Col>
-                    <Col className="order-lg-1" lg="4">
-                      <div className="card-profile-stats d-flex justify-content-center">
-                        <div>
-                          <span className="heading">
-                            {" "}
-                            {this.state.posts.length}
-                          </span>
-                          <span className="description">{t("Posts")}</span>
-                        </div>
 
-                        <div
-                          onClick={
-                            this.state.followerList < 1
-                              ? (e) => e.preventDefault()
-                              : () => this.toggleModal("defaultModal3")
-                          }
-                        >
-                          <span className="heading">
-                            {" "}
-                            {this.state.followerList.length}
-                          </span>
-                          <span className="description">{t("Followers")}</span>
+                          {this.state.admin ? (
+                            <Button
+                              className="float-right"
+                              color="danger
+ "
+                              size="sm"
+                              to="/admin"
+                              tag={Link}
+                            >
+                              {t("Admin Panel")}
+                            </Button>
+                          ) : (
+                            ""
+                          )}
                         </div>
-                        <div
-                          onClick={
-                            this.state.followingList < 1
-                              ? (e) => e.preventDefault()
-                              : () => this.toggleModal("defaultModal2")
-                          }
-                        >
-                          <span className="heading">
-                            {" "}
-                            {this.state.followingList.length}
-                          </span>
-                          <span className="description">{t("Following")}</span>
+                      </Col>
+                      <Col className="order-lg-1" lg="4">
+                        <div className="card-profile-stats d-flex justify-content-center">
+                          <div>
+                            <span className="heading">
+                              {" "}
+                              {this.state.posts.length}
+                            </span>
+                            <span className="description">{t("Posts")}</span>
+                          </div>
+
+                          <div
+                            onClick={
+                              this.state.followerList < 1
+                                ? (e) => e.preventDefault()
+                                : () => this.toggleModal("defaultModal3")
+                            }
+                          >
+                            <span className="heading">
+                              {" "}
+                              {this.state.followerList.length}
+                            </span>
+                            <span className="description">
+                              {t("Followers")}
+                            </span>
+                          </div>
+                          <div
+                            onClick={
+                              this.state.followingList < 1
+                                ? (e) => e.preventDefault()
+                                : () => this.toggleModal("defaultModal2")
+                            }
+                          >
+                            <span className="heading">
+                              {" "}
+                              {this.state.followingList.length}
+                            </span>
+                            <span className="description">
+                              {t("Following")}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </Col>
-                  </Row>
-                  <div className="text-center mt-5">
-                    <h3>{this.state.name} </h3>
-                    <span className="font-weight-light">
-                      {"@"}
-                      {this.state.username}
-                    </span>
-                    {/* <div className="h6 font-weight-300">
+                      </Col>
+                    </Row>
+                    <div className="text-center mt-5">
+                      <h3>{this.state.name} </h3>
+                      <span className="font-weight-light">
+                        {"@"}
+                        {this.state.username}
+                      </span>
+                      {/* <div className="h6 font-weight-300">
                       <i className="ni location_pin mr-2" />
                       Bucharest, Romania
                     </div> */}
-                    <div className="h6 mt-4">
-                      <i className="ni business_briefcase-24 mr-2" />
-                      {this.state.bio}
-                    </div>
-                    {/* <div>
+                      <div className="h6 mt-4">
+                        <i className="ni business_briefcase-24 mr-2" />
+                        {this.state.bio}
+                      </div>
+                      {/* <div>
                       <i className="ni education_hat mr-2" />
                       University of Computer Science
                     </div> */}
-                  </div>
+                    </div>
 
-                  {/* {this.state.admin ? (
+                    {/* {this.state.admin ? (
                     <div className="text-center mt-5">
                       <Button
                         //  className="float-right"
@@ -494,13 +514,14 @@ class Profile extends React.Component {
                     ""
                   )} */}
 
-                  <div className="mt-5 py-5 border-top text-center">
-                    <Row className="justify-content-center">
-                      <Col lg="11">{this.postsView()}</Col>
-                    </Row>
+                    <div className="mt-5 py-5 border-top text-center">
+                      <Row className="justify-content-center">
+                        <Col lg="11">{this.postsView()}</Col>
+                      </Row>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              </FadeIn>
             </Container>
           </section>
           <SimpleFooter />
@@ -616,7 +637,7 @@ class Profile extends React.Component {
           className="fluid"
         >
           {" "}
-          {this.state.modalItem && <PostPicOnly item={this.state.modalItem} />}
+          {this.state.modalItem && <Post item={this.state.modalItem} />}
         </Modal>
 
         {/* <Update /> */}

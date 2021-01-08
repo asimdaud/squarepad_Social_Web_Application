@@ -4,6 +4,8 @@ import React from "react";
 import moment from "moment";
 import { Favorite, FavoriteBorder, Comment } from "@material-ui/icons";
 import SmoothImage from "react-smooth-image";
+import images from "../components/Themes/images";
+
 // reactstrap components
 import {
   // UncontrolledCollapse,
@@ -41,7 +43,7 @@ import CommentItem from "../components/CommentItem";
 
 class Post extends React.Component {
   user = firebase.auth().currentUser;
-  ismounted = false;
+  // ismounted = false;
 
   state = {
     user: firebase.auth().currentUser,
@@ -72,7 +74,7 @@ class Post extends React.Component {
   firestoreUsersRef = firebase.firestore().collection("users");
 
   componentWillUnmount = () => {
-    this.ismounted = false;
+    // this.ismounted = false;
     clearInterval(CommentItem);
     // clearInterval(this.getCommentData());
     this.getProfilePic();
@@ -80,7 +82,7 @@ class Post extends React.Component {
   };
 
   componentDidMount = () => {
-    this.ismounted = true;
+    // this.ismounted = true;
     this.renderAvatar();
     this.getProfilePic();
     const { item } = this.props;
@@ -122,7 +124,7 @@ class Post extends React.Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    this.ismounted = true;
+    // this.ismounted = true;
     const { item } = this.props;
 
     if (prevProps.item.postId !== item.postId) {
@@ -152,9 +154,10 @@ class Post extends React.Component {
         });
     }
 
-    if (prevState.commentsArray !== this.state.commentsArray) {
-      this.getCommentData();
-    }
+    //re-renders
+    // if (prevState.commentsArray !== this.state.commentsArray) {
+    //   this.getCommentData();
+    // }
 
     // this.renderAvatar();
     // this.getProfilePic();
@@ -266,7 +269,8 @@ class Post extends React.Component {
       .firestore()
       .collection("users")
       .doc(this.user.uid)
-      .onSnapshot((doc) => {
+      .get()
+      .then((doc) => {
         const res = doc.data().profilePic;
 
         if (res != null) {
@@ -302,13 +306,12 @@ class Post extends React.Component {
           .collection("notifications")
           .doc(this.state.userId)
           .collection("userNotifications")
-          .doc("(" + item.postId + ")like")
+          .doc("(" + item.postId + ")like+("+this.user.uid+")")
           .set({
             userId: this.user.uid,
-            username: this.state.currentUsername,
-            avatar: this.state.profilePic,
-            content: "liked your post",
+            
             source: item.postId,
+            content: "liked your post",
             type: "like",
             time: moment().valueOf().toString(),
           })
@@ -327,8 +330,7 @@ class Post extends React.Component {
           .collection("notifications")
           .doc(this.state.userId)
           .collection("userNotifications")
-          .doc("(" + item.postId + ")like")
-          .delete()
+          .doc("(" + item.postId + ")like+("+this.user.uid+")")          .delete()
           .then(() => {
             if (noOfLikes === 0) this.state.likes = 0;
             this.state.likes = noOfLikes - 1;
@@ -347,14 +349,14 @@ class Post extends React.Component {
   }
 
   postComment = (e) => {
-    e.preventDefault();
+    // e.preventDefault();
     const { item } = this.props;
     const timestamp = moment().valueOf().toString();
     let myComment = this.state.commentInput;
     let myusername = this.state.currentUsername;
     let myuserId = this.user.uid;
 
-    if (myComment != "") {
+    if (myComment.trim() != "") {
       // firebase
       //   .firestore()
       //   .collection("comments")
@@ -392,13 +394,12 @@ class Post extends React.Component {
           .doc(timestamp)
           .set({
             userId: this.user.uid,
-            username: this.state.currentUsername,
-            avatar: this.state.profilePic,
-            content: "commented on your post",
+            
             source: item.postId,
+            content: "commented on your post",
             type: "comment",
             time: moment().valueOf().toString(),
-         })
+          })
           .then(() => {
             this.setState({ commentInput: "" });
 
@@ -493,6 +494,12 @@ class Post extends React.Component {
     localStorage.setItem("Fuid", JSON.stringify(this.state.userId));
   };
 
+  onKeyboardPress = (event) => {
+    if (event.key === "Enter") {
+      this.postComment();
+    }
+  };
+
   // mOver = () => {
   //   const { item } = this.props;
 
@@ -528,15 +535,18 @@ class Post extends React.Component {
 
   render() {
     const { item } = this.props;
+    // console.log("SRKKK")
+    // console.log(item)
     return (
       <>
         <div
           style={{
             // padding: "16px",
             borderRadius: "20px",
-            marginBottom: "25px",
+            paddingBottom: "25px"
+            // marginBottom: "25px",
           }}
-          key={item.time}
+          // key={item.time}
         >
           <div
             className="shadow"
@@ -548,7 +558,7 @@ class Post extends React.Component {
               borderTopLeftRadius: "50px",
               borderTopRightRadius: "50px",
             }}
-            key={item.time}
+            // key={item.time}
           >
             {/* <div className="card-header">
                 <h5 className="h3 mb-0">Timeline</h5>
@@ -561,14 +571,14 @@ class Post extends React.Component {
                 borderTopRightRadius: "50px",
               }}
               // onClick={this.togglePage()}
-              key={item.time}
+              // key={item.time}
             >
               <div
                 className="d-flex align-items-center"
                 // onClick={() => {this.togglePage();}}
                 // onClick={() => {this.togglePage();}}
                 onMouseOver={() => this.onHover()}
-                key={item.time}
+                // key={item.time}
                 // href="javascript:;"
               >
                 {/* <i
@@ -696,12 +706,15 @@ class Post extends React.Component {
 
               {/* <!-- Comments --> */}
               <div className="mb-1" style={{ zoom: "95%" }}>
+                <div style={{maxHeight:"350px",overflowY:"scroll"}}>
+
                 {this.state.commentsArray.map((comment, postindex) => (
                   <CommentItem item={comment} key={postindex} />
-                ))}
+                  ))}
+                  </div>
 
                 <div className="media align-items-center mt-1">
-                  <img
+                  {/* <img
                     style={{
                       width: "44px",
                       height: "44px",
@@ -712,14 +725,14 @@ class Post extends React.Component {
                     // alt="Image placeholder"
                     // className="avatar"
                     src={this.state.profilePic}
-                  />
+                  /> */}
                   <div className="media-body">
-                    <Form
+                    {/* <Form
                       id="formComment"
                       role="form"
                       onSubmit={this.postComment}
-                    >
-                      <Input
+                    > */}
+                    {/* <Input
                         className="form-control"
                         id="commentInput"
                         placeholder="Write your comment"
@@ -727,12 +740,52 @@ class Post extends React.Component {
                         value={this.state.commentInput}
                         rows="1"
                       ></Input>
-                    </Form>
+                          */}
+
+                    <div className="viewBottom">
+                      <img
+                        style={{
+                          width: "44px",
+                          height: "44px",
+                          display: "block",
+                          objectFit: "cover",
+                        }}
+                        className="rounded  img-responsive"
+                        // alt="Image placeholder"
+                        // className="avatar"
+                        src={this.state.profilePic}
+                      />
+                      <input
+                        className="viewInput"
+                        placeholder="Write your comment..."
+                        id="commentInput"
+                        onChange={this.handleChange}
+                        value={this.state.commentInput}
+                        rows="1"
+                        onKeyPress={this.onKeyboardPress}
+                      />
+                      <img
+                        className="icSend"
+                        src={images.ic_send}
+                        alt="icon send"
+                        onClick={() => this.postComment()}
+                      />
+                    </div>
+                    {/* </Form> */}
                   </div>
                 </div>
               </div>
             </div>
-            <div></div>
+
+            <div
+            
+            className="card-header d-flex align-items-center "
+            // style={{  MozBorderRadiusTopleft:"20px",MozBorderRadiusTopright:"20px"  }}
+            style={{
+              borderBottomLeftRadius: "50px",
+              borderBottomRightRadius: "50px",
+            }}
+            ></div>
           </div>
         </div>
 

@@ -40,7 +40,6 @@ import { withTranslation } from "react-i18next";
 //   setValidated(true);
 // };
 
-
 class Register extends React.Component {
   constructor() {
     super();
@@ -55,9 +54,7 @@ class Register extends React.Component {
       usernameChecked: false,
       isUsernameValid: true,
       // value: "en",
-      value: localStorage.getItem("lang")
-        ? localStorage.getItem("lang")
-        : "en",
+      value: localStorage.getItem("lang") ? localStorage.getItem("lang") : "en",
       // setValidated: false,
       // validated: false,
       error: "",
@@ -88,13 +85,13 @@ class Register extends React.Component {
   componentDidMount = () => {
     localStorage.setItem("lang", "en");
     // localStorage.setItem("ss", "en");
-// console.log(   JSON.parse(localStorage.getItem("lang")))   ;
-// console.log(   localStorage.getItem("lang")) ;
-// console.log(   localStorage.getItem("ss")) ;
+    // console.log(   JSON.parse(localStorage.getItem("lang")))   ;
+    // console.log(   localStorage.getItem("lang")) ;
+    // console.log(   localStorage.getItem("ss")) ;
 
-// console.log(   JSON.parse(localStorage.getItem("ss")))   ;
-    
-// this.hollow().then(() => {
+    // console.log(   JSON.parse(localStorage.getItem("ss")))   ;
+
+    // this.hollow().then(() => {
 
     // this.handleSubmit();
     // });
@@ -102,11 +99,10 @@ class Register extends React.Component {
     firebase.auth().onAuthStateChanged((user) => {
       this.setState({ isSignedIn: !!user });
       console.log("user", user);
-      if (this.state.isSignedIn) 
-      {      this.next(user);
-    
+      if (this.state.isSignedIn) {
+        this.next(user);
       }
-      });
+    });
   };
 
   componentWillUnmount = () => {};
@@ -125,38 +121,35 @@ class Register extends React.Component {
   next = (user) => {
     // if (!firebase.firestore().collection("users").doc(user.uid)) {
 
-      
-      
-      
-      firebase.firestore()
+    firebase
+      .firestore()
       .collection("users")
       .doc(user.uid)
       .set({
-        // username: user.email.replace('@','').toLowerCase(),   
+        // username: user.email.replace('@','').toLowerCase(),
         name: user.displayName,
-          email: user.email,
-          profilePic: user.photoURL,
-          publicProfile: true,
-          emailAlert: false,
-          bio: user.displayName + "'s bio.",
-        });
-        // }
-        localStorage.setItem(
-          "uid",
-          JSON.stringify(firebase.auth().currentUser.uid)
+        email: user.email,
+        profilePic: user.photoURL,
+        publicProfile: true,
+        emailAlert: false,
+        bio: user.displayName + "'s bio.",
+      });
+    // }
+    localStorage.setItem(
+      "uid",
+      JSON.stringify(firebase.auth().currentUser.uid)
     );
     localStorage.setItem("user", JSON.stringify(firebase.auth().currentUser));
-    
+
     // localStorage.setItem("lang", "en");
-    
+
     // this.props.history.push("/update");
-    
-    
+
     // alert(localStorage.getItem("uid"));
     // console.log(cred);
     // this.props.history.push("/profile");
   };
-  
+
   handleChangeData = (e) => {
     this.setState({
       [e.target.id]: e.target.value,
@@ -239,8 +232,7 @@ class Register extends React.Component {
         if (pattern.test(word)) {
           this.setState({
             isUsernameValid: false,
-            isUsernameAvailable:false,
-
+            isUsernameAvailable: false,
           });
           console.log(this.state.isUsernameValid, "Invalid");
         } else {
@@ -256,10 +248,7 @@ class Register extends React.Component {
             });
             console.log(this.state.isUsernameAvailable, "taken");
           }
-
         }
-    
-     
       });
   }
 
@@ -280,7 +269,7 @@ class Register extends React.Component {
       alert("Please only use standard alphanumerics for username");
     }
     //  if (username !== "" && name !== "")
-    else if(this.state.isUsernameAvailable) {
+    else if (this.state.isUsernameAvailable) {
       CreateUser(username, name, email, password, bio)
         .then((res) => {
           console.log(res);
@@ -317,8 +306,11 @@ class Register extends React.Component {
     return (
       <>
         <PubNavbar />
-        <main ref="main">
-          <section className="section-shaped" style={{ paddingTop: "4rem" }}>
+        <main ref="main" style={{ height: "100%" }}>
+          <section
+            className="section-shaped"
+            style={{ paddingTop: "4rem", height: "100%" }}
+          >
             <div className="shape shape-style-1 bg-gradient-default">
               <span />
               <span />
@@ -352,8 +344,7 @@ class Register extends React.Component {
                       </div>
                       <Form role="form" onSubmit={this.handleSubmit}>
                         <FormGroup>
-
-                        <InputGroup className="input-group-alternative mb-3">
+                          <InputGroup className="input-group-alternative mb-3">
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 <i className="ni ni-hat-3" />
@@ -376,7 +367,7 @@ class Register extends React.Component {
                             <Input
                               valid={
                                 this.state.isUsernameAvailable &&
-                                this.state.usernameChecked 
+                                this.state.usernameChecked
                                 // &&
                                 // this.state.isUsernameValid
                               }
@@ -404,9 +395,7 @@ class Register extends React.Component {
                               Sweet! that username is available
                             </FormFeedback>
 
-                            <FormFeedback invalid>
-                              Bummer! 
-                            </FormFeedback>
+                            <FormFeedback invalid>Bummer!</FormFeedback>
                             {/* <Form.Control
                               type="text"
                               placeholder="Username"
@@ -433,8 +422,6 @@ class Register extends React.Component {
                               aria-describedby="inputGroupPrepend" required
                             /> */}
                           </InputGroup>
-
-
                         </FormGroup>
 
                         {/* <FormGroup
