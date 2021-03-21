@@ -1699,7 +1699,7 @@ class chat extends React.Component {
 
     return (
       <>
-        <UserNavbar />
+        {/* <UserNavbar /> */}
         <main
           className="profile-page"
           ref="main"

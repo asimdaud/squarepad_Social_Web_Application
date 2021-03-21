@@ -25,6 +25,7 @@ import { firebase, ui } from "../services/firebase";
 import { SigninUser } from "../services/authServices";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import { withTranslation } from "react-i18next";
+import { DropdownDivider } from "semantic-ui-react";
 
 class Login extends React.Component {
   state = {
@@ -46,8 +47,30 @@ class Login extends React.Component {
   uiConfig = {
     signInFlow: "popup",
     signInOptions: [
-      firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-      // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+      {
+        provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        scopes: ["https://www.googleapis.com/auth/contacts.readonly"],
+        customParameters: {
+          // Forces account selection even when one account
+          // is available.
+          prompt: "select_account",
+        },
+      },
+      // {
+      //   provider: firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+      //   scopes: [
+      //     'public_profile',
+      //     'email',
+      //     'user_likes',
+      //     'user_friends'
+      //   ],
+      //   customParameters: {
+      //     // Forces password re-entry.
+      //     auth_type: 'reauthenticate'
+      //   }
+      // },
+      // firebase.auth.TwitterAuthProvider.PROVIDER_ID, // Twitter does not support scopes.
+      // firebase.auth.EmailAuthProvider.PROVIDER_ID // Other providers don't need to be given as object.
     ],
     callbacks: {
       signInSuccessWithAuthResult: () => false,
@@ -94,40 +117,57 @@ class Login extends React.Component {
 
   render() {
     const { t } = this.props;
+    let BackgroundImage = require("assets/img/theme/login_bg.png");
     return (
       <>
         <PubNavbar />
-        <main ref="main" style={{ height: "100%" }}>
+        <main
+          ref="main"
+          style={{
+            // backgroundColor:"black",
+            paddingTop: "2rem",
+            // overflow: "auto",
+            width: "-webkit-fill-available",
+            display: "table",
+            position: "absolute",
+            height: "-webkit-fill-available",
+            backgroundSize: "cover",
+            backgroundImage: `url(${BackgroundImage})`,
+            // "linear-gradient(to top, #e5a8cf, #c99bca, #ab90c3, #8b85ba, #6a7aae, #7679b0, #8277b0, #8f75af, #c67caa, #ee8a98, #ffa484, #fcc67a)",
+
+          }}
+        >
           <section
             className="section-shaped"
-            style={{ paddingTop: "4rem", height: "100%" }}
+            style={{
+              // paddingTop: "4rem",
+            }}
           >
-            <div className="shape shape-style-1 bg-gradient-default">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
             <Container className="pt-lg-md ">
               {/* <br/><br/> */}
               <Row className="justify-content-center">
                 <Col lg="5">
-                  <Card className="bg-secondary shadow border-0">
-                    <CardHeader className="bg-white pb-5">
-                      <div className="text-muted text-center mb-3">
+                  <Card className=
+                  // bg-secondary
+                   "shadow border-0"
+                   style={{backgroundColor: "transparent", paddingTop:"20px", borderRadius:"40px", webkittextstroke: "thin"}} >
+                    <div className=
+                    // bg-white
+                    "pb-5">
+                      <div className=
+                      
+                      "text-white text-center mb-3">
                         <small>{t("Sign in with")}</small>
                         <StyledFirebaseAuth
                           uiConfig={this.uiConfig}
                           firebaseAuth={firebase.auth()}
                         />
                       </div>
-                    </CardHeader>
-                    <CardBody className="px-lg-5 py-lg-5">
-                      <div className="text-center text-muted mb-4">
+                    </div>
+                    <CardBody
+                      className="px-lg-5 py-lg-5"
+                    >
+                      <div className="text-center text-white mb-4">
                         <small>{t("Or sign in with credentials")}</small>
                       </div>
                       <Form id="formLogin" role="form" onSubmit={this.onLogin}>

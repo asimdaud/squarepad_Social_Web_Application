@@ -17,6 +17,7 @@ import PostPicOnly from "../components/postPicOnly";
 import Update from "./Update";
 import { Redirect, Link, useRouteMatch } from "react-router-dom";
 
+
 import UserNavbar from "components/Navbars/UserNavbar";
 import {
   FormControlLabel,
@@ -139,15 +140,13 @@ class Profile extends React.Component {
           console.log(res, this.state.userdb);
         });
 
-
-        // this.interval = setInterval(
-        //   () => 
-        //   firebase.firestore().collection("users").doc(user.uid).update({
-        //     lastOnline: moment().valueOf().toString(),
-        //   }),
-        //   30000
-        // );
-
+      // this.interval = setInterval(
+      //   () =>
+      //   firebase.firestore().collection("users").doc(user.uid).update({
+      //     lastOnline: moment().valueOf().toString(),
+      //   }),
+      //   30000
+      // );
     });
 
     // localStorage.setItem("groupId", JSON.stringify("TCeQwxQ2DprIpZpr431V"));
@@ -297,7 +296,8 @@ class Profile extends React.Component {
             {this.state.posts.map((post, index) => (
               <Card
                 className="col-sm-4"
-                style={{ padding: "10px", justifyContent: "center" }}
+                style={{ padding: "10px", justifyContent: "center",
+              }}
                 key={index}
                 onClick={() => {
                   this.setState({ modalItem: post });
@@ -306,6 +306,7 @@ class Profile extends React.Component {
                 }}
               >
                 <img
+                style={{height: "255px", objectFit:"cover"}}
                   src={post.image}
                   className="img-fluid"
                   alt=""
@@ -358,14 +359,19 @@ class Profile extends React.Component {
     // }
     return (
       <>
-        <UserNavbar />
+        {/* <UserNavbar /> */}
         {/* <ExampleNavbar/> */}
         <main
           className="profile-page"
           ref="main"
           style={{
             // backgroundColor:"black",
-            height:"100%",
+            paddingTop: "2rem",
+            // overflow: "auto",
+            width: "-webkit-fill-available",
+            display: "table",
+            position: "absolute",
+            height: "-webkit-fill-available",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}

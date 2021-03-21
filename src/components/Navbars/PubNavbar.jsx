@@ -70,6 +70,7 @@ class UserNavbar extends React.Component {
             className="navbar-main navbar-transparent navbar-light headroom"
             expand="lg"
             id="navbar-main"
+            // style={{ backgroundColor: "#172b4d", height: "75px" }}
           >
             <Container>
               <NavbarBrand className="mr-lg-5" to="/timeline" tag={Link}>

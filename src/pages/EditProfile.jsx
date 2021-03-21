@@ -341,7 +341,7 @@ class EditProfile extends React.Component {
     const { t } = this.props;
     return (
       <>
-        <UserNavbar />
+        {/* <UserNavbar /> */}
         <main
           className="profile-page"
           ref="main"

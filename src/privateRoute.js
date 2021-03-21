@@ -13,8 +13,13 @@ import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 import * as firebase from "firebase";
 import moment from "moment";
+import UserNavbar from "components/Navbars/UserNavbar";
+import FlashMessage from "components/FlashMessage";
+
+
 
 // import { Grade } from "@material-ui/icons";
+
 const PrivateRoute = ({ component: RouteComponent, ...rest }) => {
   const currentUser = JSON.parse(localStorage.getItem("uid"));
   if (currentUser == null) return <Redirect to="/login" />;
@@ -27,6 +32,7 @@ const PrivateRoute = ({ component: RouteComponent, ...rest }) => {
   return (
     <>
       <I18nextProvider i18n={i18n}>
+        <UserNavbar/>
         <Route path="/home" exact render={(props) => <Timeline {...props} />} />
         {/* <Route path="/friend" exact render={props => <FriendsPage {...props} />} /> */}
         <Route
@@ -62,6 +68,8 @@ const PrivateRoute = ({ component: RouteComponent, ...rest }) => {
         <Route path="/group" exact render={(props) => <Group {...props} />} />
         <Route path="/admin" exact render={(props) => <Admin {...props} />} />
         {/* <Route path="/update" exact render={props => <Update {...props} />} /> */}
+        <FlashMessage show={true} /> 
+
       </I18nextProvider>
     </>
   );

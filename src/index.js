@@ -1,5 +1,5 @@
 import React from "react";
-import { createStore } from "redux";
+//import { createStore } from "redux";
 import { Provider } from "react-redux";
 import ReactDOM from "react-dom";
 import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
@@ -22,29 +22,40 @@ import PostPage from "pages/PostPage";
 import Chat from "pages/chat";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
+import LoginFunctional from "pages/LoginFunctional";
+import store from "./redux/store";
 
-const initialState = { user3: 8 };
+// const initialState = { user3: 8 };
 
-function reducer(state = initialState, action) {
-  switch (action.type) {
-    case "increment":
-      return {
-        user3: state.user3 + 1,
-      };
-    default:
-      return state;
-  }
-}
+// function reducer(state = initialState, action) {
+//   switch (action.type) {
+//     case "increment":
+//       return {
+//         user3: state.user3 + 1,
+//       };
+//     default:
+//       return state;
+//   }
+// }
 
-const store = createStore(reducer);
+//const store = createStore(reducer);
 
 // store.dispatch({ type: "increment" });
+
+
+
 
 ReactDOM.render(
   <Provider store={store}>
     <I18nextProvider i18n={i18n}>
       <BrowserRouter>
         <Switch>
+          <Route
+            path="/loginF"
+            exact
+            render={(props) => <LoginFunctional {...props} />}
+          />
+
           <Route path="/login" exact render={(props) => <Login {...props} />} />
           <PrivateRoute
             path="/profile"
@@ -110,6 +121,8 @@ ReactDOM.render(
         </Switch>
       </BrowserRouter>
     </I18nextProvider>
-  </Provider>,
+  </Provider>
+  ,
   document.getElementById("root")
 );
+

@@ -54,41 +54,45 @@ import * as firebase from "firebase";
 import { logOutUser } from "../../services/authServices";
 import Friendreq from "../../pages/FriendReq";
 import { withTranslation } from "react-i18next";
+import { connect } from "react-redux";
+import { ActionsCreator } from "../../redux/actions";
 // import classnames from "classnames";
 // import { Route, Redirect } from "react-router-dom";
 
 class UserNavbar extends React.Component {
   firestoreUsersRef = firebase.firestore().collection("users");
+  constructor(props) {
+    super(props);
+    this.state = {
+      user3: JSON.parse(localStorage.getItem("uid")),
+      user: {},
+      searchWord: "",
+      searchResults: [],
+      profilePic: require("assets/img/brand/logo.png"),
+      username: undefined,
+      name: undefined,
+      friendReq: [],
+      notifications: [],
+      alert: [],
 
-  state = {
-    user3: JSON.parse(localStorage.getItem("uid")),
-    user: {},
-    searchWord: "",
-    searchResults: [],
-    profilePic: require("assets/img/brand/logo.png"),
-    username: undefined,
-    name: undefined,
-    friendReq: [],
-    notifications: [],
-    alert: [],
+      currentName: undefined,
+      userProfilePic: require("assets/img/icons/user/user1.png"),
 
-    currentName: undefined,
-    userProfilePic: require("assets/img/icons/user/user1.png"),
+      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
+      foundUser: "",
+      found: false,
+      userChecked: false,
+      reqNotify: false,
+      value: localStorage.getItem("lang") ? localStorage.getItem("lang") : "en",
 
-    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
-    foundUser: "",
-    found: false,
-    userChecked: false,
-    reqNotify: false,
-    value: localStorage.getItem("lang") ? localStorage.getItem("lang") : "en",
+      collapseClasses: "",
+      collapseOpen: false,
 
-    collapseClasses: "",
-    collapseOpen: false,
-
-    currentUserUid: JSON.parse(localStorage.getItem("uid")),
-    currentUsername: undefined,
-    unseenChats: 0,
-  };
+      currentUserUid: JSON.parse(localStorage.getItem("uid")),
+      currentUsername: undefined,
+      unseenChats: 0,
+    };
+  }
 
   handleChange = (event) => {
     console.log("selected val is ", event.target.value);
@@ -136,53 +140,63 @@ class UserNavbar extends React.Component {
   searchUser(word) {
     let userCollectionRef = firebase.firestore().collection("users");
     console.log(word);
-    if (word.length > 3) this.setState({ userChecked: true });
+    if (word.length > 2) this.setState({ userChecked: true });
     let users = [];
-    userCollectionRef
-      // .where("username", "==", word.toLowerCase())
-      .where("username", "==", word)
-      .get()
-      .then((querySnapshot) => {
-        querySnapshot.forEach((documentSnapshot) => {
-          users.push(documentSnapshot.data());
-          //   console.log(documentSnapshot.id);
-          this.setState({
-            foundUser: documentSnapshot.id,
-            found: true,
-            username: documentSnapshot.data().username,
-            name: documentSnapshot.data().name,
-            profilePic: documentSnapshot.data().profilePic
-              ? documentSnapshot.data().profilePic
-              : require("assets/img/icons/user/user1.png"),
-          });
-          // console.log(this.state.foundUser)
-          // console.log(users);
-        });
-        // console.log(this.state.searchResults);
-        // console.log(this.state.foundUser);
+    if (word.length > 2) {
+      userCollectionRef
+        // .where("username", "==", word.toLowerCase())
+        // .where("username", "==", word)
+        .where("usernameKeywords", "array-contains", word)
+        // .orderByChild("usernameKeywords").equalTo(word)
+        .get()
+        .then((querySnapshot) => {
+          querySnapshot.forEach((documentSnapshot) => {
+            console.log(documentSnapshot.data());
+            // let f = documentSnapshot.id +""+ documentSnapshot.data();
+            users.push(documentSnapshot);
 
-        if (users.length == 0) {
-          this.setState({
-            profilePic: require("assets/img/icons/user/user1.png"),
-            searchResults: [],
-            foundUser: "",
-            found: false,
-          });
-          // console.log(this.state.found);
-        } else {
-          // let profilePic = firebase
-          //   .storage()
-          //   .ref()
-          //   .child("profilePics/(" + this.state.foundUser + ")ProfilePic");
-          // profilePic.getDownloadURL().then((url) => {
-          //   this.setState({ profilePic: url });
-          // });
-          this.setState({
-            searchResults: users,
+            //   console.log(documentSnapshot.id);
+            this.setState({
+              foundUser: documentSnapshot.id,
+              found: true,
+              username: documentSnapshot.data().username,
+              name: documentSnapshot.data().name,
+              profilePic: documentSnapshot.data().profilePic
+                ? documentSnapshot.data().profilePic
+                : require("assets/img/icons/user/user1.png"),
+            });
+            // console.log(this.state.foundUser)
+            // console.log(users);
           });
           // console.log(this.state.searchResults);
-        }
-      });
+          // console.log(this.state.foundUser);
+
+          if (users.length == 0) {
+            this.setState({
+              profilePic: require("assets/img/icons/user/user1.png"),
+              searchResults: [],
+              foundUser: "",
+              found: false,
+            });
+            // console.log(this.state.found);
+          } else {
+            // let profilePic = firebase
+            //   .storage()
+            //   .ref()
+            //   .child("profilePics/(" + this.state.foundUser + ")ProfilePic");
+            // profilePic.getDownloadURL().then((url) => {
+            //   this.setState({ profilePic: url });
+            // });
+            this.setState({
+              searchResults: users,
+            });
+            console.log(this.state.searchResults);
+          }
+        });
+    }
+    // this.setState({
+    //   found: false,
+    // });
   }
 
   // renderAvatar() {
@@ -336,32 +350,30 @@ class UserNavbar extends React.Component {
     //   });
   };
 
-  renderUserItem = () => {
-    // const { item } = this.props;
-    // if (this.state.found) {
-    return (
-      <Link to={`/friend/${this.state.foundUser}`}>
-        <div className="d-flex align-items-center">
-          <img
-            // className="rounded-circle"
-            className="avatar"
-            width="45"
-            src={this.state.profilePic}
-            alt=""
-            // onClick={localStorage.setItem('Fuid', JSON.stringify(this.state.userId))}
-          />
-          <div className="mx-3">
-            <h6 className="mb-0 text-black font-weight-bold">
-              {this.state.name}{" "}
-            </h6>
+  // renderUserItem = () => {
+  //   // const { item } = this.props;
+  //   // if (this.state.found) {
+  //   return (
+  //     <Link to={`/friend/${this.state.foundUser}`}>
+  //       <div className="d-flex align-items-center">
+  //         <img
+  //           // className="rounded-circle"
+  //           className="avatar"
+  //           width="45"
+  //           src={user.profilePic}
+  //           alt=""
+  //           // onClick={localStorage.setItem('Fuid', JSON.stringify(this.state.userId))}
+  //         />
+  //         <div className="mx-3">
+  //           <h6 className="mb-0 text-black font-weight-bold">{user.name} </h6>
 
-            <small className="text-muted">@{this.state.username} </small>
-          </div>
-        </div>
-      </Link>
-    );
-    // } else return null;
-  };
+  //           <small className="text-muted">@{user.username} </small>
+  //         </div>
+  //       </div>
+  //     </Link>
+  //   );
+  //   // } else return null;
+  // };
 
   toggleModal = (state) => {
     this.setState({
@@ -459,6 +471,9 @@ class UserNavbar extends React.Component {
             // onChange={this.textInput}
             // value={this.state.searchWord}
             onChange={(word) => this.textInput(word)}
+            onKeyDown={(e) => {
+              if (e.keyCode === 8) this.setState({ userChecked: false });
+            }}
             // value={this.state.searchWord}
           />
         </InputGroup>
@@ -473,9 +488,20 @@ class UserNavbar extends React.Component {
   noUserFound = () => {
     if (this.state.userChecked) {
       return (
-        <DropdownMenu aria-labelledby="navbar-success_dropdown_1" right>
-          {" "}
-          <DropdownItem>No user found!</DropdownItem>
+        <DropdownMenu
+          style={{
+            position: "absolute",
+            willChange: " transform",
+            top: "0px",
+            left: "0px",
+            transform: " translate3d(15px, 51px, 0px)",
+            width: "222px",
+          }}
+          aria-labelledby="navbar-success_dropdown_1"
+          right
+        >
+          {/* {" "} */}
+          <DropdownItem>sssound!</DropdownItem>
         </DropdownMenu>
       );
     }
@@ -516,11 +542,11 @@ class UserNavbar extends React.Component {
     // initialise
     headroom.init();
     // this.checkReqNotification();
-    this.renderUserItem();
+    // this.renderUserItem();
     this.renderSearchBar();
     this.getFriendReq();
-    this.getNotifications();
 
+    this.getNotifications();
     this.firestoreUsersRef
       .doc(this.state.currentUserUid)
       .get()
@@ -529,50 +555,83 @@ class UserNavbar extends React.Component {
       });
   }
 
+  //       componentDidUpdate(prevProps, prevState) {
+  //   if(prevProps.notificationsArray!==this.props.notificationsArray){
+  // console.log("ASDSIDM",this.props.notificationsArray)
+  // console.log(this.props.notificationsArray.length)
+  // // alert(this.props.notifications.length)
+  //   }
+  //   // alert(this.props.notificationsArray.length)
+  //       }
+
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   if (this.props.notificationsArray !== nextProps.notificationsArray) {
+  //     return true;
+  //   }
+  //   return false;
+  // }
+
   getNotifications = () => {
-    let chatCounter = 0;
-    firebase
-      .firestore()
-      .collection("notifications")
-      .doc(this.state.user3)
-      .collection("userNotifications")
-      .orderBy("time", "desc")
-      .onSnapshot((snapshot) => {
-        const notificationsArray = [];
+    // this.setState({ notifications: this.props.notificationsArray });
 
-        // snapshot.docChanges().forEach((change) => {
-        //   if (change.type === "added") {
-        //  this.state.alert.push(change.doc.data());
+    this.props
+      .getNotificationsRedux(this.state.user3)
+      .then(() => {
+        this.setState({ notifications: this.props.notificationsArray });
+        this.setState({ unseenChats: this.props.chatCounter });
+        // alert(this.props.chatCounter)
+        console.log(this.props.notificationsArray);
+        console.log(this.props.notificationsArray.length);
+        console.log(this.props);
+        console.log(this.props.getNotificationsRedux.length);
+      })
+      .catch((err) => {
+        console.warn(err);
 
-        // }
-        // });
-
-        snapshot.forEach((doc) => {
-          firebase
-            .firestore()
-            .collection("users")
-            .doc(doc.data().userId)
-            .get()
-            .then((doco) => {
-              let pp = {
-                avatar: doco.data().profilePic,
-                content: doc.data().content,
-                source: doc.data().source,
-                time: doc.data().time,
-                type: doc.data().type,
-                userId: doc.data().userId,
-                username: doco.data().username,
-              };
-              notificationsArray.push(pp);
-              this.setState({ notifications: notificationsArray });
-              if (doc.data().type == "chat") {
-                chatCounter = chatCounter + 1;
-              }
-              this.setState({ unseenChats: chatCounter });
-              // console.log(this.state.unseenChats)
-            });
-        });
+        //setState({ error: err.message });
       });
+    // let chatCounter = 0;
+    // firebase
+    //   .firestore()
+    //   .collection("notifications")
+    //   .doc(this.state.user3)
+    //   .collection("userNotifications")
+    //   .orderBy("time", "desc")
+    //   .onSnapshot((snapshot) => {
+    //     const notificationsArray = [];
+
+    //     // snapshot.docChanges().forEach((change) => {
+    //     //   if (change.type === "added") {
+    //     //  this.state.alert.push(change.doc.data());
+
+    //     // }
+    //     // });
+    //     snapshot.forEach((doc) => {
+    //       firebase
+    //         .firestore()
+    //         .collection("users")
+    //         .doc(doc.data().userId)
+    //         .get()
+    //         .then((doco) => {
+    //           let pp = {
+    //             avatar: doco.data().profilePic,
+    //             content: doc.data().content,
+    //             source: doc.data().source,
+    //             time: doc.data().time,
+    //             type: doc.data().type,
+    //             userId: doc.data().userId,
+    //             username: doco.data().username,
+    //           };
+    //           notificationsArray.push(pp);
+    //           this.setState({ notifications: notificationsArray });
+    //           if (doc.data().type == "chat") {
+    //             chatCounter = chatCounter + 1;
+    //           }
+    //           this.setState({ unseenChats: chatCounter });
+    //           // console.log(this.state.unseenChats)
+    //         });
+    //     });
+    //   });
   };
 
   getFriendReq = async () => {
@@ -666,16 +725,69 @@ class UserNavbar extends React.Component {
                 >
                   {this.renderSearchBar()}
                 </DropdownToggle>
-                {this.state.found ? (
+                {this.state.found &&
+                this.state.searchResults &&
+                this.state.userChecked ? (
                   <DropdownMenu
+                    style={{
+                      position: "absolute",
+                      willChange: " transform",
+                      top: "0px",
+                      left: "0px",
+                      transform: " translate3d(15px, 51px, 0px)",
+                      width: "222px",
+                    }}
                     aria-labelledby="navbar-success_dropdown_1"
                     right
                   >
-                    {" "}
-                    <DropdownItem>{this.renderUserItem()}</DropdownItem>
+                    {this.state.searchResults.map((user, index) => (
+                      // return;
+                      <>
+                        <DropdownItem>
+                          {/* {this.renderUserItem(user)} */}
+                          <Link to={`/friend/${user.id}`}>
+                            <div className="d-flex align-items-center">
+                              <img
+                                // className="rounded-circle"
+                                className="avatar"
+                                width="45"
+                                src={user.data().profilePic}
+                                alt=""
+                                // onClick={localStorage.setItem('Fuid', JSON.stringify(this.state.userId))}
+                              />
+                              <div className="mx-3">
+                                <h6 className="mb-0 text-black font-weight-bold">
+                                  {user.data().name}{" "}
+                                </h6>
+
+                                <small className="text-muted">
+                                  @{user.data().username}{" "}
+                                </small>
+                              </div>
+                            </div>
+                          </Link>
+                        </DropdownItem>
+                      </>
+                    ))}
+                    {/* </> */}
+                  </DropdownMenu>
+                ) : this.state.userChecked ? (
+                  <DropdownMenu
+                    style={{
+                      position: "absolute",
+                      willChange: " transform",
+                      top: "0px",
+                      left: "0px",
+                      transform: " translate3d(15px, 51px, 0px)",
+                      width: "222px",
+                    }}
+                    aria-labelledby="navbar-success_dropdown_22"
+                    right
+                  >
+                    <DropdownItem>No user found!</DropdownItem>
                   </DropdownMenu>
                 ) : (
-                  this.noUserFound()
+                  ""
                 )}
               </UncontrolledDropdown>
 
@@ -729,7 +841,9 @@ class UserNavbar extends React.Component {
                     <IconButton aria-label="follow requests" color="inherit">
                       {this.state.unseenChats > 0 ? (
                         <Badge
-                          badgeContent={this.state.unseenChats}
+                          badgeContent={this.props.chatCounter}
+                          // badgeContent={this.state.unseenChats}
+
                           color="secondary"
                         >
                           {/* <i className="ni ni-bell-55" /> */}
@@ -768,7 +882,14 @@ class UserNavbar extends React.Component {
                   >
                     {/* <DropdownItem to="/profile" tag={Link}> */}
 
-                    <div style={{ padding: "2px" }}>
+                    <div
+                      style={{
+                        padding: "2px",
+                        maxHeight: "350px",
+                        overflowY: "auto",
+                        width: "263px",
+                      }}
+                    >
                       <Inbox />
                     </div>
                     {/* </DropdownItem> */}
@@ -783,7 +904,9 @@ class UserNavbar extends React.Component {
                     <IconButton aria-label="notifications" color="inherit">
                       {this.state.notifications.length > 0 ? (
                         <Badge
-                          badgeContent={this.state.notifications.length}
+                          // badgeContent={this.state.notifications.length}
+                          // badgeContent={this.props.notificationsArray.length}
+                          badgeContent={this.props.totalNotifications}
                           color="secondary"
                         >
                           {/* <i className="ni ni-bell-55" /> */}
@@ -816,123 +939,148 @@ class UserNavbar extends React.Component {
                     {t("Follow Requests")}
                   </span> */}
                   </DropdownToggle>
-                  <DropdownMenu
-                    aria-labelledby="navbar-success_dropdown_1"
-                    right
+                  <div
+                  //   style={{ maxHeight: "350px",
+                  // // position:"absolute",
+                  // // top:"0px",
+                  // // left:"0px",
+                  // // transform:"translate3d(-203px, 64px, 0px)"  ,
+                  //   // overflowY: "auto"
+
+                  // }}
                   >
-                    {this.state.notifications.length < 1 ? (
-                      <DropdownItem>No notifications</DropdownItem>
-                    ) : (
-                      <>
-                        {/* // <DropdownItem> */}
-                        {this.state.notifications.map((item, index) => (
-                          <>
-                            <DropdownItem
-                              to={
-                                item.type == "request" ||
-                                item.type == "follow" ||
-                                item.type == "requestAccepted"
-                                  ? `/friend/${item.source}`
-                                  : item.type == "chat"
-                                  ? `/chat/${item.source}`
-                                  : `/post/${item.source}`
-                              }
-                              tag={Link}
-                            >
-                              <div className="d-flex align-items-center">
-                                <Badge
-                                  // overlap="circle"
-                                  anchorOrigin={{
-                                    vertical: "bottom",
-                                    horizontal: "right",
-                                  }}
-                                  badgeContent={
-                                    <img
-                                      src={
-                                        item.type == "like"
-                                          ? require("assets/img/icons/bnw/like.png")
-                                          : item.type == "comment"
-                                          ? require("assets/img/icons/bnw/comment.png")
-                                          : item.type == "chat"
-                                          ? require("assets/img/icons/bnw/chat.png")
-                                          : require("assets/img/icons/bnw/friend.png")
-                                      }
-                                      width="16px"
-                                      height="16px"
-                                      // className="avatar"
-                                    />
+                    <DropdownMenu
+                      style={{
+                        maxHeight: "350px",
+                        overflowY: "auto",
+                        position: "absolute",
+                        willChange: "transform",
+                        top: "75px",
+                        left: "0px",
+                        transform: "translate3d(-290px, -11px, 0px)",
+                        zoom: "80%",
+                      }}
+                      // aria-labelledby="navbar-success_dropdown_1"
+                      right
+                    >
+                      {this.state.notifications.length < 1 ? (
+                        <DropdownItem>No notifications</DropdownItem>
+                      ) : (
+                        <>
+                          {/* // <DropdownItem> */}
+                          {this.props.notificationsArray &&
+                            this.props.notificationsArray.map((item, index) => (
+                              <>
+                                <DropdownItem
+                                  to={
+                                    item.type == "request" ||
+                                    item.type == "follow" ||
+                                    item.type == "requestAccepted"
+                                      ? `/friend/${item.source}`
+                                      : item.type == "chat"
+                                      ? `/chat/${item.source}`
+                                      : `/post/${item.source}`
                                   }
-                                  //  color="primary"
+                                  tag={Link}
                                 >
-                                  <img
-                                    className="avatar"
-                                    width="45"
-                                    src={item.avatar}
-                                    alt=""
-                                  />
-                                </Badge>
-                                <div className="mx-3">
-                                  <h6 className="mb-0 text-black">
-                                    {"@"}
-                                    {item.username} {item.content}
-                                  </h6>
-
-                                  <small className="text-muted">
-                                    {" "}
-                                    {moment(Number(item.time)).format(
-                                      "lll"
-                                    )}{" "}
-                                  </small>
-                                </div>
-
-                                {item.type == "chat" ? (
-                                  <IconButton aria-label="chat" color="inherit">
-                                    <img
-                                      src={require("assets/img/icons/48px/chat-46.svg")}
-                                      // src={require("assets/img/icons/bnw/chat.png")}
-                                      width="30px"
-                                      height="30px"
-                                      // className="avatar"
-                                    />
-                                  </IconButton>
-                                ) : null}
-
-                                {item.type == "request" ? (
-                                  <>
-                                    <Button
-                                      color="info"
-                                      size="sm"
-                                      onClick={() =>
-                                        this.handleAccept(
-                                          item.userId,
-                                          item.username,
-                                          item.avatar
-                                        )
+                                  <div className="d-flex align-items-center">
+                                    <Badge
+                                      // overlap="circle"
+                                      anchorOrigin={{
+                                        vertical: "bottom",
+                                        horizontal: "right",
+                                      }}
+                                      badgeContent={
+                                        <img
+                                          src={
+                                            item.type == "like"
+                                              ? require("assets/img/icons/bnw/like.png")
+                                              : item.type == "comment"
+                                              ? require("assets/img/icons/bnw/comment.png")
+                                              : item.type == "chat"
+                                              ? require("assets/img/icons/bnw/chat.png")
+                                              : require("assets/img/icons/bnw/friend.png")
+                                          }
+                                          width="16px"
+                                          height="16px"
+                                          // className="avatar"
+                                        />
                                       }
+                                      //  color="primary"
                                     >
-                                      {" "}
-                                      {t("accept")}{" "}
-                                    </Button>
-                                    <Button
-                                      // className="mr-4"
-                                      color="danger"
-                                      size="sm"
-                                      onClick={() =>
-                                        this.handleReject(item.userId)
-                                      }
-                                    >
-                                      {t("reject")}
-                                    </Button>
-                                  </>
-                                ) : null}
-                              </div>
-                            </DropdownItem>
-                          </>
-                        ))}
-                        {/* </DropdownItem> */}
-                      </>
-                    )}
-                  </DropdownMenu>
+                                      <img
+                                        className="avatar"
+                                        width="45"
+                                        src={item.avatar}
+                                        alt=""
+                                      />
+                                    </Badge>
+                                    <div className="mx-3">
+                                      <h6 className="mb-0 text-black">
+                                        {"@"}
+                                        {item.username} {item.content}
+                                      </h6>
+
+                                      <small className="text-muted">
+                                        {" "}
+                                        {moment(Number(item.time)).format(
+                                          "lll"
+                                        )}{" "}
+                                      </small>
+                                    </div>
+
+                                    {item.type == "chat" ? (
+                                      <IconButton
+                                        aria-label="chat"
+                                        color="inherit"
+                                      >
+                                        <img
+                                          src={require("assets/img/icons/48px/chat-46.svg")}
+                                          // src={require("assets/img/icons/bnw/chat.png")}
+                                          width="30px"
+                                          height="30px"
+                                          // className="avatar"
+                                        />
+                                      </IconButton>
+                                    ) : null}
+
+                                    {item.type == "request" ? (
+                                      <>
+                                        <Button
+                                          color="info"
+                                          size="sm"
+                                          onClick={() =>
+                                            this.handleAccept(
+                                              item.userId,
+                                              item.username,
+                                              item.avatar
+                                            )
+                                          }
+                                        >
+                                          {" "}
+                                          {t("accept")}{" "}
+                                        </Button>
+                                        <Button
+                                          // className="mr-4"
+                                          color="danger"
+                                          size="sm"
+                                          onClick={() =>
+                                            this.handleReject(item.userId)
+                                          }
+                                        >
+                                          {t("reject")}
+                                        </Button>
+                                      </>
+                                    ) : null}
+                                  </div>
+                                </DropdownItem>
+                              </>
+                            ))}
+                          {/* </DropdownItem> */}
+                        </>
+                      )}
+                    </DropdownMenu>
+                  </div>
                 </UncontrolledDropdown>
               </div>
 
@@ -1069,4 +1217,20 @@ class UserNavbar extends React.Component {
   }
 }
 
-export default withTranslation()(UserNavbar);
+const mapStateToProps = (state) => {
+  return {
+    notificationsArray: state.NotificationsReducer.notificationsArray,
+    chatCounter: state.NotificationsReducer.chatCounter,
+    totalNotifications: state.NotificationsReducer.totalNotifications,
+  };
+};
+const mapDispatchToProps = (dispatch) => ({
+  getNotificationsRedux: (uid) =>
+    dispatch(ActionsCreator.getNotificationsRedux(uid)),
+});
+
+// export default withTranslation()(UserNavbar);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withTranslation()(UserNavbar));

@@ -3,6 +3,8 @@
 import React from "react";
 import moment from "moment";
 import { Favorite, FavoriteBorder, Comment } from "@material-ui/icons";
+import ReactPlayer from "react-player/lazy";
+
 import SmoothImage from "react-smooth-image";
 import images from "../components/Themes/images";
 
@@ -306,10 +308,10 @@ class Post extends React.Component {
           .collection("notifications")
           .doc(this.state.userId)
           .collection("userNotifications")
-          .doc("(" + item.postId + ")like+("+this.user.uid+")")
+          .doc("(" + item.postId + ")like+(" + this.user.uid + ")")
           .set({
             userId: this.user.uid,
-            
+
             source: item.postId,
             content: "liked your post",
             type: "like",
@@ -330,7 +332,8 @@ class Post extends React.Component {
           .collection("notifications")
           .doc(this.state.userId)
           .collection("userNotifications")
-          .doc("(" + item.postId + ")like+("+this.user.uid+")")          .delete()
+          .doc("(" + item.postId + ")like+(" + this.user.uid + ")")
+          .delete()
           .then(() => {
             if (noOfLikes === 0) this.state.likes = 0;
             this.state.likes = noOfLikes - 1;
@@ -394,7 +397,7 @@ class Post extends React.Component {
           .doc(timestamp)
           .set({
             userId: this.user.uid,
-            
+
             source: item.postId,
             content: "commented on your post",
             type: "comment",
@@ -543,13 +546,13 @@ class Post extends React.Component {
           style={{
             // padding: "16px",
             borderRadius: "20px",
-            paddingBottom: "25px"
+            paddingBottom: "25px",
             // marginBottom: "25px",
           }}
           // key={item.time}
         >
           <div
-            className="shadow"
+            // className="shadow"
             // style={{
             //   // padding: "16px",
             //   borderRadius: "20px",
@@ -641,8 +644,9 @@ class Post extends React.Component {
             </div>
             <div
               // className="mb-0 text-black font-weight-bold"
-              className="justify-content-between align-items-center"
+              // className="justify-content-between align-items-center"
               style={{
+                // textAlignLast:"center",
                 // backgroundColor: "#F7F7F7",
                 backgroundColor: "rgba(var(--b3f,250,250,250),1)",
                 //  MozBorderRadiusBottomleft:"20px",MozBorderRadiusBottomright:"20px"
@@ -661,18 +665,56 @@ class Post extends React.Component {
                 src={item.image}
                 className="img-fluid rounded"
               /> */}
-              <img
-                alt="Image placeholder"
-                src={item.image}
-                className="img-fluid rounded"
-                style={{
-                  width: "100%",
-                  height: "620px",
-                  display: "block",
-                  objectFit: "cover",
-                  zoom: "90%",
-                }}
-              />
+              <div
+              style={{
+                textAlignLast:"center",
+                width:"100%"
+              }}
+              >
+
+              {item.type == "video" ? (
+                <>
+                  <ReactPlayer
+                    url={item.video}
+                    // light={true}
+                    light={item.image}
+                    controls={true}
+                    playing={true}
+                    width="100%"
+                    height="360px"
+                  />
+
+                  {/* <video poster={item.image} loop={true} controls>
+              <source src={item.video} type="video/mp4"/>
+            </video> */}
+                </>
+              ) : (
+                <img
+                  loading="lazy"
+                  onLoad={console.log("Fully loaded")}
+                  onError={console.log("Error on image")}
+                  alt="Image placeholder"
+                  src={item.image}
+                  className="img-fluid rounded"
+                  style={{
+                    // width: "100%",
+                    // height: "620px",
+                    // display: "block",
+                    // // objectFit: "cover",
+                    // objectFit: "contain",
+                    // // background: "black",
+                    // zoom: "90%",
+                    // background: "#f6f9fc",                    
+
+                    // maxHeight: "450px",
+                    // // maxWidth: "606px",
+                    // height:"auto",
+                    // width:"auto"
+                    width:"inherit"
+                  }}
+                />
+              )}
+                </div>
               <div className="row align-items-center  ">
                 <div className="col-sm-12">
                   <div className="icon-actions my-3 pb-3 border-bottom">
@@ -705,13 +747,14 @@ class Post extends React.Component {
               </div>
 
               {/* <!-- Comments --> */}
-              <div className="mb-1" style={{ zoom: "95%" }}>
-                <div style={{maxHeight:"350px",overflowY:"scroll"}}>
-
-                {this.state.commentsArray.map((comment, postindex) => (
-                  <CommentItem item={comment} key={postindex} />
+              <div
+              //  className="mb-1"
+               style={{ zoom: "95%" }}>
+                <div style={{ maxHeight: "350px", overflowY: "scroll" }}>
+                  {this.state.commentsArray.map((comment, postindex) => (
+                    <CommentItem item={comment} key={postindex} />
                   ))}
-                  </div>
+                </div>
 
                 <div className="media align-items-center mt-1">
                   {/* <img
@@ -778,13 +821,12 @@ class Post extends React.Component {
             </div>
 
             <div
-            
-            className="card-header d-flex align-items-center "
-            // style={{  MozBorderRadiusTopleft:"20px",MozBorderRadiusTopright:"20px"  }}
-            style={{
-              borderBottomLeftRadius: "50px",
-              borderBottomRightRadius: "50px",
-            }}
+              className="card-header d-flex align-items-center "
+              // style={{  MozBorderRadiusTopleft:"20px",MozBorderRadiusTopright:"20px"  }}
+              style={{
+                borderBottomLeftRadius: "50px",
+                borderBottomRightRadius: "50px",
+              }}
             ></div>
           </div>
         </div>

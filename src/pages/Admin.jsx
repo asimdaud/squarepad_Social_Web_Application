@@ -422,7 +422,7 @@ console.log(this.state)
  
     return (
       <>
-        <UserNavbar />
+        {/* <UserNavbar /> */}
         {/* <PubNavbar /> */}
         <main
           className="profile-page"

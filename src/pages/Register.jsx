@@ -306,7 +306,14 @@ class Register extends React.Component {
     return (
       <>
         <PubNavbar />
-        <main ref="main" style={{ height: "100%" }}>
+        <main ref="main" style={{ height: "100%" ,
+      backgroundImage: "radial-gradient(circle, #5f81b4, #429bc6, #32b4ca, #51cbc3, #85deb5)"  
+      }}
+        
+        
+        
+        
+        >
           <section
             className="section-shaped"
             style={{ paddingTop: "4rem", height: "100%" }}

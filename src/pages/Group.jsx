@@ -268,7 +268,7 @@ increment=()=>{
   render() {
     return (
       <>
-        <UserNavbar />
+        {/* <UserNavbar /> */}
         <main
           className="profile-page"
           ref="main"

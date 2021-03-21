@@ -99,7 +99,6 @@ class PostPage extends React.Component {
           userData: res,
         });
       });
-
     this.firestorePostRef
       .doc(this.state.currentUserUid)
       .collection("userPosts")
@@ -111,10 +110,12 @@ class PostPage extends React.Component {
           userId: this.state.currentUserUid,
           title: "post",
           profilePic: this.state.userData.profilePic,
-          image: doc.data().image,
           caption: doc.data().caption,
           postId: doc.data().postId,
           timeStamp: doc.data().time,
+          type: doc.data().type?doc.data().type:null,
+          video: doc.data().video?doc.data().video:null,
+          image: doc.data().image,
         };
 
         this.setState({ postData: article, showPost: true });
@@ -135,7 +136,7 @@ class PostPage extends React.Component {
     console.log("kakakask");
     return (
       <>
-        <UserNavbar />
+        {/* <UserNavbar /> */}
         <main
           className="profile-page"
           ref="main"

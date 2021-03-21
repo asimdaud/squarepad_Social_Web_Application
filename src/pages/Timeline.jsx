@@ -5,9 +5,11 @@ import LoaderSpinner from "react-loader-spinner";
 import Post from "../components/post.jsx";
 import Ad from "../components/ad.jsx";
 import Switch from "@material-ui/core/Switch";
-import PostsPagination from "../components/PostsPagination.jsx"; 
+import PostsPagination from "../components/PostsPagination.jsx";
 import { Carousel } from "react-responsive-carousel";
-import Loader from 'react-loader-advanced';
+import Loader from "react-loader-advanced";
+import GPT from "../components/gpt";
+import GoogleAdsense2021 from "../components/GoogleAdsense2021.js";
 
 import {
   // Button,
@@ -52,6 +54,8 @@ import { withTranslation } from "react-i18next";
 import GoogleAd from "components/GoogleAd.jsx";
 import AdSense from "react-adsense";
 import Inbox from "components/inbox.jsx";
+import { connect } from "react-redux";
+import { ActionsCreator } from "../redux/actions";
 
 const user3 = JSON.parse(localStorage.getItem("uid"));
 const userId = JSON.parse(localStorage.getItem("uid"));
@@ -93,13 +97,11 @@ class Timeline extends React.Component {
     itemState: [],
     lol: [],
     loading: false,
-    currentPage:1,
-    postsPerPage:4,
-    currentPosts:[],
-    noPosts:true,
-    loaderPosts:true,
-
-
+    currentPage: 1,
+    postsPerPage: 4,
+    currentPosts: [],
+    noPosts: true,
+    loaderPosts: true,
   };
 
   renderNewCarousel = (story) => {
@@ -163,44 +165,38 @@ class Timeline extends React.Component {
       this.getCloseFriendsPosts();
     }
 
-
     if (prevState.currentPage !== this.state.currentPage) {
       console.log(this.state.currentPosts);
- 
+
       const indexOfLastPost = this.state.currentPage * this.state.postsPerPage;
       const indexOfFirstPost = indexOfLastPost - this.state.postsPerPage;
-      let currentPosts = this.state.posts.slice(indexOfFirstPost, indexOfLastPost);
-      
-      this.setState({currentPosts: currentPosts});
-      console.log("allpost: " ,this.state.posts.length)
-      console.log("crrentpost: ",this.state.currentPosts.length)
-  console.log(indexOfFirstPost,indexOfLastPost)
-  
+      let currentPosts = this.state.posts.slice(
+        indexOfFirstPost,
+        indexOfLastPost
+      );
+
+      this.setState({ currentPosts: currentPosts });
+      console.log("allpost: ", this.state.posts.length);
+      console.log("crrentpost: ", this.state.currentPosts.length);
+      console.log(indexOfFirstPost, indexOfLastPost);
+
       this.renderPosts();
- 
-     }
-
+    }
   }
 
-
-  renderPosts=()=>{
-    return(
-      
-      this.state.currentPosts.map((post, postindex) => (
-        <Post item={post} key={postindex} />
-      ))
-
-    );
-  }
+  renderPosts = () => {
+    return this.state.currentPosts.map((post, postindex) => (
+      <Post item={post} key={postindex} />
+    ));
+  };
 
   // Change page
-  paginate = (pageNumber) =>{
-  
-    this.setState({currentPage:pageNumber});
+  paginate = (pageNumber) => {
+    this.setState({ currentPage: pageNumber });
     // console.log(this.state.currentPage,"and",pageNumber);
-  
+
     // console.log("pagination")
-      } 
+  };
 
   getFriendId = async () => {
     // this.state.friendId = JSON.parse(localStorage.getItem("Fuid"));
@@ -304,7 +300,7 @@ class Timeline extends React.Component {
                     // locLatLng: "Address",
                   };
                   allPosts.push(article);
-                  this.setState({noPosts:false});
+                  this.setState({ noPosts: false });
                 });
               });
           });
@@ -320,26 +316,31 @@ class Timeline extends React.Component {
         // console.log(this.state.posts);
       }
     });
-    let sortedPosts = [];
-    allPosts
-      .sort((a, b) => (a.timeStamp.seconds < b.timeStamp.seconds ? 1 : -1))
-      .map((item, i) => {
-        sortedPosts.push(item);
-      });
 
-    this.setState({ posts: sortedPosts });
+// //sorting the posts manually
+//     let sortedPosts = [];
+//     allPosts
+//       .sort((a, b) => (a.timeStamp.seconds < b.timeStamp.seconds ? 1 : -1))
+//       .map((item, i) => {
+//         sortedPosts.push(item);
+//       });
+// this.setState({ posts: sortedPosts });
+
+this.setState({ posts: allPosts  });
 
 
+ 
 
     const indexOfLastPost = this.state.currentPage * this.state.postsPerPage;
     const indexOfFirstPost = indexOfLastPost - this.state.postsPerPage;
-    let currentPosts = this.state.posts.slice(indexOfFirstPost, indexOfLastPost);
-    
-    this.setState({currentPosts: currentPosts});
+    let currentPosts = this.state.posts.slice(
+      indexOfFirstPost,
+      indexOfLastPost
+    );
 
-    this.setState({loaderPosts:false});
+    this.setState({ currentPosts: currentPosts });
 
-
+    this.setState({ loaderPosts: false });
   };
 
   getCloseFriendsPosts = async () => {
@@ -513,18 +514,16 @@ class Timeline extends React.Component {
   noFriendsTimeline = () => {
     const { t } = this.props;
     if (this.state.posts.length > 0 && !this.state.checkedA) {
-
       return (
         <>
-        
-{        this.renderPosts()}
+          {this.renderPosts()}
 
-        <PostsPagination
-        postsPerPage={this.state.postsPerPage}
-        totalPosts={this.state.posts.length}
-        paginate={this.paginate}
-      />
-           {/* {this.state.posts.map((post, postindex) => (
+          <PostsPagination
+            postsPerPage={this.state.postsPerPage}
+            totalPosts={this.state.posts.length}
+            paginate={this.paginate}
+          />
+          {/* {this.state.posts.map((post, postindex) => (
             <Post item={post} key={postindex} />
           ))} */}
         </>
@@ -556,7 +555,7 @@ class Timeline extends React.Component {
           </p>
         </Card>
       );
-    } else if(this.state.followedUsers.length<1) {
+    } else if (this.state.followedUsers.length < 1) {
       return (
         <Card
           className="container justify-content-center"
@@ -619,10 +618,12 @@ class Timeline extends React.Component {
   };
 
   render() {
+    // alert(this.props.uidRedux)
+    console.log(this.props.uidRedux);
     return (
       <>
-        <UserNavbar />
-        
+        {/* <UserNavbar /> */}
+
         <main
           className="profile-page"
           ref="main"
@@ -632,6 +633,12 @@ class Timeline extends React.Component {
             // backgroundRepeat: "no-repeat",
             // backgroundSize: "cover",
             // backgroundColor: "black",
+            paddingTop: "2rem",
+            // overflow: "auto",
+            width: "-webkit-fill-available",
+            display: "table",
+            position: "absolute",
+            height: "-webkit-fill-available",
             backgroundImage:
               "linear-gradient(to right bottom, #e4efe9, #d9ede8, #cfeae9, #c6e6ed, #c0e2f1, #bcdef2, #badaf3, #bad5f4, #b7d1f2, #b5ccf1, #b3c8ef, #b1c3ed)",
           }}
@@ -640,6 +647,9 @@ class Timeline extends React.Component {
             className="section section-blog-info"
             style={{ marginTop: "20px" }}
           >
+            {/* <GPT /> */}
+            {/* <GoogleAdsense2021 /> */}
+
             <Row
               style={{ padding: "20px" }}
               // className="d-flex justify-content-center"
@@ -663,77 +673,75 @@ class Timeline extends React.Component {
                 className="order-md-2"
                 style={{ zoom: "85%" }}
               >
-
-<Loader
-
-// foregroundStyle={{color: 'white'}}
-  backgroundStyle={{ backgroundColor:"white",borderRadius:"10px"}}
-
-show={this.state.loaderPosts} 
- message={
-   
-  
-  <LoaderSpinner
-  type="Grid"
-  color="#00BFFF"
-  height={50}
-  width={50}
-  timeout={3000} //3 secs
-/>
-
- } 
- timeout={3000}
- contentBlur={200} 
- hideContentOnLoad={true}
-
->
-
-                {/* Stories */}
-
-                <div
-                  className="card-header d-flex align-items-center shadow"
-                  style={{ borderRadius: "85px", marginBottom: "25px" }}
-                >
-                  <div className="d-flex align-items-center"></div>
-
-                  {/* <Link to={`/friend/d99NLeMfDYd7SYbcJtTYkLSiPKp1`}> */}
-
-                  {this.state.stories.map((story, index) => (
-                    <img
-                      onClick={() => {
-                        this.setState({ modalItem: story, lol: story.stories });
-                        this.setState({ defaultModal: true });
-                        console.log("story-only", story);
-                        console.log("story-stories", story.stories);
-                        // // console.log("story-index", story.stories[index].content);
-                        // console.log("index", index);
-                        // console.log("index-index", story.stories.index);
-                        this.renderCarousel(story.stories);
-                        this.renderNewCarousel(story.stories);
-                        {
-                          story.stories.map((s, i) => {
-                            console.log(s);
-                          });
-                        }
-
-                        // console.log("misa", story.stories[index].content);
-                      }}
-                      key={index}
-                      src={story.userAvatar}
-                      className="rounded-circle img-responsive border border-danger"
-                      style={{
-                        width: "75px",
-                        height: "75px",
-                        display: "block",
-                        objectFit: "cover",
-                        padding: "2px",
-                        margin: "3px",
-                      }}
-                      alt=""
+                <Loader
+                  // foregroundStyle={{color: 'white'}}
+                  backgroundStyle={{
+                    backgroundColor: "white",
+                    borderRadius: "10px",
+                  }}
+                  show={this.state.loaderPosts}
+                  message={
+                    <LoaderSpinner
+                      type="Grid"
+                      color="#00BFFF"
+                      height={50}
+                      width={50}
+                      timeout={3000} //3 secs
                     />
-                  ))}
+                  }
+                  timeout={3000}
+                  contentBlur={200}
+                  hideContentOnLoad={true}
+                >
+                  {/* Stories */}
 
-                  {/* {this.state.stories.map((story, index) => (
+                  <div
+                    className="card-header d-flex align-items-center shadow"
+                    style={{ borderRadius: "85px", marginBottom: "25px" }}
+                  >
+                    <div className="d-flex align-items-center"></div>
+
+                    {/* <Link to={`/friend/d99NLeMfDYd7SYbcJtTYkLSiPKp1`}> */}
+
+                    {this.state.stories.map((story, index) => (
+                      <img
+                        onClick={() => {
+                          this.setState({
+                            modalItem: story,
+                            lol: story.stories,
+                          });
+                          this.setState({ defaultModal: true });
+                          console.log("story-only", story);
+                          console.log("story-stories", story.stories);
+                          // // console.log("story-index", story.stories[index].content);
+                          // console.log("index", index);
+                          // console.log("index-index", story.stories.index);
+                          this.renderCarousel(story.stories);
+                          this.renderNewCarousel(story.stories);
+                          {
+                            story.stories.map((s, i) => {
+                              console.log(s);
+                            });
+                          }
+
+                          // console.log("misa", story.stories[index].content);
+                        }}
+                        key={index}
+                        src={story.userAvatar}
+                        className="rounded-circle img-responsive border border-danger"
+                        style={{
+                          width: "75px",
+                          height: "75px",
+                          display: "block",
+                          objectFit: "cover",
+                          padding: "2px",
+                          margin: "3px",
+                        }}
+                        alt=""
+                      />
+                    ))}
+
+                    {/* {this.state.stories.map((story, index) => (
                     <img
                       onClick={() => {
                         this.setState({ modalItem: story });
@@ -752,29 +760,29 @@ show={this.state.loaderPosts}
                     />
                   ))} */}
 
-                  <h6 className="mb-0 text-muted font-weight-bold">
-                    {/* <small className="text-muted"> */}
-                    {/* Hassan */}
-                    {/* </small> */}
-                  </h6>
-                  {/* </Link> */}
-                  <div
-                    className="text-right ml-auto"
-                    style={{ color: "black" }}
-                  >
-                    <label>Show Posts from Close Friends only</label>
+                    <h6 className="mb-0 text-muted font-weight-bold">
+                      {/* <small className="text-muted"> */}
+                      {/* Hassan */}
+                      {/* </small> */}
+                    </h6>
+                    {/* </Link> */}
+                    <div
+                      className="text-right ml-auto"
+                      style={{ color: "black" }}
+                    >
+                      <label>Show Posts from Close Friends only</label>
 
-                    <Switch
-                      checked={this.state.checkedA}
-                      onChange={this.handleChange}
-                      name="checkedA"
-                      color="primary"
-                      inputProps={{ "aria-label": "secondary checkbox" }}
-                    />
+                      <Switch
+                        checked={this.state.checkedA}
+                        onChange={this.handleChange}
+                        name="checkedA"
+                        color="primary"
+                        inputProps={{ "aria-label": "secondary checkbox" }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* See posts from friends only                
+                  {/* See posts from friends only                
                 <div
                   className="card-header d-flex align-items-center shadow"
                   style={{ borderRadius: "25px", marginBottom: "25px" }}
@@ -818,11 +826,9 @@ show={this.state.loaderPosts}
                   </div>
                 </div> */}
 
-                {this.noFriendsTimeline()}
-        
-</Loader>
+                  {this.noFriendsTimeline()}
+                </Loader>
               </Col>
-
 
               <Col
                 sm="3"
@@ -838,12 +844,22 @@ show={this.state.loaderPosts}
                 /> */}
 
                 {/* </Card> */}
+
+                {/* <Card> */}
+                {/* <GPT
+                    style={{ width: "500px", height: "500px",
+                    //  zIndex: "111"
+                     }}
+                  /> */}
+
+                <GoogleAdsense2021 />
+                {/* </Card> */}
               </Col>
             </Row>
           </section>
           <SimpleFooter />
         </main>
- 
+
         <Modal
           size="sm"
           isOpen={this.state.defaultModal}
@@ -982,4 +998,18 @@ src={this.state.modalItem.stories}
   }
 }
 
-export default withTranslation()(Timeline);
+//export default withTranslation()(Timeline);
+const mapStateToProps = (state) => {
+  return {
+    uidRedux: state.UseReducer.uidRedux,
+  };
+};
+const mapDispatchToProps = (dispatch) => ({
+  getUserInfo: (email, password) =>
+    dispatch(ActionsCreator.getUserInfo(email, password)),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(withTranslation()(Timeline));

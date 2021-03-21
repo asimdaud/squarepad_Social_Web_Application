@@ -99,7 +99,7 @@ class FriendsPage extends React.Component {
       isOpen: false,
       loaderAdv: true,
       currentUsername: undefined,
-      userProfilePic:undefined,
+      userProfilePic: undefined,
     };
   }
 
@@ -116,14 +116,13 @@ class FriendsPage extends React.Component {
       [state]: !this.state[state],
     });
   };
- UNSAFE_componentWillMount = () => {
+  UNSAFE_componentWillMount = () => {
     // this.getFriendId().then(() => {
     //   this.getFriendList();
     //   this.getPosts();
-      // this.checkFollow();
-      // this.getProfilePic();
+    // this.checkFollow();
+    // this.getProfilePic();
     // });
-
   };
 
   getFriendId = async () => {
@@ -141,27 +140,25 @@ class FriendsPage extends React.Component {
     });
 
     // this.getFriendId().then(() => {
-      this.getProfilePic();
-      this.checkFollow();
-      this.getPosts();
-      this.getFriendList();
+    this.getProfilePic();
+    this.checkFollow();
+    this.getPosts();
+    this.getFriendList();
 
     // });
-      // this.getProfilePic();
+    // this.getProfilePic();
     firebase
-    .firestore()
-    .collection("users")
-    .doc(this.state.currentUserUid)
-    .onSnapshot((doc) => {
-    
+      .firestore()
+      .collection("users")
+      .doc(this.state.currentUserUid)
+      .onSnapshot((doc) => {
         const res = doc.data().profilePic;
         if (res != null) {
           this.setState({
             userProfilePic: res,
           });
-      }
-    });
-
+        }
+      });
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -470,20 +467,20 @@ class FriendsPage extends React.Component {
         .collection("closeFriends")
         .doc(this.state.uid)
         .delete() &&
-        // firebase
-        // .firestore()
-        // .collection("notifications")
-        // .doc(this.state.uid)
-        // .collection("userNotifications")
-        // .doc("("+this.state.currentUserUid+")requestAccepted")
-        // .delete() &&
-        firebase
+      // firebase
+      // .firestore()
+      // .collection("notifications")
+      // .doc(this.state.uid)
+      // .collection("userNotifications")
+      // .doc("("+this.state.currentUserUid+")requestAccepted")
+      // .delete() &&
+      firebase
         .firestore()
         .collection("notifications")
         .doc(this.state.uid)
         .collection("userNotifications")
         .doc(this.state.currentUserUid)
-        .delete() 
+        .delete()
         .then(() => {
           this.setState({ following: false, closeFriends: false });
           // console.log("UNFOLLOWED");
@@ -725,12 +722,12 @@ class FriendsPage extends React.Component {
             {this.state.posts.map((post, index) => (
               <Card
                 className="col-sm-4"
-                style={{ padding: "10px" }}
+                style={{ padding: "10px", justifyContent: "center" }}
                 key={index}
                 onClick={() => {
                   this.setState({ modalItem: post });
                   this.setState({ defaultModal: true });
-                  console.log(this.state.modalItem)
+                  console.log(this.state.modalItem);
                 }}
               >
                 <img
@@ -860,13 +857,13 @@ class FriendsPage extends React.Component {
 
     return (
       <>
-        <UserNavbar />
+        {/* <UserNavbar /> */}
         <main
           className="profile-page"
           ref="main"
           style={{
             // backgroundColor:"black",
-            height:"100%",
+            height: "100%",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
