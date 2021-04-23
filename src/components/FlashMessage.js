@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import moment from "moment";
 import { Alert } from "reactstrap";
+import Snackbar from "@material-ui/core/Snackbar";
 import { connect } from "react-redux";
 import { ActionsCreator } from "../redux/actions";
 
@@ -11,13 +12,17 @@ const FlashMessage = (props) => {
   ]);
   const [length, setLength] = useState(null);
   const [visible, setVisible] = useState(true);
-  const onDismiss = () => setVisible(false);
+  const onDismiss = () =>  setAlert(false);
 
   useEffect(() => {
     props.getNotificationsRedux(JSON.parse(localStorage.getItem("uid")));
     //   .then(() => {
     //     setLength(props.totalNotifications);
     //   });
+
+
+
+    
   }, []); // Only re-run the effect if var changes
 
   useEffect(() => {
@@ -28,7 +33,16 @@ const FlashMessage = (props) => {
       props.notificationsArray[0].time > timeCorrection
     ) {
       setAlert(true);
-    }
+      // console.log("alert should turn true: ",alert)
+      // console.log(alert)
+      // console.log(props.show)
+    } 
+    // console.log(props.notificationsArray[0] )
+// console.log(       timeCorrection)
+
+    // console.log("alert outside: ", alert)
+    // console.log(alert)
+    // console.log(props.show)
     setLength(props.totalNotifications);
     setMessage(props.notificationsArray[0]);
   }, [props.notificationsArray]); // Only re-run the effect if var changes
@@ -47,7 +61,35 @@ const FlashMessage = (props) => {
         }}
       >
         <div className={`notification`}>
-          <Alert color="info" isOpen={visible} toggle={onDismiss}>
+          <Snackbar
+            open={visible}
+            autoHideDuration={6000}
+            onClose={onDismiss}
+            style={{ width: "100%" }}
+          >
+            <Alert onClose={onDismiss} severity="success">
+              <div className="d-flex align-items-center">
+                <img
+                  className="avatar"
+                  width="45"
+                  src={message.avatar}
+                  alt=""
+                />
+                <div className="mx-3">
+                  <h6 className="mb-0 text-white">
+                    {"@"}
+                    {message.username} {message.content}
+                  </h6>
+                  <small className="text-white">
+                    {" "}
+                    {moment(Number(message.time)).format("lll")}{" "}
+                  </small>
+                </div>
+              </div>
+            </Alert>
+          </Snackbar>
+
+          {/* <Alert color="info" isOpen={visible} toggle={onDismiss}>
             <div className="d-flex align-items-center">
               <img className="avatar" width="45" src={message.avatar} alt="" />
               <div className="mx-3">
@@ -62,6 +104,7 @@ const FlashMessage = (props) => {
               </div>
             </div>
           </Alert>
+         */}
         </div>
       </div>
     );

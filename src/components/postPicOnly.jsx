@@ -4,6 +4,7 @@ import React from "react";
 import moment from "moment";
 import { Favorite, FavoriteBorder, Comment } from "@material-ui/icons";
 import SmoothImage from "react-smooth-image";
+import FadeIn from "react-fade-in";
 // reactstrap components
 import {
   // UncontrolledCollapse,
@@ -47,9 +48,8 @@ class PostPicOnly extends React.Component {
     commentsArray: [],
     getComments: false,
     // openCommentInput: false,
-    profilePic:
-    require('assets/img/icons/user/user1.png'),
-      // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
+    profilePic: require("assets/img/icons/user/user1.png"),
+    // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
     commentInput: "",
     currentUsername: "",
     defaultModal: false,
@@ -177,8 +177,8 @@ class PostPicOnly extends React.Component {
           case "storage/object-not-found":
             // File doesn't exist
             this.setState({
-              profilePic:
-              require('assets/img/icons/user/user1.png'),                });
+              profilePic: require("assets/img/icons/user/user1.png"),
+            });
             break;
           default:
         }
@@ -479,84 +479,90 @@ class PostPicOnly extends React.Component {
   render() {
     const { item } = this.props;
     return (
-        <div className="card  shadow" style={{ zoom: "80%" 
-        //   , backgroundColor: '#333', borderColor: '#333'
-        }} 
+      <div
+        className="card  shadow"
+        style={{
+          zoom: "80%",
+          //   , backgroundColor: '#333', borderColor: '#333'
+        }}
         //   fluid body inverse
-        >
-          <div className="card-body" style={{ backgroundColor: "#F7F7F7" }}>
-            <p className="mb-4">{item.caption}</p>
-            <SmoothImage
+      >
+        <div className="card-body" style={{ backgroundColor: "#F7F7F7" }}>
+          <p className="mb-4">{item.caption}</p>
+
+          <FadeIn transitionDuration={2100} delay={80}>
+            <img
+              loading="lazy"
+              onLoad={console.log("Fully loaded")}
+              onError={console.log("Error on image")}
               alt="Image placeholder"
               src={item.image}
               className="img-fluid rounded"
+              style={{
+                width: "inherit",
+              }}
             />
-            <div className="row align-items-center my-3 pb-3 border-bottom">
-              <div className="col-sm-12">
-                <div className="icon-actions">
-                  {this.state.ifLiked === true ? (
-                    <Favorite color="error" onClick={this.toggleLike} />
-                  ) : (
-                    <FavoriteBorder
-                      color="secondary"
-                      onClick={this.toggleLike}
-                    />
-                  )}
+          </FadeIn>
 
-                  <span className="text-muted">
-                    {" "}
-                    {" " + this.state.likes}
-                    {" likes "}
-                  </span>
+          <div className="row align-items-center my-3 pb-3 border-bottom">
+            <div className="col-sm-12">
+              <div className="icon-actions">
+                {this.state.ifLiked === true ? (
+                  <Favorite color="error" onClick={this.toggleLike} />
+                ) : (
+                  <FavoriteBorder color="secondary" onClick={this.toggleLike} />
+                )}
 
-                  <Comment color="primary" />
+                <span className="text-muted">
+                  {" "}
+                  {" " + this.state.likes}
+                  {" likes "}
+                </span>
 
-                  <span className="text-muted">
-                    {/* d-none d-lg-block */}{" "}
-                    {" " + this.state.commentsArray.length}
-                    {" comments"}
-                  </span>
-                </div>
+                <Comment color="primary" />
+
+                <span className="text-muted">
+                  {/* d-none d-lg-block */}{" "}
+                  {" " + this.state.commentsArray.length}
+                  {" comments"}
+                </span>
               </div>
             </div>
+          </div>
 
-            {/* <!-- Comments --> */}
-            <div className="mb-1">
-              {this.state.commentsArray.map((comment, postindex) => (
-                <CommentItem item={comment} key={postindex} />
-              ))}
+          {/* <!-- Comments --> */}
+          <div className="mb-1">
+            {this.state.commentsArray.map((comment, postindex) => (
+              <CommentItem item={comment} key={postindex} />
+            ))}
 
-              <div className="media align-items-center mt-1">
-                <img
-                  style={{
-                    width: "44px",
-                    height: "44px",
-                    display: "block",
-                    objectFit: "cover",
-                  }}
-                  className="rounded  img-responsive"
-                  src={this.state.profilePic}
-                />
-                <div className="media-body">
-                  <Form
-                    id="formComment"
-                    role="form"
-                    onSubmit={this.postComment}
-                  >
-                    <Input
-                      className="form-control"
-                      id="commentInput"
-                      placeholder="Write your comment"
-                      onChange={this.handleChange}
-                      value={this.state.commentInput}
-                      rows="1"
-                    ></Input>
-                  </Form>
-                </div>
+            <div className="media align-items-center mt-1">
+              <img
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  display: "block",
+                  objectFit: "cover",
+                }}
+                className="rounded  img-responsive"
+                src={this.state.profilePic}
+              />
+              <div className="media-body">
+                <Form id="formComment" role="form" onSubmit={this.postComment}>
+                  <Input
+                    className="form-control"
+                    id="commentInput"
+                    placeholder="Write your comment"
+                    onChange={this.handleChange}
+                    value={this.state.commentInput}
+                    rows="1"
+                  ></Input>
+                </Form>
               </div>
             </div>
           </div>
         </div>
+      </div>
     );
   }
 }

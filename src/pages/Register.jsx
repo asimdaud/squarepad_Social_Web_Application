@@ -1,5 +1,5 @@
 import React from "react";
-
+import classnames from "classnames";
 // reactstrap components
 import {
   Button,
@@ -27,6 +27,7 @@ import { CreateUser } from "../services/authServices";
 import "firebase/auth";
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import { withTranslation } from "react-i18next";
+import PasswordStrengthMeter from "components/PasswordStrengthMeter";
 
 // const [, ] = useState(false);
 
@@ -83,7 +84,7 @@ class Register extends React.Component {
   };
 
   componentDidMount = () => {
-    localStorage.setItem("lang", "en");
+    // localStorage.setItem("lang", "en");
     // localStorage.setItem("ss", "en");
     // console.log(   JSON.parse(localStorage.getItem("lang")))   ;
     // console.log(   localStorage.getItem("lang")) ;
@@ -211,9 +212,13 @@ class Register extends React.Component {
     if (word.length > 3) {
       this.setState({ usernameChecked: true });
     }
+    if (word.length < 3) {
+      this.setState({ usernameChecked: false });
+    }
+    // console.log(this.state.usernameChecked);
     let users = [];
     userCollectionRef
-      .where("username", "==", word.toLowerCase())
+      .where("username", "==", word)
       .get()
       .then((querySnapshot) => {
         querySnapshot.forEach((documentSnapshot) => {
@@ -305,14 +310,20 @@ class Register extends React.Component {
 
     return (
       <>
-        <PubNavbar />
-        <main ref="main" style={{ height: "100%" ,
-      backgroundImage: "radial-gradient(circle, #5f81b4, #429bc6, #32b4ca, #51cbc3, #85deb5)"  
-      }}
-        
-        
-        
-        
+        {/* <PubNavbar /> */}
+        <main
+          ref="main"
+          style={{
+    // overflow: "auto",
+    width: "-webkit-fill-available",
+    display: "table",
+    position: "absolute",
+    height: "-webkit-fill-available",
+    backgroundSize: "cover",
+
+            backgroundImage:
+              "radial-gradient(circle, #5f81b4, #429bc6, #32b4ca, #51cbc3, #85deb5)",
+          }}
         >
           <section
             className="section-shaped"
@@ -333,9 +344,24 @@ class Register extends React.Component {
               <br />
               <Row className="justify-content-center">
                 <Col lg="5">
-                  <Card className="bg-secondary shadow border-0">
-                    <CardHeader className="bg-white pb-5">
-                      <div className="text-muted text-center mb-3">
+                  <Card
+                    // bg-secondary
+                    className="                  shadow border-0"
+                    style={{
+                      backdropFilter: "brightness(1.1)",
+
+                      backgroundColor: "transparent",
+                      //  paddingTop:"20px", borderRadius:"40px",
+                      webkittextstroke: "thin",
+                    }}
+                  >
+                    {/* <CardHeader 
+                    
+                    // bg-white
+                    className=
+                    
+                    "                 pb-5">
+                      <div className="text-white text-center mb-3">
                         <small>{t("Sign up with")}</small>
                       </div>
                       <div className="text-center">
@@ -344,14 +370,35 @@ class Register extends React.Component {
                           firebaseAuth={firebase.auth()}
                         />
                       </div>
-                    </CardHeader>
+                    </CardHeader> */}
                     <CardBody className="px-lg-5 py-lg-5">
-                      <div className="text-center text-muted mb-4">
+                      <div className="text-white text-center mb-3">
+                        <small>{t("Sign up with")}</small>
+                      </div>
+                      <div
+                        className="text-center"
+                        style={{ paddingBottom: "1rem" }}
+                      >
+                        <StyledFirebaseAuth
+                          uiConfig={this.uiConfig}
+                          firebaseAuth={firebase.auth()}
+                        />
+                      </div>
+
+                      <div className="text-center text-white mb-4">
                         <small>{t("Or sign up with credentials")}</small>
                       </div>
                       <Form role="form" onSubmit={this.handleSubmit}>
                         <FormGroup>
-                          <InputGroup className="input-group-alternative mb-3">
+                          <InputGroup
+                            // className="input-group-alternative mb-3"
+                            className={classnames(
+                              "input-group-alternative mb-3",
+                              {
+                                "input-group-focus": this.state.focus1,
+                              }
+                            )}
+                          >
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 <i className="ni ni-hat-3" />
@@ -362,10 +409,19 @@ class Register extends React.Component {
                               type="text"
                               id="name"
                               onChange={this.handleChangeData}
+                              onFocus={(e) => this.setState({ focus1: true })}
+                              onBlur={(e) => this.setState({ focus1: false })}
                             />
                           </InputGroup>
 
-                          <InputGroup className="input-group-alternative mb-3">
+                          <InputGroup
+                            className={classnames(
+                              "input-group-alternative mb-3",
+                              {
+                                "input-group-focus": this.state.focus2,
+                              }
+                            )}
+                          >
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 {/* <i className="ni ni-email-83" /> */}@
@@ -395,14 +451,40 @@ class Register extends React.Component {
                               className="form-control"
                               onChange={(word) => this.textInput(word)}
                               aria-describedby="inputGroupPrepend"
+                              onFocus={(e) => this.setState({ focus2: true })}
+                              onBlur={(e) => this.setState({ focus2: false })}
                               required
                             />
 
-                            <FormFeedback valid>
+                            <FormFeedback
+                              valid
+                              style={{
+                                fontSize: "13px",
+                                filter: "drop-shadow(5px 3px 3px black)",
+                                backgroundColor: "transparent",
+                                borderRadius: "40px",
+                                textAlign: "-webkit-center",
+                                webkittextstroke: "thin",
+                                color: "#1eff9f",
+                              }}
+                            >
                               Sweet! that username is available
                             </FormFeedback>
 
-                            <FormFeedback invalid>Bummer!</FormFeedback>
+                            <FormFeedback
+                              invalid
+                              style={{
+                                fontSize: "13px",
+                                filter: "drop-shadow(5px 3px 3px black)",
+
+                                backgroundColor: "transparent",
+                                borderRadius: "40px",
+                                textAlign: "-webkit-center",
+                                webkittextstroke: "thin",
+                              }}
+                            >
+                              Bummer!
+                            </FormFeedback>
                             {/* <Form.Control
                               type="text"
                               placeholder="Username"
@@ -458,7 +540,14 @@ class Register extends React.Component {
                         </FormGroup> */}
 
                         <FormGroup>
-                          <InputGroup className="input-group-alternative mb-3">
+                          <InputGroup
+                            className={classnames(
+                              "input-group-alternative mb-3",
+                              {
+                                "input-group-focus": this.state.focus3,
+                              }
+                            )}
+                          >
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 <i className="ni ni-email-83" />
@@ -469,11 +558,20 @@ class Register extends React.Component {
                               type="email"
                               id="email"
                               onChange={this.handleChangeData}
+                              onFocus={(e) => this.setState({ focus3: true })}
+                              onBlur={(e) => this.setState({ focus3: false })}
                             />
                           </InputGroup>
                         </FormGroup>
                         <FormGroup>
-                          <InputGroup className="input-group-alternative">
+                          <InputGroup
+                            className={classnames(
+                              "input-group-alternative mb-3",
+                              {
+                                "input-group-focus": this.state.focus4,
+                              }
+                            )}
+                          >
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 <i className="ni ni-lock-circle-open" />
@@ -485,6 +583,8 @@ class Register extends React.Component {
                               id="password"
                               onChange={this.handleChangeData}
                               autoComplete="off"
+                              onFocus={(e) => this.setState({ focus4: true })}
+                              onBlur={(e) => this.setState({ focus4: false })}
                             />
                           </InputGroup>
                         </FormGroup>
@@ -502,16 +602,23 @@ class Register extends React.Component {
                           />
                         </InputGroup> */}
 
-                        <div className="text-muted font-italic">
+                        <div
+                          className="text-white font-italic"
+                          style={{ textAlignLast: "center" }}
+                        >
                           <small>
                             {/* password strength:{" "} */}
-                            <span className="text-danger font-weight-700">
+                            <PasswordStrengthMeter
+                              password={this.state.password}
+                            />
+
+                            {/* <span className="text-danger font-weight-700">
                               {this.state.error}
-                            </span>
+                            </span> */}
                           </small>
                         </div>
 
-                        {/* <div className="text-muted font-italic">
+                        {/* <div className="text-white font-italic">
                           <small>
                             password strength:{" "}
                             <span className="text-success font-weight-700">
@@ -521,7 +628,7 @@ class Register extends React.Component {
                         </div> */}
                         <Row className="my-4">
                           <Col xs="12">
-                            {/* <div className="custom-control custom-control-alternative custom-checkbox">
+                            <div className="custom-control custom-control-alternative custom-checkbox">
                               <input
                                 className="custom-control-input"
                                 id="customCheckRegister"
@@ -531,17 +638,17 @@ class Register extends React.Component {
                                 className="custom-control-label"
                                 htmlFor="customCheckRegister"
                               >
-                                <span>
+                                <span className="text-white">
                                   I agree with the{" "}
                                   <a
                                     href="#pablo"
-                                    onClick={e => e.preventDefault()}
+                                    onClick={(e) => e.preventDefault()}
                                   >
                                     Privacy Policy
                                   </a>
                                 </span>
                               </label>
-                            </div> */}
+                            </div>
                           </Col>
                         </Row>
                         <div className="text-center">

@@ -10,6 +10,9 @@ import { Carousel } from "react-responsive-carousel";
 import Loader from "react-loader-advanced";
 import GPT from "../components/gpt";
 import GoogleAdsense2021 from "../components/GoogleAdsense2021.js";
+import "emoji-mart/css/emoji-mart.css";
+import { Picker } from "emoji-mart";
+import imageCompression from "browser-image-compression";
 
 import {
   // Button,
@@ -56,6 +59,10 @@ import AdSense from "react-adsense";
 import Inbox from "components/inbox.jsx";
 import { connect } from "react-redux";
 import { ActionsCreator } from "../redux/actions";
+import Input from "reactstrap/lib/Input";
+import FormGroup from "reactstrap/lib/FormGroup";
+import TimelineShowAds from "components/TimelineShowAds";
+import postsBatch from "components/PostsBatch";
 
 const user3 = JSON.parse(localStorage.getItem("uid"));
 const userId = JSON.parse(localStorage.getItem("uid"));
@@ -76,7 +83,6 @@ class Timeline extends React.Component {
     closeUserData: {},
     followedUsers: [],
     closeFriends: [],
-    avatar: "",
     isLoading: true,
     friendReqData: [],
     friendReq: [],
@@ -102,12 +108,30 @@ class Timeline extends React.Component {
     currentPosts: [],
     noPosts: true,
     loaderPosts: true,
+    locationName: "",
+    postCaption: "",
+    postImage: null,
+    avatar: "",
+    uploadImage: false,
+    imageLoaded: false,
+
+    postsBatch:[],
+    lastKey:"",
+    nextPosts_loading: false,
+
   };
 
   renderNewCarousel = (story) => {
     return (
       <>
-        <Carousel autoPlay showStatus={false} showThumbs={false}>
+        <Carousel
+          autoPlay
+          showStatus={false}
+          showThumbs={false}
+          // centerMode={true}
+          dynamicHeight={true}
+          style={{ alignSelf: "center" }}
+        >
           {story.map((s, i) => {
             return (
               <div>
@@ -136,10 +160,19 @@ class Timeline extends React.Component {
     this.setState({ ...this.state, [event.target.name]: event.target.checked });
   };
 
-  toggleModal = (state) => {
+  handleChangeData = (e) => {
+    this.setState({ postCaption: e.target.value });
+    // this.setState({
+    //   postCaption: this.state.postCaption + emoji,
+    // });
+  };
+
+  toggleEmoji = (state) => {
     this.setState({
       [state]: !this.state[state],
     });
+    console.log(state);
+    console.log(this.state.emoji);
   };
 
   componentWillUnmount() {
@@ -150,6 +183,7 @@ class Timeline extends React.Component {
     clearInterval(this.getFollowedUsers());
     clearInterval(this.getCloseFriends());
     clearInterval(this.getFollowingPosts());
+    clearInterval(this.getTimeline());
     clearInterval(this.getCloseFriendsPosts());
 
     // this.getFriendId();
@@ -164,6 +198,11 @@ class Timeline extends React.Component {
       this.getCloseFriends();
       this.getCloseFriendsPosts();
     }
+
+
+if(prevState.postsBatch!==this.state.postsBatch){
+  this.renderPosts();
+}
 
     if (prevState.currentPage !== this.state.currentPage) {
       console.log(this.state.currentPosts);
@@ -185,9 +224,19 @@ class Timeline extends React.Component {
   }
 
   renderPosts = () => {
-    return this.state.currentPosts.map((post, postindex) => (
+    // return this.state.posts.map((post, postindex) => (
+    //   <Post item={post} key={postindex} />
+    // ));
+console.log(this.state.postsBatch)
+    return this.state.postsBatch.map((post, postindex) => (
       <Post item={post} key={postindex} />
     ));
+
+
+
+
+ 
+
   };
 
   // Change page
@@ -203,6 +252,21 @@ class Timeline extends React.Component {
   };
 
   componentDidMount() {
+    firebase
+      .firestore()
+      .collection("users")
+      .doc(this.state.user3)
+      .get()
+      .then((doc) => {
+        const res = doc.data().profilePic;
+
+        if (res != null) {
+          this.setState({
+            avatar: res,
+          });
+        }
+      });
+
     this.ismounted = true;
     document.documentElement.scrollTop = 0;
     document.scrollingElement.scrollTop = 0;
@@ -210,8 +274,24 @@ class Timeline extends React.Component {
 
     this.getFriendId().then(() => {
       // this.getProfilePic();
+
       this.getFollowedUsers();
       this.getFollowingPosts();
+      this.getTimeline();
+
+      postsBatch.postsFirstBatch()
+      .then((res) => {
+        this.setState({postsBatch:res.posts})
+        this.setState({lastKey:res.lastKey})
+        // setPosts(res.posts);
+        // setLastKey(res.lastKey);
+        // console.log(this.state.lastKey)
+        console.log(JSON.stringify(this.state.lastKey.seconds))
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
       // this.getFollowingStories();
       // this.getFriendsStories();
       // this.renderCarousel();
@@ -222,6 +302,36 @@ class Timeline extends React.Component {
     // this.getCloseFriends();
     // this.getCloseFriendsPosts();
   }
+
+  fetchMorePosts = (key) => {
+    if (key.length > 0) {
+      // setNextPostsLoading(true);
+      this.setState({nextPosts_loading:true})
+      postsBatch.postsNextBatch(key)
+        .then((res) => {
+
+
+          this.setState({lastKey:res.lastKey})
+          
+          // setLastKey(res.lastKey);
+          // add new posts to old posts
+          let coc = this.state.postsBatch.concat(res.posts);
+
+          this.setState({postsBatch:coc})
+          // setPosts(posts.concat(res.posts));
+          this.setState({nextPosts_loading:false})
+
+          // setNextPostsLoading(false);
+        })
+        .catch((err) => {
+          console.log(err);
+          // setNextPostsLoading(false);
+          this.setState({nextPosts_loading:false})
+        });
+    }
+  };
+
+
 
   getFollowedUsers = async () => {
     let users = [];
@@ -298,8 +408,12 @@ class Timeline extends React.Component {
                     timeStamp: doc.data().time,
                     // likes:0,
                     // locLatLng: "Address",
+
+                    type: doc.data().type ? doc.data().type : null,
+                    video: doc.data().video ? doc.data().video : null,
                   };
                   allPosts.push(article);
+
                   this.setState({ noPosts: false });
                 });
               });
@@ -317,19 +431,16 @@ class Timeline extends React.Component {
       }
     });
 
-// //sorting the posts manually
-//     let sortedPosts = [];
-//     allPosts
-//       .sort((a, b) => (a.timeStamp.seconds < b.timeStamp.seconds ? 1 : -1))
-//       .map((item, i) => {
-//         sortedPosts.push(item);
-//       });
-// this.setState({ posts: sortedPosts });
+    // //sorting the posts manually
+    //     let sortedPosts = [];
+    //     allPosts
+    //       .sort((a, b) => (a.timeStamp.seconds < b.timeStamp.seconds ? 1 : -1))
+    //       .map((item, i) => {
+    //         sortedPosts.push(item);
+    //       });
+    // this.setState({ posts: sortedPosts });
 
-this.setState({ posts: allPosts  });
-
-
- 
+    // this.setState({ posts: allPosts });
 
     const indexOfLastPost = this.state.currentPage * this.state.postsPerPage;
     const indexOfFirstPost = indexOfLastPost - this.state.postsPerPage;
@@ -341,6 +452,40 @@ this.setState({ posts: allPosts  });
     this.setState({ currentPosts: currentPosts });
 
     this.setState({ loaderPosts: false });
+  };
+
+  getTimeline = async () => {
+    let allPosts = [];
+    firebase
+      .firestore()
+      .collection("timeline")
+      .doc(this.state.user3)
+      .collection("timelinePosts")
+      .orderBy("time", "desc")
+      .get()
+      .then((posts) => {
+        posts.forEach((post) => {
+          let data = post.data();
+          let article = {
+            username: data.username,
+            userId: data.userId,
+            title: "post",
+            profilePic: data.userAvatar,
+            image: data.image,
+            caption: data.caption ? data.caption : null,
+            postId: data.postId,
+            timeStamp: data.time,
+            type: data.type ? data.type : null,
+            video: data.video ? data.video : null,
+            locName: data.location ? data.location.locationName : null,
+            // location: doc.data().location.coordinates,
+            // cta: "cta",
+            // locLatLng: "Address",
+          };
+          allPosts.push(article);
+        });
+        this.setState({ posts: allPosts });
+      });
   };
 
   getCloseFriendsPosts = async () => {
@@ -418,7 +563,8 @@ this.setState({ posts: allPosts  });
                   timestampDiff = Math.round(timestampDiff);
                   let storyObj = {
                     content: story.downloadURL,
-                    uploaded: timestampDiff + " hours ago",
+                    // uploaded: timestampDiff + " hours ago",
+                    uploaded: moment(Number(uploadTime)).fromNow(),
                   };
                   storiesArr.push(storyObj);
                   userStoryObj.stories = storiesArr;
@@ -429,7 +575,7 @@ this.setState({ posts: allPosts  });
         });
     }
     this.setState({ stories: stories });
-    console.log("asim", this.state.stories);
+    // console.log("asim", this.state.stories);
   };
 
   getFriendsStories = async () => {
@@ -518,11 +664,23 @@ this.setState({ posts: allPosts  });
         <>
           {this.renderPosts()}
 
+
+          <div style={{ textAlign: "center" }}>
+      {this.state.nextPosts_loading ? (
+        <p>Loading..</p>
+      ) : this.state.lastKey.length > 0 ? (
+        <button onClick={() => this.fetchMorePosts(this.state.lastKey)}>More Posts</button>
+      ) : (
+        <span>You are up to date!</span>
+      )}
+      </div>
+
+          {/* 
           <PostsPagination
             postsPerPage={this.state.postsPerPage}
             totalPosts={this.state.posts.length}
             paginate={this.paginate}
-          />
+          /> */}
           {/* {this.state.posts.map((post, postindex) => (
             <Post item={post} key={postindex} />
           ))} */}
@@ -617,9 +775,156 @@ this.setState({ posts: allPosts  });
     // }
   };
 
+  toggleModal = (state) => {
+    this.setState({
+      [state]: !this.state[state],
+    });
+  };
+
+  handleChangeEmoji = (e) => {
+    this.setState({
+      [e.target.id]: e.target.value,
+    });
+  };
+
+  addEmoji = (emoji) => {
+    // let emoji = e.native;
+    this.setState({
+      postCaption: this.state.postCaption + emoji,
+    });
+    // console.log(this.state.postCaption);
+  };
+
+  handleImageUpload = async (event) => {
+    //call it after storing pic in a state
+    const imageFile = event.target.files[0];
+    console.log("originalFile instanceof Blob", imageFile instanceof Blob); // true
+    console.log(`originalFile size ${imageFile.size / 1024 / 1024} MB`);
+
+    const options = {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    };
+    try {
+      const compressedFile = await imageCompression(imageFile, options);
+      console.log(
+        "compressedFile instanceof Blob",
+        compressedFile instanceof Blob
+      ); // true
+      console.log(
+        `compressedFile size ${compressedFile.size / 1024 / 1024} MB`
+      ); // smaller than maxSizeMB
+      // this.setState({ imageLoaded: true });
+
+      await this.uploadPhoto(compressedFile);
+
+      // console.log(compressedFile)
+      // uploadToServer(compressedFile); // write your own logic
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  uploadPhoto = (file) => {
+    console.log(file);
+    if (file) {
+      const timestamp = moment().valueOf().toString();
+
+      const uploadTask = firebase
+        .storage()
+        .ref()
+        .child("postImages/" + timestamp)
+        .put(file);
+
+      uploadTask.on(
+        "state_changed",
+        // null,
+        (snapshot) => {
+          const getProgress = Math.round(
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+          );
+          this.setState({ progress: getProgress });
+        },
+        (err) => {
+          this.setState({ isLoading: false });
+          alert(err.message);
+        },
+
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            this.setState({ isLoading: false });
+            console.log(downloadURL);
+            this.setState({ postImage: downloadURL });
+            // this.onSendMessage(downloadURL, 1);
+            this.addPost(downloadURL);
+          });
+        }
+      );
+    } else {
+      this.setState({ isLoading: false });
+      alert("File is null");
+    }
+  };
+
+  addPost = (downloadURL) => {
+    let caption = this.state.postCaption;
+    let image = this.state.postImage;
+    let postId = moment().valueOf().toString();
+    let type = "image";
+    let userId = this.state.user3;
+    let locationName = this.state.locationName;
+    // const time = new Date().getTime();
+    const time = firebase.firestore.Timestamp.fromDate(new Date());
+    // let myuserId = this.user.uid;
+    // if (this.state.imageLoaded && userId !== null) {
+    //   this.setState({ uploadImage: true });
+    // alert("yehaw");
+    firebase
+      .firestore()
+      .collection("posts")
+      .doc(userId)
+      .collection("userPosts")
+      .doc(postId)
+      .set({
+        caption: caption,
+        image: downloadURL,
+        postId: postId,
+        time: time,
+        type: type,
+        userId: userId,
+        location: {
+          locationName: locationName ? locationName : "",
+        },
+      })
+      .then(() => {
+        this.setState({ postCaption: "", postImage: null });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    // }
+    // alert("asw");
+  };
+
+  // addEmoji = e => {
+  //   let sym = e.unified.split('-')
+  //   let codesArray = []
+  //   sym.forEach(el => codesArray.push('0x' + el))
+  //   let emoji = String.fromCodePoint(...codesArray)
+  //   this.setState({
+  //      text: this.state.text + emoji
+  //   })
+  // }
+
   render() {
     // alert(this.props.uidRedux)
-    console.log(this.props.uidRedux);
+    // console.log(this.props.uidRedux);
+    // console.log(firebase.firestore.Timestamp());
+    // console.log( firebase.firestore.Timestamp.fromDate(new Date()))
+
+    // console.log(moment().format("MMMM Do YYYY, h:mm:ss a"))
+    // console.log(firebase.firestore.FieldValue.serverTimestamp())
     return (
       <>
         {/* <UserNavbar /> */}
@@ -633,7 +938,7 @@ this.setState({ posts: allPosts  });
             // backgroundRepeat: "no-repeat",
             // backgroundSize: "cover",
             // backgroundColor: "black",
-            paddingTop: "2rem",
+            // paddingTop: "2rem",
             // overflow: "auto",
             width: "-webkit-fill-available",
             display: "table",
@@ -645,14 +950,14 @@ this.setState({ posts: allPosts  });
         >
           <section
             className="section section-blog-info"
-            style={{ marginTop: "20px" }}
+            // style={{ marginTop: "20px" }}
           >
             {/* <GPT /> */}
             {/* <GoogleAdsense2021 /> */}
 
             <Row
-              style={{ padding: "20px" }}
-              // className="d-flex justify-content-center"
+            // style={{ padding: "20px" }}
+            // className="d-flex justify-content-center"
             >
               <Col
                 sm="3"
@@ -673,10 +978,149 @@ this.setState({ posts: allPosts  });
                 className="order-md-2"
                 style={{ zoom: "85%" }}
               >
+                {/* Add a Post */}
+
+                <div
+                  className="card-header  align-items-center shadow"
+                  style={{ borderRadius: "24px", marginBottom: "25px" }}
+                >
+                  <div className="d-flex align-items-center">
+                    <div
+                      className="d-flex align-items-center"
+                      style={{ padding: "10px" }}
+                    >
+                      <img
+                        className="avatar"
+                        width="45"
+                        src={
+                          this.state.avatar
+                            ? this.state.avatar
+                            : require("assets/img/icons/user/user1.png")
+                        }
+                        alt="..."
+                      />
+                      {/* <div className="mx-3">
+                          <h6 className="mb-0 text-black font-weight-bold">
+                            {this.state.currentName
+                              ? this.state.currentName
+                              : "Name"}
+                          </h6>
+
+                          <small className="text-muted">My Profile </small>
+                        </div> */}
+                    </div>
+                    <Input
+                      style={{
+                        padding: "22px",
+                        height: "10px",
+                        borderRadius: "15px",
+                      }}
+                      className="form-control-alternative"
+                      // rows="2"
+                      placeholder="Add a post"
+                      type="text"
+                      id="postCaption"
+                      onChange={this.handleChangeData}
+                      value={this.state.postCaption}
+                      // onChange={this.handleChangeData}
+                    />
+
+                    {/* <div className="pl-lg-4"> */}
+                    {/* </div> */}
+                  </div>
+
+                  <div className="d-flex" style={{ placeContent: "center" }}>
+                    <span>
+                      <Button
+                        style={{
+                          boxShadow: "none",
+                          backgroundColor: "transparent",
+                          border: "0",
+                        }}
+                        onClick={() => this.refInput.click()}
+                      >
+                        <img
+                          width="26px"
+                          height="26px"
+                          alt="..."
+                          src={require("assets/img/icons/images/icons8.png")}
+                          style={{ margin: "4px" }}
+                        />
+                        Photo
+                      </Button>
+
+                      <input
+                        ref={(el) => {
+                          this.refInput = el;
+                        }}
+                        accept="image/*"
+                        className="viewInputGallery"
+                        type="file"
+                        // onChange={this.onChoosePhoto}
+                        onChange={(event) => this.handleImageUpload(event)}
+                      />
+
+                      {/* </span>
+<span>
+   */}
+                      {/* </span>
+<span> */}
+                      <Button
+                        style={{
+                          boxShadow: "none",
+                          backgroundColor: "transparent",
+                          border: "0",
+                        }}
+                        onClick={() => this.toggleEmoji("emoji")}
+                      >
+                        <img
+                          width="24px"
+                          height="24px"
+                          alt="..."
+                          src={require("assets/img/icons/images/ic_wave_hand.png")}
+                          style={{ margin: "4px" }}
+                        />
+                        Emoji
+                      </Button>
+
+                      {/* 
+                      <Button
+                        style={{
+                          boxShadow: "none",
+                          backgroundColor: this.state.imageLoaded
+                            ? "orange"
+                            : "transparent",
+                          border: "0",
+                        }}
+                        onClick={() => this.addPost()}
+                      >
+Post
+                      </Button> */}
+                      <div
+                        //  toggle={() => this.toggleModal("emoji")}
+                        style={{
+                          transform: "translate3d(-213px, 93px, 0px)",
+
+                          display: this.state.emoji ? "unset" : "none",
+                          position: "absolute",
+                          zIndex: "50",
+                          zoom: "85%",
+                        }}
+                      >
+                        <Picker
+                          onSelect={(emoji) => this.addEmoji(emoji.native)}
+                        />
+                      </div>
+                    </span>
+                  </div>
+                </div>
+
                 <Loader
                   // foregroundStyle={{color: 'white'}}
                   backgroundStyle={{
-                    backgroundColor: "white",
+                    position: "absolute",
+                    display: "content",
+                    backgroundColor: "transparent",
                     borderRadius: "10px",
                   }}
                   show={this.state.loaderPosts}
@@ -686,10 +1130,10 @@ this.setState({ posts: allPosts  });
                       color="#00BFFF"
                       height={50}
                       width={50}
-                      timeout={3000} //3 secs
+                      // timeout={3000} //3 secs
                     />
                   }
-                  timeout={3000}
+                  // timeout={3000}
                   contentBlur={200}
                   hideContentOnLoad={true}
                 >
@@ -835,7 +1279,7 @@ this.setState({ posts: allPosts  });
                 md="3"
                 lg="3"
                 className="order-md-3"
-                style={{ zoom: "85%" }}
+                style={{ zoom: "60%" }}
               >
                 {/* <Card> */}
                 {/* <AdSense.Google
@@ -851,6 +1295,16 @@ this.setState({ posts: allPosts  });
                     //  zIndex: "111"
                      }}
                   /> */}
+                <div
+                  style={{
+                    position: "fixed",
+                    borderStyle: "groove",
+                    border: "black",
+                  }}
+                >
+                  <span>Sponsored posts</span>
+                  <TimelineShowAds />
+                </div>
 
                 <GoogleAdsense2021 />
                 {/* </Card> */}

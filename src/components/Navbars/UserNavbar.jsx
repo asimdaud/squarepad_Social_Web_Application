@@ -83,7 +83,8 @@ class UserNavbar extends React.Component {
       found: false,
       userChecked: false,
       reqNotify: false,
-      value: localStorage.getItem("lang") ? localStorage.getItem("lang") : "en",
+      // value: localStorage.getItem("lang") ? localStorage.getItem("lang") : "en",
+      value: localStorage.getItem("lang"),
 
       collapseClasses: "",
       collapseOpen: false,
@@ -98,7 +99,7 @@ class UserNavbar extends React.Component {
     console.log("selected val is ", event.target.value);
     let newlang = event.target.value;
     this.setState((prevState) => ({ value: newlang }));
-    localStorage.setItem("lang", JSON.stringify(newlang));
+    localStorage.setItem("lang", newlang);
     console.log("state value is", newlang, this.props.i18n.changeLanguage);
     this.props.i18n.changeLanguage(newlang);
   };
@@ -144,10 +145,10 @@ class UserNavbar extends React.Component {
     let users = [];
     if (word.length > 2) {
       userCollectionRef
-        // .where("username", "==", word.toLowerCase())
-        // .where("username", "==", word)
-        .where("usernameKeywords", "array-contains", word)
-        // .orderByChild("usernameKeywords").equalTo(word)
+        .where("usernameKeywords", "array-contains-any", [
+          word.toLowerCase(),
+          word.toUpperCase(),
+        ])
         .get()
         .then((querySnapshot) => {
           querySnapshot.forEach((documentSnapshot) => {
@@ -190,7 +191,7 @@ class UserNavbar extends React.Component {
             this.setState({
               searchResults: users,
             });
-            console.log(this.state.searchResults);
+            // console.log(this.state.searchResults);
           }
         });
     }
@@ -385,6 +386,7 @@ class UserNavbar extends React.Component {
     // word.preventDefault();
     this.setState({ searchWord: word });
     this.searchUser(word.target.value);
+
     // console.log("textinput+   " + word);
   };
 
@@ -460,14 +462,43 @@ class UserNavbar extends React.Component {
     const { t } = this.props;
     return (
       <>
-        <InputGroup className="input-group-alternative">
+        <InputGroup
+          className="input-group-alternative"
+          style={{ borderRadius: "4px", zoom: "80%" }}
+        >
           <InputGroupAddon addonType="prepend">
-            <InputGroupText>@</InputGroupText>
+            <InputGroupText
+              style={{
+                // border: 'solid 1px rgba(var(--b6a,219,219,219),1)',
+                /* background: rgba(var(--b3f,250,250,250),1), */
+                /* background-color: rgba(var(--b3f,250,250,250),1), */
+                // borderRadius: '4px',
+                padding: "1px 6px 2px 8px",
+                outline: "0",
+                fontFamily: "system-ui",
+              }}
+            >
+              @
+            </InputGroupText>
           </InputGroupAddon>
+          {/* <div
+          style={{transform: 'translate(20px,3px)'}}>
+            @
+          </div> */}
           <input
-            className="form-control-alternative"
+            className="form-control"
             placeholder={t("Search")}
             type="text"
+            style={{
+              // border: 'solid 1px rgba(var(--b6a,219,219,219),1)',
+              /* background: rgba(var(--b3f,250,250,250),1), */
+              /* background-color: rgba(var(--b3f,250,250,250),1), */
+              // borderRadius: '4px',
+              padding: "3px 11px 2px 10px",
+              outline: "0",
+              fontFamily: "ui-rounded",
+              boxShadow: "0",
+            }}
             // onChange={this.textInput}
             // value={this.state.searchWord}
             onChange={(word) => this.textInput(word)}
@@ -495,7 +526,7 @@ class UserNavbar extends React.Component {
             top: "0px",
             left: "0px",
             transform: " translate3d(15px, 51px, 0px)",
-            width: "222px",
+            minWidth: "210px",
           }}
           aria-labelledby="navbar-success_dropdown_1"
           right
@@ -508,8 +539,6 @@ class UserNavbar extends React.Component {
   };
 
   componentDidMount() {
-    localStorage.setItem("lang", "en");
-
     this.props.i18n.changeLanguage(this.state.value);
 
     firebase.auth().onAuthStateChanged((user) => {
@@ -582,8 +611,11 @@ class UserNavbar extends React.Component {
         // alert(this.props.chatCounter)
         console.log(this.props.notificationsArray);
         console.log(this.props.notificationsArray.length);
-        console.log(this.props);
-        console.log(this.props.getNotificationsRedux.length);
+        // console.log(this.props);
+        // console.log(this.props.getNotificationsRedux.length);
+
+
+
       })
       .catch((err) => {
         console.warn(err);
@@ -668,21 +700,28 @@ class UserNavbar extends React.Component {
           className="navbar-main navbar-transparent navbar-light headroom"
           expand="lg"
           id="navbar-main"
-          style={
-            {
-              // padding: "0px",
-              // borderBottom: "0.001rem solid black",
-              // backgroundColor: "#f0f3f4",
-            }
-          }
+          style={{
+            // padding: "0px",
+            // borderBottom: "0.001rem solid black",
+            // backgroundColor: "#f0f3f4",
+            paddingBlockStart: "1px",
+            paddingBlockEnd: "1px",
+            backgroundColor: "#0e2a47",
+          }}
         >
           <Container>
-            <NavbarBrand className="mr-lg-5" to="/home" tag={Link}>
-              <img
+            <NavbarBrand
+              className="mr-lg-5"
+              to="/home"
+              tag={Link}
+              style={{ fontFamily: "system-ui", fontSize: "20px" }}
+            >
+              {/* <img
                 style={{ height: "45px" }}
                 alt="..."
                 src={require("assets/img/brand/logo.png")}
-              />
+              /> */}
+              SQUARE PAD
             </NavbarBrand>
             <button className="navbar-toggler" id="navbar_global">
               <span className="navbar-toggler-icon" />
@@ -730,12 +769,13 @@ class UserNavbar extends React.Component {
                 this.state.userChecked ? (
                   <DropdownMenu
                     style={{
+                      zoom: "81%",
                       position: "absolute",
                       willChange: " transform",
                       top: "0px",
                       left: "0px",
                       transform: " translate3d(15px, 51px, 0px)",
-                      width: "222px",
+                      minWidth: "210px",
                     }}
                     aria-labelledby="navbar-success_dropdown_1"
                     right
@@ -751,7 +791,11 @@ class UserNavbar extends React.Component {
                                 // className="rounded-circle"
                                 className="avatar"
                                 width="45"
-                                src={user.data().profilePic}
+                                src={
+                                  user.data().profilePic
+                                    ? user.data().profilePic
+                                    : require("assets/img/icons/user/user1.png")
+                                }
                                 alt=""
                                 // onClick={localStorage.setItem('Fuid', JSON.stringify(this.state.userId))}
                               />
@@ -774,12 +818,13 @@ class UserNavbar extends React.Component {
                 ) : this.state.userChecked ? (
                   <DropdownMenu
                     style={{
+                      zoom: "81%",
                       position: "absolute",
                       willChange: " transform",
                       top: "0px",
                       left: "0px",
                       transform: " translate3d(15px, 51px, 0px)",
-                      width: "222px",
+                      minWidth: "210px",
                     }}
                     aria-labelledby="navbar-success_dropdown_22"
                     right
@@ -811,7 +856,8 @@ class UserNavbar extends React.Component {
                   to="/home"
                   tag={Link}
                   id="tooltip333589074"
-                  style={{ padding: "10px 10px" }}
+                  // style={{ padding: "10px 10px" }}
+                  style={{ padding: "0px" }}
                 >
                   {/* <i
                         className="ni ni-world"
@@ -837,7 +883,11 @@ class UserNavbar extends React.Component {
               {/* messages */}
               <div style={{ display: "block" }}>
                 <UncontrolledDropdown nav id="tooltip233583072">
-                  <DropdownToggle nav style={{ padding: "10px 8px" }}>
+                  <DropdownToggle
+                    nav
+                    // style={{ padding: "10px 8px" }}
+                    style={{ padding: "0px" }}
+                  >
                     <IconButton aria-label="follow requests" color="inherit">
                       {this.state.unseenChats > 0 ? (
                         <Badge
@@ -900,7 +950,11 @@ class UserNavbar extends React.Component {
               {/* notifications */}
               <div style={{ display: "block" }}>
                 <UncontrolledDropdown nav id="tooltip333583072">
-                  <DropdownToggle nav style={{ padding: "10px 8px" }}>
+                  <DropdownToggle
+                    nav
+                    // style={{ padding: "10px 8px" }}
+                    style={{ padding: "0px" }}
+                  >
                     <IconButton aria-label="notifications" color="inherit">
                       {this.state.notifications.length > 0 ? (
                         <Badge
@@ -968,7 +1022,8 @@ class UserNavbar extends React.Component {
                       ) : (
                         <>
                           {/* // <DropdownItem> */}
-                          {this.props.notificationsArray &&
+                          {
+                          this.props.notificationsArray &&
                             this.props.notificationsArray.map((item, index) => (
                               <>
                                 <DropdownItem
@@ -1089,14 +1144,23 @@ class UserNavbar extends React.Component {
               <div style={{ display: "block" }}>
                 <UncontrolledDropdown nav id="tooltip333589070">
                   <DropdownToggle nav style={{ padding: "10px 10px" }}>
-                    <IconButton aria-label="user profile" color="inherit">
+                    <IconButton
+                      aria-label="user profile"
+                      color="inherit"
+                      style={{
+                        padding: "2px",
+                        backgroundImage:
+                          " linear-gradient(to top, #ff00d8, #ab80ff, #00b2ff, #00d1ff, #00e6ff, #00e1ff, #00ddff, #00d8ff, #00b9ff, #0094ff, #0067ff, #3709f7)",
+                      }}
+                    >
                       <img
                         style={{
                           // display: "block",
                           objectFit: "cover",
                         }}
-                        width="21"
-                        height="21"
+                        alt=".."
+                        width="24"
+                        height="24"
                         className="rounded-circle img-responsive"
                         src={
                           this.state.userProfilePic
@@ -1127,7 +1191,7 @@ class UserNavbar extends React.Component {
                               ? this.state.userProfilePic
                               : require("assets/img/icons/user/user1.png")
                           }
-                          alt=""
+                          alt=".."
                         />
                         <div className="mx-3">
                           <h6 className="mb-0 text-black font-weight-bold">
@@ -1184,27 +1248,57 @@ class UserNavbar extends React.Component {
                   {/* <legend>Radio Buttons</legend> */}
                   <FormGroup check onClick={this.handleChange}>
                     <Label check>
-                      <Input type="radio" name="lang" value="en" /> English
+                      <Input
+                        type="radio"
+                        name="lang"
+                        value="en"
+                        checked={this.state.value === "en"}
+                      />{" "}
+                      English
                     </Label>
                   </FormGroup>
                   <FormGroup check onClick={this.handleChange}>
                     <Label check>
-                      <Input type="radio" name="lang" value="esp" /> Spanish
+                      <Input
+                        type="radio"
+                        name="lang"
+                        value="esp"
+                        checked={this.state.value === "esp"}
+                      />{" "}
+                      Spanish
                     </Label>
                   </FormGroup>
                   <FormGroup check onClick={this.handleChange}>
                     <Label check>
-                      <Input type="radio" name="lang" value="fre" /> French
+                      <Input
+                        type="radio"
+                        name="lang"
+                        value="fre"
+                        checked={this.state.value === "fre"}
+                      />{" "}
+                      French
                     </Label>
                   </FormGroup>
                   <FormGroup check onClick={this.handleChange}>
                     <Label check>
-                      <Input type="radio" name="lang" value="ger" /> German
+                      <Input
+                        type="radio"
+                        name="lang"
+                        value="ger"
+                        checked={this.state.value === "ger"}
+                      />{" "}
+                      German
                     </Label>
                   </FormGroup>
                   <FormGroup check onClick={this.handleChange}>
                     <Label check>
-                      <Input type="radio" name="lang" value="jap" /> Japanese
+                      <Input
+                        type="radio"
+                        name="lang"
+                        value="jap"
+                        checked={this.state.value === "jap"}
+                      />{" "}
+                      Japanese
                     </Label>
                   </FormGroup>
                 </FormGroup>

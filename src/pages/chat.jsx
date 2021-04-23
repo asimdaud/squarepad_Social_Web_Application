@@ -1734,6 +1734,7 @@ class chat extends React.Component {
                       borderRadius: "20px",
                       // paddingBottom: "22px",
                       marginBottom: "22px",
+                      maxHeight:"599px"
                     }}
                     // style={{ zoom: "85%",  }}
                   >

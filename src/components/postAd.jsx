@@ -124,10 +124,10 @@ class PostAd extends React.Component {
           >
             <div
               className="card-header d-flex align-items-center "
-              style={{
-                borderTopLeftRadius: "50px",
-                borderTopRightRadius: "50px",
-              }}
+              // style={{
+              //   borderTopLeftRadius: "50px",
+              //   borderTopRightRadius: "50px",
+              // }}
             >
               <div className="d-flex align-items-center">
                 <div className="mx-3">
@@ -183,9 +183,9 @@ class PostAd extends React.Component {
               // className="mb-0 text-black font-weight-bold"
               className="justify-content-between align-items-center"
               style={{
-                // backgroundColor: "#F7F7F7",
-                borderBottomLeftRadius: "50px",
-                borderBottomRightRadius: "50px",
+                // // backgroundColor: "#F7F7F7",
+                // borderBottomLeftRadius: "50px",
+                // borderBottomRightRadius: "50px",
 
                 backgroundColor: "rgba(var(--b3f,250,250,250),1)",
                 //  MozBorderRadiusBottomleft:"20px",MozBorderRadiusBottomright:"20px"
@@ -219,7 +219,9 @@ class PostAd extends React.Component {
 
                 className="justify-content-between align-items-center"
               >
-                <a href={item.link}>
+                <a href={item.link} target="_blank">
+
+
                   <p
                     style={{
                       fontSize: "20px",

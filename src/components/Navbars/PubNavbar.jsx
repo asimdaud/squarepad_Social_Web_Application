@@ -41,6 +41,7 @@ import Select from "@material-ui/core/Select";
 
 class UserNavbar extends React.Component {
   state = {
+    // value: JSON.parse(localStorage.getItem("lang")), //throws cors error
     value: localStorage.getItem("lang"),
   };
 
@@ -48,19 +49,28 @@ class UserNavbar extends React.Component {
     console.log("selected val is ", event.target.value);
     let newlang = event.target.value;
     this.setState((prevState) => ({ value: newlang }));
-    localStorage.setItem("lang", JSON.stringify(newlang));
+    localStorage.setItem("lang", newlang);
     console.log("state value is", newlang, this.props.i18n.changeLanguage);
     this.props.i18n.changeLanguage(newlang);
   };
 
   componentDidMount() {
-    localStorage.setItem("lang", "en");
+    // this.setState({ value: JSON.parse(localStorage.getItem("lang")) });
+    localStorage.getItem("lang") ? console.log("Lang Selected"):     localStorage.setItem("lang", 'en');
 
-    this.props.i18n.changeLanguage(this.state.value);
+    
+    // localStorage.getItem("lang") ? console.log("Lang Selected"):     localStorage.setItem("lang", JSON.stringify("en"));
+    // localStorage.setItem("lang", "en");
+
+    // this.props.i18n.changeLanguage(this.state.value);
+    this.props.i18n.changeLanguage( localStorage.getItem("lang"));
     let headroom = new Headroom(document.getElementById("navbar-main"));
     // initialise
     headroom.init();
   }
+
+
+
   render() {
     const { t } = this.props;
     return (

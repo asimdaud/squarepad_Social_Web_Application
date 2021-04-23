@@ -27,7 +27,7 @@ export const CreateUser = async (username, name, email, password, bio) => {
       JSON.stringify(firebase.auth().currentUser.uid)
     );
     localStorage.setItem("user", JSON.stringify(firebase.auth().currentUser));
-    localStorage.setItem("lang", "en");
+    
   } catch (err) {
     // alert(err);
     console.log(err);
@@ -116,7 +116,7 @@ export const EditUser = (
     .currentUser.updateProfile(
       // updateProfile
       {
-        username: username.toLowerCase(),
+        username: username,
         name: name,
         bio: bio,
         publicProfile: publicProfile,
@@ -126,19 +126,35 @@ export const EditUser = (
     )
     .then((cred) => {
       db.collection("users").doc(auth.currentUser.uid).update({
-        username: username.toLowerCase(),
+        username: username,
         name: name,
         bio: bio,
         publicProfile: publicProfile,
         profilePic: profilePic,
         emailAlert: emailAlert,
       });
+      
       alert("Succes updation");
     })
     .catch((err) => {
       alert("Couldnt update!!!" + err);
     });
 };
+
+
+// exports.sendWelcomeEmail = functions.auth.user().onCreate((user) => {
+//   // ...
+// });
+
+// var auth = firebase.auth();
+// var emailAddress = "user@example.com";
+
+// auth.sendPasswordResetEmail(emailAddress).then(function() {
+//   // Email sent.
+// }).catch(function(error) {
+//   // An error happened.
+// });
+
 
 // return firebase.auth().currentUser.updateProfile({
 //   name: "aaa"

@@ -58,7 +58,6 @@ class PostPage extends React.Component {
   UNSAFE_componentWillMount = () => {
     this.setState({ postId: this.props.match.params.pId });
     // this.getPost();
-    
   };
 
   componentDidMount() {
@@ -70,8 +69,6 @@ class PostPage extends React.Component {
     this.getPost();
   }
 
-
-  
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.match.params.pId !== this.props.match.params.pId) {
       // this.setState({ loaderAdv: true });
@@ -79,7 +76,7 @@ class PostPage extends React.Component {
       document.documentElement.scrollTop = 0;
       document.scrollingElement.scrollTop = 0;
       this.refs.main.scrollTop = 0;
-  
+
       this.setState({ postId: this.props.match.params.pId });
       this.getPost();
       this.showPost();
@@ -113,8 +110,8 @@ class PostPage extends React.Component {
           caption: doc.data().caption,
           postId: doc.data().postId,
           timeStamp: doc.data().time,
-          type: doc.data().type?doc.data().type:null,
-          video: doc.data().video?doc.data().video:null,
+          type: doc.data().type ? doc.data().type : null,
+          video: doc.data().video ? doc.data().video : null,
           image: doc.data().image,
         };
 
@@ -122,27 +119,32 @@ class PostPage extends React.Component {
       });
   };
 
-  showPost=()=>{
-    return(
-      <Post
-      item={this.state.postData}
-      key={this.state.currentUserUid}
-    />
-    );
-  }
+  showPost = () => {
+    return <Post item={this.state.postData} key={this.state.currentUserUid} />;
+  };
 
   render() {
     const { t } = this.props;
-    console.log("kakakask");
     return (
       <>
         {/* <UserNavbar /> */}
         <main
           className="profile-page"
           ref="main"
+          // style={{
+          //   // backgroundColor:"black",
+          //   height:"100%",
+          //   backgroundImage:
+          //     "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
+          // }}
           style={{
             // backgroundColor:"black",
-            height:"100%",
+            paddingTop: "2rem",
+            // overflow: "auto",
+            width: "-webkit-fill-available",
+            display: "table",
+            position: "absolute",
+            height: "-webkit-fill-available",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
@@ -163,8 +165,6 @@ class PostPage extends React.Component {
                         className="order-md-2"
                         style={{ zoom: "70%", padding: "20px" }}
                       >
-
-
                         {this.showPost()}
                       </Col>
                     </Row>

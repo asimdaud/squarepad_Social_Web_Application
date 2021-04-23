@@ -4,6 +4,7 @@ import ReactCrop from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import imageCompression from "browser-image-compression";
 import Avatar from "react-avatar-edit";
+import { AvForm, AvField } from "availity-reactstrap-validation";
 // reactstrap components
 import {
   Button,
@@ -47,7 +48,7 @@ class EditProfile extends React.Component {
       name: "Name",
       email: "email@default.com",
       publicProfile: true,
-      emailAlert: true,
+      emailAlert: false,
       interestsArr: [],
       defaultModal: false,
       modalItem: "",
@@ -55,6 +56,10 @@ class EditProfile extends React.Component {
       isLoading: false,
       value: "en",
       preview: null,
+      isUsernameAvailable: undefined,
+      usernameChecked: undefined,
+      isUsernameValid: true,
+      formValid: true,
     };
     this.onCrop = this.onCrop.bind(this);
     this.onClose = this.onClose.bind(this);
@@ -104,7 +109,13 @@ class EditProfile extends React.Component {
   handleChangeData = (e) => {
     this.setState({
       [e.target.id]: e.target.value,
+      // formValid: true,
     });
+    if (!e.target.value) {
+      this.setState({
+        formValid: false,
+      });
+    }
   };
 
   handleSubmit = (e) => {
@@ -118,7 +129,7 @@ class EditProfile extends React.Component {
       emailAlert,
     } = this.state;
     console.log(this.state);
-    EditUser(username, name, bio, publicProfile, profilePic, emailAlert);
+    EditUser(username?username:"invalidUsername404", name, bio, publicProfile, profilePic, emailAlert);
   };
 
   toggleModal = (state) => {
@@ -153,6 +164,102 @@ class EditProfile extends React.Component {
         });
     });
   };
+
+  handleValidSubmit(event, values) {
+    this.setState({ email: values.email });
+    console.log("VVVVVVVVVVVvaaalidad");
+  }
+
+  handleInvalidSubmit(event, errors, values) {
+    // this.setState({email: values.email});
+    console.log("invaaalidad");
+  }
+
+  textInput = (word) => {
+    this.setState({
+      [word.target.id]: word.target.value,
+    });
+
+    // word.preventDefault();
+    // this.setState({ username: word });
+    this.searchUsername(word.target.value);
+    // console.log("textinput+   " + word);
+  };
+
+  searchUsername(word) {
+    // let userCollectionRef = firebase.firestore().collection("usernames");
+    // let userCollectionRef = firebase.firestore().collection("users");
+
+    // // console.log(word);
+    // // let users = [];
+
+    //   .get()
+    //   .then((querySnapshot) => {
+
+    //       this.setState({ isUsernameAvailable: false });
+    //               console.log(this.state.isUsernameAvailable,"LOLA",word);
+
+    //     });
+
+    // if (userCollectionRef.where("username", "==", word)) {
+    //   this.setState({ isUsernameAvailable: false });
+    //   console.log(this.state.isUsernameAvailable, "n/a", word);
+    // } else console.log(this.state.isUsernameAvailable, "free", word);
+
+    let userCollectionRef = firebase.firestore().collection("users");
+    var pattern = new RegExp(/[~`@!#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/); //unacceptable chars
+
+    // console.log(word);
+    if (word.length > 3) {
+      this.setState({ usernameChecked: true });
+    }
+    if (word.length < 4) {
+      this.setState({ usernameChecked: undefined });
+    }
+    // console.log(this.state.usernameChecked);
+    let users = [];
+    userCollectionRef
+      .where("username", "==", word)
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach((documentSnapshot) => {
+          users.push(documentSnapshot.data());
+          //   console.log(documentSnapshot.id);
+          // this.setState({
+          //   // username: documentSnapshot.username,
+          //   isUsernameAvailable: true,
+          //   // usernameChecked: true,
+          // });
+          // console.log(this.state.foundUser)
+          // console.log(users);
+        });
+        // console.log(this.state.searchResults);
+        // console.log(this.state.foundUser);
+        if (pattern.test(word)) {
+          this.setState({
+            isUsernameValid: false,
+            isUsernameAvailable: false,
+            formValid: false,
+          });
+          console.log(this.state.isUsernameValid, "Invalid");
+        } else {
+          if (users.length == 0) {
+            this.setState({
+              isUsernameAvailable: true,
+              formValid: true,
+            });
+            console.log(this.state.isUsernameAvailable, "free");
+          } else {
+            this.setState({
+              username: "",
+              isUsernameAvailable: false,
+              formValid: false,
+            });
+            console.log(this.state.isUsernameAvailable, "taken");
+          }
+        }
+      });
+  }
 
   handleImageUpload = async (event) => {
     const imageFile = event.target.files[0];
@@ -337,6 +444,37 @@ class EditProfile extends React.Component {
     return blob;
   };
 
+  removePicture = () => {
+    firebase
+      .storage()
+      .ref()
+      .child("profilePics/(" + this.state.user3 + ")ProfilePic")
+      .delete()
+      .then(() => {
+        console.log("File deleted successfully");
+        this.setState({ defaultModal: false });
+        this.setState({ profilePic: null });
+            const {
+      username,
+      name,
+      bio,
+      publicProfile,
+      profilePic,
+      emailAlert,
+    } = this.state;
+    // console.log(this.state);
+    EditUser(username, name, bio, publicProfile, profilePic, emailAlert);
+  
+
+
+
+        
+      })
+      .catch((error) => {
+        console.log("Uh-oh, an error occurred!");
+      });
+  };
+
   render() {
     const { t } = this.props;
     return (
@@ -346,15 +484,17 @@ class EditProfile extends React.Component {
           className="profile-page"
           ref="main"
           style={{
-            // backgroundColor:"black",
-            height:"100%",
+            width: "-webkit-fill-available",
+            display: "table",
+            position: "absolute",
+            height: "-webkit-fill-available",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
         >
           <section
             className="section section-blog-info"
-            style={{ marginTop: "200px" }}
+            style={{ marginTop: "180px" }}
           >
             <Container className="" fluid>
               <Row className="justify-content-center">
@@ -441,7 +581,9 @@ class EditProfile extends React.Component {
                                       this.setState({ defaultModal: true });
                                     }}
                                   >
-                                    Change profile picture
+                                    {this.state.profilePic
+                                      ? "Change profile picture"
+                                      : "Add a profile picture"}
                                   </Button>
                                 </Row>
                                 <Row className="justify-content-center">
@@ -470,9 +612,50 @@ class EditProfile extends React.Component {
                                   placeholder={this.state.username}
                                   type="text"
                                   id="username"
-                                  onChange={this.handleChangeData}
+                                  // onChange={this.handleChangeData}
+                                  onChange={(word) => this.textInput(word)}
+                                  required
+                                  style={{
+                                    outlineStyle:
+                                      this.state.isUsernameAvailable &&
+                                      this.state.usernameChecked == true
+                                        ? "double"
+                                        : this.state.isUsernameAvailable == false
+                                        ? "double"
+                                        : null,
+                                    outlineColor:
+                                      this.state.isUsernameAvailable 
+                                      &&
+                                      this.state.usernameChecked == true
+                                        ? "green"
+                                        : this.state.isUsernameAvailable == false
+                                        ? "red"
+                                        : null,
+                                    outlineWidth:
+                                      this.state.isUsernameAvailable &&
+                                      this.state.usernameChecked == true
+                                        ? "thin"
+                                        : this.state.isUsernameAvailable == false
+                                        ? "thin"
+                                        : null,
+                                  }}
                                 />
                               </FormGroup>
+
+                              {/* <AvForm
+                              // onValidSubmit={this.handleValidSubmit}
+                              // onInvalidSubmit={this.handleInvalidSubmit}
+                              >
+                                <AvField
+                                  className="form-control-alternative"
+                                  placeholder={this.state.username}
+                                  type="text"
+                                  id="username"
+                                  // onChange={this.handleChangeData}
+                                  onChange={(word) => this.textInput(word)}
+                                  required
+                                />
+                              </AvForm> */}
                             </Col>
                             <Col lg="6">
                               <FormGroup>
@@ -505,8 +688,8 @@ class EditProfile extends React.Component {
                                     {t("Profile privacy settings")}
                                   </h4>
                                 </label>
-
-                                <div className="custom-control custom-checkbox mb-3">
+                                {/* Send email everytime you login */}
+                                {/* <div className="custom-control custom-checkbox mb-3">
                                   <input
                                     className="custom-control-input"
                                     id="emailAlert"
@@ -522,7 +705,7 @@ class EditProfile extends React.Component {
                                       {t("Send email everytime you login")}
                                     </p>
                                   </label>
-                                </div>
+                                </div> */}
 
                                 <div className="custom-control custom-checkbox mb-3">
                                   <input
@@ -570,9 +753,28 @@ class EditProfile extends React.Component {
                           <Button
                             color="info"
                             type="submit"
+                            disabled={!this.state.formValid}
                             onClick={this.handleSubmit}
                             size="lg"
                             block
+                            style={{
+                              backgroundColor:
+                                // !this.state.isUsernameAvailable &&
+                                // this.state.usernameChecked == true
+                                //   ? "red"
+                                //   : null
+
+                                  this.state.isUsernameAvailable 
+                                  &&
+                                  this.state.usernameChecked == true
+                                    ? null
+                                                                        : this.state.isUsernameAvailable == false
+                                    ? "red"
+                                    : null,
+
+
+                                }}
+
                           >
                             {t("Save")}
                           </Button>
@@ -641,6 +843,17 @@ class EditProfile extends React.Component {
                       size="sm"
                     >
                       Save
+                    </Button>
+                  ) : (
+                    ""
+                  )}
+                  {this.state.profilePic ? (
+                    <Button
+                      onClick={this.removePicture}
+                      color="secondary"
+                      size="sm"
+                    >
+                      Remove picture
                     </Button>
                   ) : (
                     ""

@@ -9,21 +9,23 @@ import "assets/vendor/font-awesome/css/font-awesome.min.css";
 import "assets/scss/argon-design-system-react.scss";
 
 import Login from "pages/Login.jsx";
+import Register from "pages/Register.jsx";
+import LoginFunctional from "pages/LoginFunctional";
 import Group from "pages/Group";
 import Profile from "pages/Profile.jsx";
-import Register from "pages/Register.jsx";
 import Timeline from "pages/Timeline.jsx";
 import EditProfile from "pages/EditProfile";
 import Update from "pages/Update";
 import Admin from "pages/Admin";
 import PrivateRoute from "./privateRoute";
+import PublicRoute from "./publicRoute";
 import FriendsPage from "pages/FirendsPage";
 import PostPage from "pages/PostPage";
 import Chat from "pages/chat";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
-import LoginFunctional from "pages/LoginFunctional";
 import store from "./redux/store";
+import PubNavbar from "components/Navbars/PubNavbar";
 
 // const initialState = { user3: 8 };
 
@@ -42,21 +44,28 @@ import store from "./redux/store";
 
 // store.dispatch({ type: "increment" });
 
-
-
-
 ReactDOM.render(
   <Provider store={store}>
     <I18nextProvider i18n={i18n}>
       <BrowserRouter>
+      {/* <PubNavbar  /> */}
         <Switch>
-          <Route
+          <PublicRoute
             path="/loginF"
             exact
             render={(props) => <LoginFunctional {...props} />}
           />
+          <PublicRoute
+            path="/register"
+            exact
+            render={(props) => <Register {...props} />}
+          />
 
-          <Route path="/login" exact render={(props) => <Login {...props} />} />
+          <PublicRoute
+            path="/login"
+            render={(props) => <Login {...props} />}
+            exact
+          />
           <PrivateRoute
             path="/profile"
             render={(props) => <Profile {...props} />}
@@ -77,12 +86,6 @@ ReactDOM.render(
         render={(props) => <Update {...props} />}
         exact
       /> */}
-
-          <Route
-            path="/register"
-            exact
-            render={(props) => <Register {...props} />}
-          />
 
           <PrivateRoute
             path="/admin"
@@ -121,8 +124,6 @@ ReactDOM.render(
         </Switch>
       </BrowserRouter>
     </I18nextProvider>
-  </Provider>
-  ,
+  </Provider>,
   document.getElementById("root")
 );
-

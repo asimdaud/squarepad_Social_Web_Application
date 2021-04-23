@@ -300,7 +300,7 @@ class Inbox extends React.Component {
       <>
         <Loader
           // foregroundStyle={{color: 'white'}}
-          backgroundStyle={{ backgroundColor: "white", borderRadius: "10px" }}
+          backgroundStyle={{ display:"content",backgroundColor: "transparent", borderRadius: "10px" }}
           show={this.state.loaderInbox}
           message={
             <LoaderSpinner

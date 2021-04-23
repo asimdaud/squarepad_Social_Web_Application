@@ -2,7 +2,10 @@
 
 import React from "react";
 import moment from "moment";
+import "../assets/css/img-hover.css";
+
 import { Favorite, FavoriteBorder, Comment } from "@material-ui/icons";
+import FadeIn from "react-fade-in";
 import ReactPlayer from "react-player/lazy";
 
 import SmoothImage from "react-smooth-image";
@@ -58,6 +61,7 @@ class Post extends React.Component {
     getComments: false,
     // openCommentInput: false,
     profilePic: require("assets/img/icons/user/user1.png"),
+    childData: null,
     // "https://image.shutterstock.com/image-vector/vector-man-profile-icon-avatar-260nw-1473553328.jpg",
     commentInput: "",
     currentUsername: "",
@@ -128,6 +132,10 @@ class Post extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     // this.ismounted = true;
     const { item } = this.props;
+
+    if (this.state.childData) {
+      this.getCommentData();
+    }
 
     if (prevProps.item.postId !== item.postId) {
       this.getCommentData();
@@ -414,14 +422,16 @@ class Post extends React.Component {
     }
   };
 
-  getCommentData = async () => {
+  getCommentData = () => {
     let commArray = [];
     const { item } = this.props;
+
     // firebase
     //   .firestore()
     //   .collection("comments")
     //   .doc(item.postId)
     //   .collection("userComments")
+    // this.setState({ commentsArray: [] });
 
     firebase
       .firestore()
@@ -488,14 +498,14 @@ class Post extends React.Component {
     this.setState({ username: this.getCurrentUsername() });
   };
 
+  handleCallback = (childData) => {
+    this.setState({ childData: childData });
+  };
+
   returnPostId() {
     const { item } = this.props;
     return item.postId;
   }
-
-  onHover = () => {
-    localStorage.setItem("Fuid", JSON.stringify(this.state.userId));
-  };
 
   onKeyboardPress = (event) => {
     if (event.key === "Enter") {
@@ -580,7 +590,7 @@ class Post extends React.Component {
                 className="d-flex align-items-center"
                 // onClick={() => {this.togglePage();}}
                 // onClick={() => {this.togglePage();}}
-                onMouseOver={() => this.onHover()}
+                // onMouseOver={() => this.onHover()}
                 // key={item.time}
                 // href="javascript:;"
               >
@@ -666,79 +676,131 @@ class Post extends React.Component {
                 className="img-fluid rounded"
               /> */}
               <div
-              style={{
-                textAlignLast:"center",
-                width:"100%"
-              }}
+                style={{
+                  textAlignLast: "center",
+                  width: "100%",
+                }}
               >
+                {item.type == "video" ? (
+                  <>
+                    <ReactPlayer
+                      url={item.video}
+                      // light={true}
+                      light={item.image}
+                      controls={true}
+                      playing={true}
+                      width="100%"
+                      height="360px"
+                    />
 
-              {item.type == "video" ? (
-                <>
-                  <ReactPlayer
-                    url={item.video}
-                    // light={true}
-                    light={item.image}
-                    controls={true}
-                    playing={true}
-                    width="100%"
-                    height="360px"
-                  />
-
-                  {/* <video poster={item.image} loop={true} controls>
+                    {/* <video poster={item.image} loop={true} controls>
               <source src={item.video} type="video/mp4"/>
             </video> */}
-                </>
-              ) : (
-                <img
-                  loading="lazy"
-                  onLoad={console.log("Fully loaded")}
-                  onError={console.log("Error on image")}
-                  alt="Image placeholder"
-                  src={item.image}
-                  className="img-fluid rounded"
-                  style={{
-                    // width: "100%",
-                    // height: "620px",
-                    // display: "block",
-                    // // objectFit: "cover",
-                    // objectFit: "contain",
-                    // // background: "black",
-                    // zoom: "90%",
-                    // background: "#f6f9fc",                    
+                  </>
+                ) : (
+                  // <SmoothImage
 
-                    // maxHeight: "450px",
-                    // // maxWidth: "606px",
-                    // height:"auto",
-                    // width:"auto"
-                    width:"inherit"
-                  }}
-                />
-              )}
-                </div>
+                  // loading="lazy"
+                  // onLoad={console.log("Fully loaded")}
+                  // onError={console.log("Error on image")}
+                  // alt="Image placeholder"
+                  // src={item.image}
+                  // className="img-fluid rounded"
+                  // style={{
+                  //   width:"inherit"
+                  // }}
+                  // />
+                  <FadeIn transitionDuration={2100} delay={80}>
+                    <img
+                      loading="lazy"
+                      // onLoad={console.log("Fully loaded")}
+                      // onError={console.log("Error on image")}
+                      alt="Image placeholder"
+                      src={item.image}
+                      className="img-fluid rounded"
+                      style={{
+                        // width: "100%",
+                        // height: "620px",
+                        // display: "block",
+                        // // objectFit: "cover",
+                        // objectFit: "contain",
+                        // // background: "black",
+                        // zoom: "90%",
+                        // background: "#f6f9fc",
+
+                        // maxHeight: "450px",
+                        // // maxWidth: "606px",
+                        // height:"auto",
+                        // width:"auto"
+
+                        // transitionProperty:"opacity",
+                        // transitionDuration:"0.3s",
+                        // transitionTimingFunction:"ease-in",
+                        // opacity:"1",
+                        // backgroundSize: "cover",
+                        // position:"relative",
+                        // overflow:"hidden",
+
+                        width: "inherit",
+                      }}
+                    />
+                  </FadeIn>
+                )}
+              </div>
               <div className="row align-items-center  ">
-                <div className="col-sm-12">
-                  <div className="icon-actions my-3 pb-3 border-bottom">
+                <div className="col-sm-12 ">
+                  {/* <div class="container-imgHover">
+                  <img
+                    src={post.image}
+                    alt="Avatar"
+                    className="image-imgHover"
+                    style={{ height: "255px", objectFit: "cover" }}
+                  />
+                    <div className="middle-icon-imgHover">
+                      <img
+                        className="icSend img-shake"
+                        src={images.play1}
+                        alt="icon send"
+                      />
+                    </div>
+</div> */}
+
+                  <div className="icon-actions my-3 pb-3 border-bottom  ">
                     {this.state.ifLiked === true ? (
-                      <Favorite color="error" onClick={this.toggleLike} />
+                      <Favorite
+                        color="error"
+                        onClick={this.toggleLike}
+                        className="heartbeat"
+                      />
                     ) : (
                       <FavoriteBorder
+                        className="heartbeat"
                         color="secondary"
                         onClick={this.toggleLike}
                       />
                     )}
-
                     <span className="text-muted">
-                      {" "}
+                      {this.state.likes === 0
+                        ? " Like "
+                        : "   " + this.state.likes + " likes "}
+
+                      {/* {" "}
                       {" " + this.state.likes}
-                      {" likes "}
+                      {" likes "} */}
                     </span>
 
                     <Comment color="primary" />
 
                     <span className="text-muted">
-                      {/* d-none d-lg-block */}{" "}
+                      {this.state.commentsArray.length === 0
+                        ? " Comment "
+                        : "   " +
+                          this.state.commentsArray.length +
+                          " comments "}
+
+                      {/* d-none d-lg-block{" "}
                       {" " + this.state.commentsArray.length}
-                      {" comments"}
+                      {" comments"} */}
                     </span>
 
                     {/* {this.commentFunc()} */}
@@ -748,11 +810,22 @@ class Post extends React.Component {
 
               {/* <!-- Comments --> */}
               <div
-              //  className="mb-1"
-               style={{ zoom: "95%" }}>
-                <div style={{ maxHeight: "350px", overflowY: "scroll" }}>
+                //  className="mb-1"
+                style={{ zoom: "95%" }}
+              >
+                <div
+                  style={{
+                    maxHeight: "350px",
+                    overflowY: "scroll",
+                    overflowX: "hidden",
+                  }}
+                >
                   {this.state.commentsArray.map((comment, postindex) => (
-                    <CommentItem item={comment} key={postindex} />
+                    <CommentItem
+                      item={comment}
+                      key={postindex}
+                      parentCallback={this.handleCallback}
+                    />
                   ))}
                 </div>
 

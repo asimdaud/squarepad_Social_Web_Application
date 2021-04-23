@@ -1,5 +1,11 @@
 import React from "react";
+import classnames from "classnames";
+
 import { Link } from "react-router-dom";
+import "../assets/css/login.css"
+import Snackbar from "@material-ui/core/Snackbar";
+import { Alert } from "reactstrap";
+import images from "../components/Themes/images";
 
 // reactstrap components
 import {
@@ -49,7 +55,7 @@ class Login extends React.Component {
     signInOptions: [
       {
         provider: firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        scopes: ["https://www.googleapis.com/auth/contacts.readonly"],
+        // scopes: ["https://www.googleapis.com/auth/contacts.readonly"],
         customParameters: {
           // Forces account selection even when one account
           // is available.
@@ -78,7 +84,10 @@ class Login extends React.Component {
   };
 
   componentDidMount = () => {
-    localStorage.setItem("lang", "en");
+// localStorage.clear();
+
+
+//     localStorage.setItem("lang", "en");
 
     firebase.auth().onAuthStateChanged((user) => {
       this.setState({ isSignedIn: !!user });
@@ -115,17 +124,21 @@ class Login extends React.Component {
       });
   };
 
+  onDismiss=()=>{
+    this.setState({error:""})
+  }
+
   render() {
     const { t } = this.props;
     let BackgroundImage = require("assets/img/theme/login_bg.png");
     return (
       <>
-        <PubNavbar />
+        {/* <PubNavbar /> */}
         <main
           ref="main"
           style={{
             // backgroundColor:"black",
-            paddingTop: "2rem",
+            // paddingTop: "2rem",
             // overflow: "auto",
             width: "-webkit-fill-available",
             display: "table",
@@ -137,10 +150,28 @@ class Login extends React.Component {
 
           }}
         >
+{/* <div 
+style={{
+  width: "-webkit-fill-available",
+  display: "table",
+  position: "absolute",
+  height: "-webkit-fill-available",
+  backgroundSize: "cover",
+  backgroundImage: `url(${BackgroundImage})`,
+  WebkitFilter:"blur(2px)"
+
+
+}}
+>
+  </div>
+ */}
+
+
           <section
-            className="section-shaped"
+            // className="section-shaped"
             style={{
-              // paddingTop: "4rem",
+              paddingTop: "4rem",
+              // top:"50px"
             }}
           >
             <Container className="pt-lg-md ">
@@ -148,16 +179,21 @@ class Login extends React.Component {
               <Row className="justify-content-center">
                 <Col lg="5">
                   <Card className=
+                  
                   // bg-secondary
                    "shadow border-0"
-                   style={{backgroundColor: "transparent", paddingTop:"20px", borderRadius:"40px", webkittextstroke: "thin"}} >
-                    <div className=
-                    // bg-white
-                    "pb-5">
+                   style={{ backdropFilter:"blur(15px)"  
+                     ,backgroundColor: "transparent", paddingTop:"20px", borderRadius:"40px", webkittextstroke: "thin"}} >
+                    <div 
+                    style={{zIndex:"0px"}}
+                    // className=
+                    // "bg-white
+                    // pb-5"
+                    >
                       <div className=
                       
                       "text-white text-center mb-3">
-                        <small>{t("Sign in with")}</small>
+                        {/* <small>{t("Sign in with")}</small> */}
                         <StyledFirebaseAuth
                           uiConfig={this.uiConfig}
                           firebaseAuth={firebase.auth()}
@@ -165,14 +201,29 @@ class Login extends React.Component {
                       </div>
                     </div>
                     <CardBody
-                      className="px-lg-5 py-lg-5"
+                      className="px-lg-5 "
+                      // py-lg-5
                     >
                       <div className="text-center text-white mb-4">
                         <small>{t("Or sign in with credentials")}</small>
                       </div>
                       <Form id="formLogin" role="form" onSubmit={this.onLogin}>
                         <FormGroup className="mb-3">
-                          <InputGroup className="input-group-alternative">
+                          <InputGroup 
+                          
+                          className={classnames(
+                            "input-group-alternative",
+                            {
+                              "input-group-focus": this.state.focus1,
+                            }
+                          )}
+                          style={{
+
+                            outlineStyle:this.state.error?"double":"none",
+                            outlineColor:this.state.error?"red":"none",
+                            outlineWidth:this.state.error?"thin":"none"
+                          }}
+                          >
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 <i className="ni ni-email-83" />
@@ -183,11 +234,27 @@ class Login extends React.Component {
                               placeholder={t("Email")}
                               type="email"
                               onChange={this.handleChangeData}
+                              onFocus={(e) => this.setState({ focus1: true })}
+                              onBlur={(e) => this.setState({ focus1: false })}
                             />
                           </InputGroup>
                         </FormGroup>
                         <FormGroup>
-                          <InputGroup className="input-group-alternative">
+                          <InputGroup 
+                          
+                          className={classnames(
+                            "input-group-alternative",
+                            {
+                              "input-group-focus": this.state.focus2,
+                            }
+                          )}
+
+                          style={{
+
+                            outlineStyle:this.state.error?"double":"none",
+                            outlineColor:this.state.error?"red":"none",
+                            outlineWidth:this.state.error?"thin":"none"
+                          }}>
                             <InputGroupAddon addonType="prepend">
                               <InputGroupText>
                                 <i className="ni ni-lock-circle-open" />
@@ -199,22 +266,26 @@ class Login extends React.Component {
                               type="password"
                               autoComplete="off"
                               onChange={this.handleChangeData}
+                              onFocus={(e) => this.setState({ focus2: true })}
+                              onBlur={(e) => this.setState({ focus2: false })}
                             />
                           </InputGroup>
                         </FormGroup>
-                        <div className="text-muted font-italic justify-content-center">
-                          <small>
-                            {/* password strength:{" "} */}
-                            <span className="text-danger font-weight-100">
-                              {this.state.error}
-                            </span>
-                          </small>
-                        </div>
-
+                          {/* <div className="text-muted font-italic justify-content-center">
+                            <small>
+                              <span className="text-danger font-weight-100">
+                                {this.state.error}
+                              </span>
+                            </small>
+                          </div> */}
                         <div className="text-center">
                           <Button
                             className="my-4"
-                            color="primary"
+                            color={!this.state.error?
+                          "primary"
+                              :
+                          "danger"
+                          }
                             type="submit"
                             onClick={this.onLogin}
                           >
@@ -222,30 +293,62 @@ class Login extends React.Component {
                           </Button>
                         </div>
                       </Form>
-                    </CardBody>
-                  </Card>
-                  <Row className="mt-3">
-                    <Col xs="6">
-                      <a
-                        className="text-light"
-                        href="#pablo"
-                        onClick={(e) => e.preventDefault()}
-                      >
-                        <small>Forgot password?</small>
-                      </a>
+                      <Row className="mt-3">
+                    <Col xs="6"
+                                        style={{fontWeight:"bold", fontSize:"73%"}}>
+
+                
+                    <Link to="/forgotPassword">
+                      
+                        {t("Forgot password?")}
+                      </Link>
                     </Col>{" "}
-                    <Col className="text-right" xs="6">
+                    <Col className="text-right" xs="6"
+                    style={{fontWeight:"bold", fontSize:"73%"}}>
                       <Link to="/register">
                         {" "}
-                        <small>{t("Create new account")}</small>
+                        {t("Create new account")}
                       </Link>
                     </Col>
                   </Row>
+
+                    </CardBody>
+                
+                 
+                  </Card>
+                
+                    <Snackbar
+                  open={this.state.error}
+                  autoHideDuration={5000}
+                  onClose={this.onDismiss}
+                  // message={this.state.error}
+                  // style={{ width: "100%" }}
+                >
+                  <Alert
+
+                  style={{backgroundColor:"#ba2c2c"
+                ,borderRadius:"45px", paddingTop:"25px",zoom:"80%"}}
+
+                >
+                  <p
+                  style={{textAlign:"-webkit-center"}}>
+                    <img
+                        className="icSend"
+                        src={images.errorCircle}
+                        alt="icon send"
+                        
+                      />
+
+{this.state.error}
+                      </p>
+                </Alert>
+                </Snackbar>
                 </Col>
               </Row>
               <SimpleFooter />
             </Container>
           </section>
+
         </main>
       </>
     );

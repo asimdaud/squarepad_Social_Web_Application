@@ -15,7 +15,11 @@ const images = {
     mimi6: require('../../assets/img/icons/images/mimi6.gif'),
     mimi7: require('../../assets/img/icons/images/mimi7.gif'),
     mimi8: require('../../assets/img/icons/images/mimi8.gif'),
-    mimi9: require('../../assets/img/icons/images/mimi9.gif')
+    mimi9: require('../../assets/img/icons/images/mimi9.gif'),
+    play1: require('../../assets/img/icons/images/play.png'),
+    play2: require('../../assets/img/icons/images/play-button.png'),
+    errorCircle: require('../../assets/img/icons/images/error-circle.png'),
+    errorX: require('../../assets/img/icons/images/error-x.jpg'),
 }
 
 export default images;

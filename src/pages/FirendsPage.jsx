@@ -1,6 +1,9 @@
 import React from "react";
 import moment from "moment";
 
+import "../assets/css/img-hover.css";
+import images from "../components/Themes/images";
+
 import Loader from "react-loader-advanced";
 import LoaderSpinner from "react-loader-spinner";
 import FadeIn from "react-fade-in";
@@ -167,10 +170,10 @@ class FriendsPage extends React.Component {
       this.setState({ uid: this.props.match.params.fuid });
 
       this.getFriendId().then(() => {
+        this.getProfilePic();
         this.getFriendList();
         this.checkFollow();
         this.getPosts();
-        this.getProfilePic();
         this.setState({
           defaultModal3: false,
           defaultModal2: false,
@@ -195,8 +198,8 @@ class FriendsPage extends React.Component {
     this.getFriendId();
   };
 
-  getProfilePic = () => {
-    firebase
+  getProfilePic = async () => {
+    await firebase
       .firestore()
       .collection("users")
       .doc(this.state.uid)
@@ -254,6 +257,8 @@ class FriendsPage extends React.Component {
             onClick={
               this.state.followerList < 1
                 ? ""
+                : !this.state.following && !this.state.publicProfile
+                ? ""
                 : () => this.toggleModal("defaultModal3")
             }
           >
@@ -264,6 +269,8 @@ class FriendsPage extends React.Component {
           <div
             onClick={
               this.state.followingList < 1
+                ? ""
+                : !this.state.following && !this.state.publicProfile
                 ? ""
                 : () => this.toggleModal("defaultModal2")
             }
@@ -296,6 +303,10 @@ class FriendsPage extends React.Component {
             caption: doc.data().caption,
             postId: doc.data().postId,
             timeStamp: doc.data().time,
+
+            type: doc.data().type ? doc.data().type : null,
+            video: doc.data().video ? doc.data().video : null,
+
             // cta: "cta",
             // location: doc.data().location.coordinates,
             // locName: doc.data().location.locationName,
@@ -303,6 +314,7 @@ class FriendsPage extends React.Component {
             // locLatLng: "Address",
           };
           cloudImages.push(article);
+          // alert(article.username);
         });
       });
     this.setState({ posts: cloudImages });
@@ -727,16 +739,52 @@ class FriendsPage extends React.Component {
                 onClick={() => {
                   this.setState({ modalItem: post });
                   this.setState({ defaultModal: true });
-                  console.log(this.state.modalItem);
+                  // console.log(this.state.modalItem);
                 }}
               >
-                <img
+                {/* <img
                   src={post.image}
                   className="img-fluid"
                   alt=""
                   // style={{height:'98%'}}
                   // onClick={() => <Modals/>}
-                />
+                /> */}
+
+                {/* <img
+                  style={{ height: "255px", objectFit: "cover" }}
+                  src={post.image}
+                  className="img-fluid"
+                  alt=""
+                  // style={{height:'98%'}}
+                  onClick={() => console.log(post.likes)}
+                /> */}
+                <div class="container-imgHover">
+                  <img
+                    src={post.image}
+                    alt="Avatar"
+                    className="image-imgHover"
+                    style={{ height: "255px", objectFit: "cover" }}
+                  />
+                  {post.type === "video" ? (
+                    <div className="middle-icon-imgHover">
+                      {/* <div > */}
+                      <img
+                        className="icSend img-shake"
+                        src={images.play1}
+                        alt="icon send"
+                        // onClick={() => this.postComment()}
+                      />
+                      {/* </div> */}
+                    </div>
+                  ) : null}
+
+                  {/* {post.caption ? (
+                    <div className="middle-imgHover">
+                      <div className="text-imgHover">{post.caption}</div>
+                    </div>
+                  ) : (
+              null    )} */}
+                </div>
               </Card>
             ))}
           </div>
@@ -862,15 +910,17 @@ class FriendsPage extends React.Component {
           className="profile-page"
           ref="main"
           style={{
-            // backgroundColor:"black",
-            height: "100%",
+            width: "-webkit-fill-available",
+            display: "table",
+            position: "absolute",
+            height: "-webkit-fill-available",
             backgroundImage:
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
         >
           <section
             className="section section-blog-info"
-            style={{ marginTop: "200px" }}
+            style={{ marginTop: "180px" }}
           >
             <Container>
               {this.state.loaderAdv ? (
@@ -1118,49 +1168,52 @@ class FriendsPage extends React.Component {
         </Modal>
 
         <Modal
-          size="md"
+          size="sm"
           isOpen={this.state.defaultModal3}
           toggle={() => this.toggleModal("defaultModal3")}
           className="fluid"
+          style={{ top: "8%" }}
         >
           {" "}
-          <Row>
+          <Row
+            style={{
+              maxHeight: "500px",
+              overflowY: "scroll",
+              //  backgroundColor:'transparent',backdropFilter:'blur(150px)',borderRadius:'6px'
+            }}
+          >
             <Col>
-              <ul>
+              <ul style={{ font: "-webkit-control", listStyle: "none" }}>
                 <h3 className="mb-0 text-dark">Followers</h3>
 
                 {this.state.followerListData.map((user, postindex) => (
                   <li key={postindex} item={this.state.followerList}>
-                    <Row
-                    // className="justify-content-center"
-                    >
-                      <Col lg="6">
-                        <Link to={`/friend/${user.userId}`}>
-                          <div
-                            className="d-flex align-items-center"
-                            style={{ margin: "5px" }}
-                          >
-                            <img
-                              alt="Image placeholder 2"
-                              className="media-comment-avatar avatar rounded-circle"
-                              style={{
-                                display: "block",
-                                objectFit: "cover",
-                                padding: "2px",
-                                margin: "5px",
-                              }}
-                              src={user.Fravatar}
-                            />
-                            <div className="mx-3">
-                              <h5 className="mb-0 text-black">{user.Frname}</h5>
-                              <small className="text-muted">
-                                @{user.Frusername}
-                              </small>
-                            </div>
+                    <span>
+                      <Link to={`/friend/${user.userId}`}>
+                        <div
+                          className="d-flex align-items-center"
+                          style={{ margin: "5px" }}
+                        >
+                          <img
+                            alt="Image placeholder 2"
+                            className="media-comment-avatar avatar rounded-circle"
+                            style={{
+                              display: "block",
+                              objectFit: "cover",
+                              padding: "2px",
+                              margin: "5px",
+                            }}
+                            src={user.Fravatar}
+                          />
+                          <div className="mx-3">
+                            <h5 className="mb-0 text-black">{user.Frname}</h5>
+                            <small className="text-muted">
+                              @{user.Frusername}
+                            </small>
                           </div>
-                        </Link>
-                      </Col>
-                    </Row>
+                        </div>
+                      </Link>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -1169,50 +1222,56 @@ class FriendsPage extends React.Component {
         </Modal>
 
         <Modal
-          size="md"
+          size="sm"
           isOpen={this.state.defaultModal2}
           toggle={() => this.toggleModal("defaultModal2")}
           className="fluid"
-          // style={{overflowWrap:"anywhere"}}
+          // modalClassName="modal-light"
+          style={{ top: "8%" }}
         >
-          {" "}
-          <Row>
+          <Row
+            style={{
+              maxHeight: "500px",
+              overflowY: "scroll",
+              //  backgroundColor:'transparent',backdropFilter:'blur(150px)',borderRadius:'6px'
+            }}
+          >
             <Col>
-              <ul>
+              <ul style={{ font: "-webkit-control", listStyle: "none" }}>
                 <h3 className="mb-0 text-dark">Following</h3>
 
                 {this.state.followingListData.map((user, postindex) => (
                   <li key={postindex} item={this.state.followingList}>
-                    <Row
+                    {/* <Row
                     // className="justify-content-center"
-                    >
-                      <Col lg="6">
-                        <Link to={`/friend/${user.userId}`}>
-                          <div
-                            className="d-flex align-items-center"
-                            style={{ margin: "5px" }}
-                          >
-                            <img
-                              alt="Image placeholder 2"
-                              className="media-comment-avatar avatar rounded-circle"
-                              style={{
-                                display: "block",
-                                objectFit: "cover",
-                                padding: "2px",
-                                margin: "5px",
-                              }}
-                              src={user.avatar}
-                            />
-                            <div className="mx-3">
-                              <h5 className="mb-0 text-black">{user.name}</h5>
-                              <small className="text-muted">
-                                @{user.username}
-                              </small>
-                            </div>
+                    > */}
+                    <span>
+                      <Link to={`/friend/${user.userId}`}>
+                        <div
+                          className="d-flex align-items-center"
+                          style={{ margin: "5px" }}
+                        >
+                          <img
+                            alt="Image placeholder 2"
+                            className="media-comment-avatar avatar rounded-circle"
+                            style={{
+                              display: "block",
+                              objectFit: "cover",
+                              padding: "2px",
+                              margin: "5px",
+                            }}
+                            src={user.avatar}
+                          />
+                          <div className="mx-3">
+                            <h5 className="mb-0 text-black">{user.name}</h5>
+                            <small className="text-muted">
+                              @{user.username}
+                            </small>
                           </div>
-                        </Link>
-                      </Col>
-                    </Row>
+                        </div>
+                      </Link>
+                    </span>
+                    {/* </Row> */}
                   </li>
                 ))}
               </ul>

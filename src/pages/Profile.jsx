@@ -1,7 +1,9 @@
 import React from "react";
 import moment from "moment";
 import FadeIn from "react-fade-in";
-
+import "../assets/css/img-hover.css";
+import images from "../components/Themes/images";
+import LoaderSpinner from "react-loader-spinner";
 // reactstrap components
 import { Button, Card, Container, Row, Col, Modal, Badge } from "reactstrap";
 // import SmoothImage from "react-smooth-image";
@@ -16,7 +18,6 @@ import Post from "../components/post";
 import PostPicOnly from "../components/postPicOnly";
 import Update from "./Update";
 import { Redirect, Link, useRouteMatch } from "react-router-dom";
-
 
 import UserNavbar from "components/Navbars/UserNavbar";
 import {
@@ -149,14 +150,40 @@ class Profile extends React.Component {
       // );
     });
 
+    firebase
+      .firestore()
+      .collection("users")
+      .doc(this.state.user3)
+      .get()
+      .then((doc) => {
+        const res = doc.data();
+
+        if (res != null) {
+          this.setState({
+            username: res.username,
+            bio: res.bio,
+            name: res.name,
+            email: res.email,
+            profilePic: res.profilePic,
+            userdb: res,
+          });
+
+          if (doc.data().admin) {
+            this.setState({ admin: true });
+          }
+        }
+        this.setState({ loading: false });
+        console.log(res, this.state.userdb);
+      });
+
     // localStorage.setItem("groupId", JSON.stringify("TCeQwxQ2DprIpZpr431V"));
 
     this.getFriendList();
     this.getPosts();
     // this.getProfilePic();
-    document.documentElement.scrollTop = 0;
-    document.scrollingElement.scrollTop = 0;
-    this.refs.main.scrollTop = 0;
+    // document.documentElement.scrollTop = 0;
+    // document.scrollingElement.scrollTop = 0;
+    // this.refs.main.scrollTop = 0;
   }
 
   componentWillUnmount() {
@@ -186,11 +213,16 @@ class Profile extends React.Component {
             image: doc.data().image,
             postId: doc.data().postId,
             timeStamp: doc.data().time,
+
+            type: doc.data().type ? doc.data().type : null,
+            video: doc.data().video ? doc.data().video : null,
+
             // likes:0,
             // locLatLng: "Address",
           };
           cloudImages.push(article);
         });
+        console.log(cloudImages);
       });
     this.setState({ posts: cloudImages });
   };
@@ -234,7 +266,7 @@ class Profile extends React.Component {
         .get()
         .then((doc) => {
           Frname = doc.data().name;
-          avatar = doc.data().profilePic
+          Fravatar = doc.data().profilePic
             ? doc.data().profilePic
             : require("assets/img/icons/user/user1.png");
           Frusername = doc.data().username;
@@ -296,8 +328,7 @@ class Profile extends React.Component {
             {this.state.posts.map((post, index) => (
               <Card
                 className="col-sm-4"
-                style={{ padding: "10px", justifyContent: "center",
-              }}
+                style={{ padding: "10px", justifyContent: "center" }}
                 key={index}
                 onClick={() => {
                   this.setState({ modalItem: post });
@@ -305,14 +336,41 @@ class Profile extends React.Component {
                   console.log(this.state.modalItem);
                 }}
               >
-                <img
-                style={{height: "255px", objectFit:"cover"}}
+                {/* <img
+                  style={{ height: "255px", objectFit: "cover" }}
                   src={post.image}
                   className="img-fluid"
                   alt=""
                   // style={{height:'98%'}}
-                  // onClick={() => <Modals/>}
-                />
+                  onClick={() => console.log(post.likes)}
+                /> */}
+                <div class="container-imgHover">
+                  <img
+                    src={post.image}
+                    alt="Avatar"
+                    className="image-imgHover"
+                    style={{ height: "255px", objectFit: "cover" }}
+                  />
+                  {post.type === "video" ? (
+                    <div className="middle-icon-imgHover">
+                      {/* <div > */}
+                      <img
+                        className="icSend heartbeat"
+                        src={images.play1}
+                        alt="icon send"
+                        // onClick={() => this.postComment()}
+                      />
+                      {/* </div> */}
+                    </div>
+                  ) : null}
+
+                  {/* {post.caption ? (
+                    <div className="middle-imgHover">
+                      <div className="text-imgHover">{post.caption}</div>
+                    </div>
+                  ) : (
+              null    )} */}
+                </div>
               </Card>
             ))}
           </div>
@@ -338,14 +396,6 @@ class Profile extends React.Component {
     return <Redirect to="/edit-profile" tag={Link} />;
   }
 
-  logOut() {
-    localStorage.clear();
-  }
-
-  // onHover = (userId) => {
-  //   localStorage.setItem("Fuid", JSON.stringify(userId));
-  // };
-
   onMouseOverColor = (event) => {
     event.target.backgroudColor = "#FFFFFF";
   };
@@ -357,6 +407,7 @@ class Profile extends React.Component {
     // if (this.state.loading){
     //   return <div>My sweet spinner</div>;
     // }
+
     return (
       <>
         {/* <UserNavbar /> */}
@@ -366,7 +417,7 @@ class Profile extends React.Component {
           ref="main"
           style={{
             // backgroundColor:"black",
-            paddingTop: "2rem",
+            // paddingTop: "2rem",
             // overflow: "auto",
             width: "-webkit-fill-available",
             display: "table",
@@ -376,134 +427,158 @@ class Profile extends React.Component {
               "radial-gradient(circle, #e4efe9, #c4e0dd, #a7cfd9, #94bcd6, #93a5cf)",
           }}
         >
-          <section className="section" style={{ marginTop: "200px" }}>
-            <Container>
-              <FadeIn transitionDuration={2100} delay={80}>
-                <Card className="card-profile shadow">
-                  <div className="px-4">
-                    <Row className="justify-content-center">
-                      <Col
-                        className="order-lg-2"
-                        lg="3"
-                        style={{ padding: "15px" }}
-                      >
-                        <div className="card-profile-image">
-                          <a href="#pablo" onClick={(e) => e.preventDefault()}>
-                            <img
-                              className="rounded-circle"
-                              style={{
-                                width: "200px",
-                                // height: "200px",
-                                // display: "table",
-                                objectFit: "cover",
-                              }}
-                              src={
-                                this.state.userdb.profilePic
-                                  ? this.state.userdb.profilePic
-                                  : require("assets/img/icons/user/user1.png")
-                              }
-                            />
-                          </a>
-                        </div>
-                      </Col>
-                      <Col
-                        className="order-lg-3 text-lg-right align-self-lg-center"
-                        lg="4"
-                      >
-                        <div
-                          className="card-profile-actions py-4 mt-lg-0"
-                          style={{ padding: "5px" }}
-                        >
-                          <Button
-                            className="mr-4"
-                            color="default"
-                            size="sm"
-                            to="/edit-profile"
-                            tag={Link}
-                          >
-                            {t("Edit Profile")}
-                          </Button>
+          <section className="section" style={{ marginTop: "180px" }}>
+            {this.state.loading ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "50px",
+                  marginBottom: "200px",
+                  // zoom:"60%"
 
-                          {this.state.admin ? (
+                  // mixBlendMode: "screen",
+                }}
+              >
+                <LoaderSpinner
+                  type="MutatingDots"
+                  color="#00BFFF"
+                  height={100}
+                  width={100}
+                  // timeout={100000} //1 secs
+                />
+              </div>
+            ) : (
+              <Container>
+                <FadeIn transitionDuration={2100} delay={80}>
+                  <Card className="card-profile shadow">
+                    <div className="px-4">
+                      <Row className="justify-content-center">
+                        <Col
+                          className="order-lg-2"
+                          lg="3"
+                          style={{ padding: "15px" }}
+                        >
+                          <div className="card-profile-image">
+                            <a
+                              href="#pablo"
+                              onClick={(e) => e.preventDefault()}
+                            >
+                              <img
+                                className="rounded-circle"
+                                alt=".."
+                                style={{
+                                  width: "200px",
+                                  // height: "200px",
+                                  // display: "table",
+                                  objectFit: "cover",
+                                }}
+                                src={
+                                  this.state.userdb.profilePic
+                                    ? this.state.userdb.profilePic
+                                    : require("assets/img/icons/user/user1.png")
+                                }
+                              />
+                            </a>
+                          </div>
+                        </Col>
+                        <Col
+                          className="order-lg-3 text-lg-right align-self-lg-center"
+                          lg="4"
+                        >
+                          <div
+                            className="card-profile-actions py-4 mt-lg-0"
+                            style={{ padding: "5px" }}
+                          >
                             <Button
-                              className="float-right"
-                              color="danger
- "
+                              className="mr-4"
+                              color="default"
                               size="sm"
-                              to="/admin"
+                              to="/edit-profile"
                               tag={Link}
                             >
-                              {t("Admin Panel")}
+                              {t("Edit Profile")}
                             </Button>
-                          ) : (
-                            ""
-                          )}
-                        </div>
-                      </Col>
-                      <Col className="order-lg-1" lg="4">
-                        <div className="card-profile-stats d-flex justify-content-center">
-                          <div>
-                            <span className="heading">
-                              {" "}
-                              {this.state.posts.length}
-                            </span>
-                            <span className="description">{t("Posts")}</span>
-                          </div>
 
-                          <div
-                            onClick={
-                              this.state.followerList < 1
-                                ? (e) => e.preventDefault()
-                                : () => this.toggleModal("defaultModal3")
-                            }
-                          >
-                            <span className="heading">
-                              {" "}
-                              {this.state.followerList.length}
-                            </span>
-                            <span className="description">
-                              {t("Followers")}
-                            </span>
+                            {this.state.admin ? (
+                              <Button
+                                className="float-right"
+                                color="danger
+ "
+                                size="sm"
+                                to="/admin"
+                                tag={Link}
+                              >
+                                {t("Admin Panel")}
+                              </Button>
+                            ) : (
+                              ""
+                            )}
                           </div>
-                          <div
-                            onClick={
-                              this.state.followingList < 1
-                                ? (e) => e.preventDefault()
-                                : () => this.toggleModal("defaultModal2")
-                            }
-                          >
-                            <span className="heading">
-                              {" "}
-                              {this.state.followingList.length}
-                            </span>
-                            <span className="description">
-                              {t("Following")}
-                            </span>
+                        </Col>
+                        <Col className="order-lg-1" lg="4">
+                          <div className="card-profile-stats d-flex justify-content-center">
+                            <div>
+                              <span className="heading">
+                                {" "}
+                                {this.state.posts.length}
+                              </span>
+                              <span className="description">{t("Posts")}</span>
+                            </div>
+
+                            <div
+                              onClick={
+                                this.state.followerList < 1
+                                  ? (e) => e.preventDefault()
+                                  : () => this.toggleModal("defaultModal3")
+                              }
+                            >
+                              <span className="heading">
+                                {" "}
+                                {this.state.followerList.length}
+                              </span>
+                              <span className="description">
+                                {t("Followers")}
+                              </span>
+                            </div>
+                            <div
+                              onClick={
+                                this.state.followingList < 1
+                                  ? (e) => e.preventDefault()
+                                  : () => this.toggleModal("defaultModal2")
+                              }
+                            >
+                              <span className="heading">
+                                {" "}
+                                {this.state.followingList.length}
+                              </span>
+                              <span className="description">
+                                {t("Following")}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </Col>
-                    </Row>
-                    <div className="text-center mt-5">
-                      <h3>{this.state.name} </h3>
-                      <span className="font-weight-light">
-                        {"@"}
-                        {this.state.username}
-                      </span>
-                      {/* <div className="h6 font-weight-300">
+                        </Col>
+                      </Row>
+                      <div className="text-center mt-5">
+                        <h3>{this.state.name} </h3>
+                        <span className="font-weight-light">
+                          {"@"}
+                          {this.state.username}
+                        </span>
+                        {/* <div className="h6 font-weight-300">
                       <i className="ni location_pin mr-2" />
                       Bucharest, Romania
                     </div> */}
-                      <div className="h6 mt-4">
-                        <i className="ni business_briefcase-24 mr-2" />
-                        {this.state.bio}
-                      </div>
-                      {/* <div>
+                        <div className="h6 mt-4">
+                          <i className="ni business_briefcase-24 mr-2" />
+                          {this.state.bio}
+                        </div>
+                        {/* <div>
                       <i className="ni education_hat mr-2" />
                       University of Computer Science
                     </div> */}
-                    </div>
+                      </div>
 
-                    {/* {this.state.admin ? (
+                      {/* {this.state.admin ? (
                     <div className="text-center mt-5">
                       <Button
                         //  className="float-right"
@@ -520,63 +595,67 @@ class Profile extends React.Component {
                     ""
                   )} */}
 
-                    <div className="mt-5 py-5 border-top text-center">
-                      <Row className="justify-content-center">
-                        <Col lg="11">{this.postsView()}</Col>
-                      </Row>
+                      <div className="mt-5 py-5 border-top text-center">
+                        <Row className="justify-content-center">
+                          <Col lg="11">{this.postsView()}</Col>
+                        </Row>
+                      </div>
                     </div>
-                  </div>
-                </Card>
-              </FadeIn>
-            </Container>
+                  </Card>
+                </FadeIn>
+              </Container>
+            )}{" "}
           </section>
           <SimpleFooter />
         </main>
 
         <Modal
-          size="md"
+          size="sm"
           isOpen={this.state.defaultModal3}
           toggle={() => this.toggleModal("defaultModal3")}
           className="fluid"
+          style={{ top: "8%" }}
         >
           {" "}
-          <Row>
+          <Row
+            style={{
+              maxHeight: "500px",
+              overflowY: "scroll",
+              //  backgroundColor:'transparent',backdropFilter:'blur(150px)',borderRadius:'6px'
+            }}
+          >
             <Col>
-              <ul>
+              <ul style={{ font: "-webkit-control", listStyle: "none" }}>
                 <h3 className="mb-0 text-dark">Followers</h3>
 
                 {this.state.followerListData.map((user, postindex) => (
                   <li key={postindex} item={this.state.followerList}>
-                    <Row
-                    // className="justify-content-center"
-                    >
-                      <Col lg="6">
-                        <Link to={`/friend/${user.userId}`}>
-                          <div
-                            className="d-flex align-items-center"
-                            style={{ margin: "5px" }}
-                          >
-                            <img
-                              alt="Image placeholder 2"
-                              className="media-comment-avatar avatar rounded-circle"
-                              style={{
-                                display: "block",
-                                objectFit: "cover",
-                                padding: "2px",
-                                margin: "5px",
-                              }}
-                              src={user.Fravatar}
-                            />
-                            <div className="mx-3">
-                              <h5 className="mb-0 text-black">{user.Frname}</h5>
-                              <small className="text-muted">
-                                @{user.Frusername}
-                              </small>
-                            </div>
+                    <span>
+                      <Link to={`/friend/${user.userId}`}>
+                        <div
+                          className="d-flex align-items-center"
+                          style={{ margin: "5px" }}
+                        >
+                          <img
+                            alt="Image placeholder 2"
+                            className="media-comment-avatar avatar rounded-circle"
+                            style={{
+                              display: "block",
+                              objectFit: "cover",
+                              padding: "2px",
+                              margin: "5px",
+                            }}
+                            src={user.Fravatar}
+                          />
+                          <div className="mx-3">
+                            <h5 className="mb-0 text-black">{user.Frname}</h5>
+                            <small className="text-muted">
+                              @{user.Frusername}
+                            </small>
                           </div>
-                        </Link>
-                      </Col>
-                    </Row>
+                        </div>
+                      </Link>
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -585,50 +664,52 @@ class Profile extends React.Component {
         </Modal>
 
         <Modal
-          size="md"
+          size="sm"
           isOpen={this.state.defaultModal2}
           toggle={() => this.toggleModal("defaultModal2")}
           className="fluid"
-          // style={{overflowWrap:"anywhere"}}
+          style={{ top: "8%" }}
         >
           {" "}
-          <Row>
+          <Row
+            style={{
+              maxHeight: "500px",
+              overflowY: "scroll",
+              //  backgroundColor:'transparent',backdropFilter:'blur(150px)',borderRadius:'6px'
+            }}
+          >
             <Col>
-              <ul>
+              <ul style={{ font: "-webkit-control", listStyle: "none" }}>
                 <h3 className="mb-0 text-dark">Following</h3>
 
                 {this.state.followingListData.map((user, postindex) => (
                   <li key={postindex} item={this.state.followingList}>
-                    <Row
-                    // className="justify-content-center"
-                    >
-                      <Col lg="6">
-                        <Link to={`/friend/${user.userId}`}>
-                          <div
-                            className="d-flex align-items-center"
-                            style={{ margin: "5px" }}
-                          >
-                            <img
-                              alt="Image placeholder 2"
-                              className="media-comment-avatar avatar rounded-circle"
-                              style={{
-                                display: "block",
-                                objectFit: "cover",
-                                padding: "2px",
-                                margin: "5px",
-                              }}
-                              src={user.avatar}
-                            />
-                            <div className="mx-3">
-                              <h5 className="mb-0 text-black">{user.name}</h5>
-                              <small className="text-muted">
-                                @{user.username}
-                              </small>
-                            </div>
+                    <span>
+                      <Link to={`/friend/${user.userId}`}>
+                        <div
+                          className="d-flex align-items-center"
+                          style={{ margin: "5px" }}
+                        >
+                          <img
+                            alt="Image placeholder 2"
+                            className="media-comment-avatar avatar rounded-circle"
+                            style={{
+                              display: "block",
+                              objectFit: "cover",
+                              padding: "2px",
+                              margin: "5px",
+                            }}
+                            src={user.avatar}
+                          />
+                          <div className="mx-3">
+                            <h5 className="mb-0 text-black">{user.name}</h5>
+                            <small className="text-muted">
+                              @{user.username}
+                            </small>
                           </div>
-                        </Link>
-                      </Col>
-                    </Row>
+                        </div>
+                      </Link>
+                    </span>
                   </li>
                 ))}
               </ul>
