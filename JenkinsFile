@@ -10,8 +10,7 @@ pipeline {
         }
         stage("Deploy") {
             steps {
-            sh "scp -r /var/lib/jenkins/workspace/DevOps_SchoolComResultBoard/out ansible-admin@172.31.86.130:/opt/docker/"
-                 sh "ssh ansible-admin@172.31.86.130 'sudo ansible-playbook /opt/docker/docker-webserver-deploy.yaml'"
+            echo "deploying"
             }
         }
     }
