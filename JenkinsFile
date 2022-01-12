@@ -5,12 +5,13 @@ pipeline {
             steps {
                 sh "sudo npm install"
                 sh "sudo npm run build"
+                sh "sudo npm run export"
             }
         }
         stage("Deploy") {
             steps {
-                sh "sudo rm -rf /var/www/jenkins-react-app"
-                sh "sudo cp -r ${WORKSPACE}/build/ /var/www/jenkins-react-app/"
+            sh "scp -r /var/lib/jenkins/workspace/DevOps_SchoolComResultBoard/out ansible-admin@172.31.86.130:/opt/docker/"
+                 sh "ssh ansible-admin@172.31.86.130 'sudo ansible-playbook /opt/docker/docker-webserver-deploy.yaml'"
             }
         }
     }
