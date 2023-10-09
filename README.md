@@ -1,4 +1,4 @@
-# squarePadGithub
+# A REACT WEB APP
 
 SquarePad is a social application where users can follow each other, send messages, post pictures, comment on each other posts.
 
