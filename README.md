@@ -10,3 +10,6 @@ This project uses React JS for the frontend. Argon theme, reactstrap, and materi
 
 This project is live at the provided link: https://square-pad-3a630.web.app
 Feel free to register account, search for users, send them follow requests/messages, and make posts, etc.
+
+![image](https://github.com/asimdaud/squarepad_Social_Web_Application/assets/45770583/1f087dbf-36cf-4f14-b6da-ba70dbe46041)
+
