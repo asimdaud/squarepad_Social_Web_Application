@@ -22,9 +22,9 @@
   },
   "homepage": "/",
   "scripts": {
-    "start": "set \"NODE_OPTIONS=--openssl-legacy-provider\" && react-scripts start",
-    "build": "set \"NODE_OPTIONS=--openssl-legacy-provider\" && react-scripts build",
-    "test": "set \"NODE_OPTIONS=--openssl-legacy-provider\" && react-scripts test",
+    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
+    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
+    "test": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts test",
     "eject": "react-scripts eject",
     "deploy:firebase": "npx firebase-tools deploy --only hosting --project squarepad-demo-fix",
     "install:clean": "npm install --legacy-peer-deps && npm start"
@@ -47,6 +47,7 @@
     "browser-image-compression": "^1.0.12",
     "classnames": "2.2.6",
     "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
     "emoji-mart": "^3.0.1",
     "firebase": "^10.13.2",
     "framer-motion": "^4.1.17",
