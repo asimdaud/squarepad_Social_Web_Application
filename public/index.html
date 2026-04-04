@@ -12,7 +12,24 @@ class="perfect-scrollbar-off nav-open"
 
     <meta name="google-site-verification" content="3GpPtI3DP6M04fN5ImoasgWCE0O_uQMcfMOBqupy6P4" />
 <!-- code sandox's code -->
-    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+    <script>
+      (function () {
+        var host = window.location.hostname;
+        var isLocalHost =
+          host === "localhost" ||
+          host === "127.0.0.1" ||
+          host === "0.0.0.0";
+
+        if (isLocalHost) {
+          return;
+        }
+
+        var script = document.createElement("script");
+        script.async = true;
+        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+        document.head.appendChild(script);
+      })();
+    </script>
 
     <!-- <script
      data-ad-client="ca-pub-3206659815873877" 

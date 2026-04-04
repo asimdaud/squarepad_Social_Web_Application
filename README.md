@@ -1,15 +1,29 @@
-# A REACT WEB APP
+# SquarePad Portfolio Demo
 
-SquarePad is a social application where users can follow each other, send messages, post pictures, comment on each other posts.
+SquarePad is now a portfolio-safe social product demo built with React and Firebase Hosting. It preserves the original product breadth with a local-first data layer, interactive profiles, feed reactions, messaging, groups, admin metrics, theme switching, and polished demo flows.
 
-Public and private profiles.
-Seen status feature in chats.
+Live site:
+https://squarepad-demo-fix.web.app
 
-This project uses React JS for the frontend. Argon theme, reactstrap, and material-ui for UI. Firebase for backend and hosting.
+## Automatic Firebase deploys from GitHub
 
+This repo is wired for GitHub Actions + Firebase Hosting.
 
-This project is live at the provided link: https://square-pad-3a630.web.app
-Feel free to register account, search for users, send them follow requests/messages, and make posts, etc.
+- Push to `main` or `master`: deploys the live site automatically
+- Open a pull request: creates a Firebase Hosting preview deploy
+
+### One-time GitHub setup
+
+Add this repository secret in GitHub:
+
+- `FIREBASE_SERVICE_ACCOUNT_SQUAREPAD_DEMO_FIX`
+
+That secret should contain the full JSON for a Firebase/Google Cloud service account with access to deploy Hosting for project `squarepad-demo-fix`.
+
+The workflow files are:
+
+- `.github/workflows/firebase-hosting-live.yml`
+- `.github/workflows/firebase-hosting-preview.yml`
 
 Edit profile feature:
 ![Capture](https://github.com/asimdaud/squarepad_Social_Web_Application/assets/45770583/6c047627-a209-46fc-be02-096d248b0160)

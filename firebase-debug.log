@@ -1,0 +1,159 @@
+[debug] [2026-04-04T01:13:58.954Z] ----------------------------------------------------------------------
+[debug] [2026-04-04T01:13:58.957Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\asim_\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js deploy --only hosting --project squarepad-demo-fix
+[debug] [2026-04-04T01:13:58.957Z] CLI Version:   15.13.0
+[debug] [2026-04-04T01:13:58.957Z] Platform:      win32
+[debug] [2026-04-04T01:13:58.957Z] Node Version:  v22.17.0
+[debug] [2026-04-04T01:13:58.958Z] Time:          Sat Apr 04 2026 02:13:58 GMT+0100 (British Summer Time)
+[debug] [2026-04-04T01:13:58.958Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-04-04T01:14:01.391Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-04-04T01:14:01.392Z] > authorizing via signed-in user (asim.scorpio9@gmail.com)
+[debug] [2026-04-04T01:14:01.392Z] [iam] checking project squarepad-demo-fix for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-04-04T01:14:01.393Z] Checked if tokens are valid: false, expires at: 1775262819078
+[debug] [2026-04-04T01:14:01.393Z] Checked if tokens are valid: false, expires at: 1775262819078
+[debug] [2026-04-04T01:14:01.393Z] > refreshing access token with scopes: []
+[debug] [2026-04-04T01:14:01.395Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-04-04T01:14:01.395Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-04T01:14:01.503Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2026-04-04T01:14:01.504Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2026-04-04T01:14:01.510Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/squarepad-demo-fix:testIamPermissions [none]
+[debug] [2026-04-04T01:14:01.510Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/squarepad-demo-fix:testIamPermissions  x-goog-user-project=squarepad-demo-fix
+[debug] [2026-04-04T01:14:01.511Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/squarepad-demo-fix:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-04T01:14:02.142Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/squarepad-demo-fix:testIamPermissions 200
+[debug] [2026-04-04T01:14:02.142Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/squarepad-demo-fix:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-04-04T01:14:02.143Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:02.143Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:02.143Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/squarepad-demo-fix [none]
+[debug] [2026-04-04T01:14:02.412Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/squarepad-demo-fix 200
+[debug] [2026-04-04T01:14:02.412Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/squarepad-demo-fix {"projectId":"squarepad-demo-fix","projectNumber":"804968652017","displayName":"squarepad-demo-fix","name":"projects/squarepad-demo-fix","resources":{"hostingSite":"squarepad-demo-fix"},"state":"ACTIVE","etag":"1_cccde41b-5357-43d8-9f6d-62bdf9e9688d"}
+[info] 
+[info] === Deploying to 'squarepad-demo-fix'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2026-04-04T01:14:02.415Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:02.415Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:02.416Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions [none]
+[debug] [2026-04-04T01:14:02.416Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}
+[debug] [2026-04-04T01:14:04.355Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions 200
+[debug] [2026-04-04T01:14:04.355Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions {"name":"projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf","status":"CREATED","config":{},"labels":{"deployment-tool":"cli-firebase"}}
+[info] i  hosting[squarepad-demo-fix]: beginning deploy... 
+[info] i  hosting[squarepad-demo-fix]: found 24 files in build 
+[debug] [2026-04-04T01:14:04.368Z] [hosting] uploading with 200 concurrency
+[debug] [2026-04-04T01:14:04.488Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:04.488Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:04.489Z] [hosting] hash cache [YnVpbGQ] stored for 24 files
+[debug] [2026-04-04T01:14:04.489Z] [hosting][hash queue][FINAL] {"max":114,"min":1,"avg":11.416666666666666,"active":0,"complete":24,"success":24,"errored":0,"retried":0,"total":24,"elapsed":118}
+[debug] [2026-04-04T01:14:04.489Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf:populateFiles [none]
+[debug] [2026-04-04T01:14:04.489Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf:populateFiles {"files":{"/_redirects":"0086dab2007297ddaf5fa8f7daf97837ac7fca30f0ac832b69110448e864ac73","/world.ico":"15b163771ab017e21dff09593ef59792870e9355f2ce5deadd2e0cde4ff93e00","/travy.png":"2439380f1aa70ca2c34ca96a93930a711f088289d2297a2c5d76bee42e5bb49d","/squarePad.png":"2439380f1aa70ca2c34ca96a93930a711f088289d2297a2c5d76bee42e5bb49d","/manifest.json":"2cc87f8f5233b0a4d972d612d3129aa962b185c849335ea9381fcdb44bbdfdac","/globe.png":"f98d815c4c3f6290d2722cf5cce72be1dd472916b05ef853a88dc474fea36f2d","/firebase-messaging-sw.js":"0c3287e1da2ce83250a9fa802e4842c5296c63a935e3560853d7fa1199605a90","/favicon.ico":"9b1b615193aa7aeeed770703af8e27b2f21bcb89f750b5b7ea8276eed1a2c0a0","/404.html":"59ed3209c28e873083c5b1a3de418b69d9319008519f34254dd2c94521d10460","/service-worker.js":"cc2b5ef146c906551b829327d13161e127571312be95ba822241d36aa489c0a2","/precache-manifest.2d4e8ccc6d12fc4907069f92e8613059.js":"2441e483cf6e5180628927f50341d5c348b76351fc9661332ea81301e3e597ad","/asset-manifest.json":"c3bf97643edccdb8e6f5fd2e74c1cbfbfe50fefdc88115ac84c8bc12fdfe221a","/static/js/runtime-main.315f9479.js.map":"3cf5d3368afcfe8ed6f1f4d410de0cc205f0afe2e90f92e792e8e2c3c55d9b23","/index.html":"1a397c7928f7aed33f84fc51dcf33c2127e6b1b2192ebc67327dbfa65a09b8a8","/static/js/runtime-main.315f9479.js":"b72388d14743d984fc18a6fbeecd6dcab015e9534b8d4af61e43fa2db4c881a9","/static/js/2.4654871f.chunk.js.LICENSE.txt":"19ca9af53a921c3fe9c0005a8c1214d0044ee5eb5d70de9844b8d3339202ebd8","/static/js/main.f784e500.chunk.js":"58ee21c18bb6b01f76996db4862c7125b40fb0a3663941250360fb6999d7284d","/static/css/main.f8f8ca5b.chunk.css":"1b5a27fb1975db4f27e367df25b906cee4601d0d0f6c41489c3b791d3b59c7b8","/static/css/2.032362bf.chunk.css":"5fa853a323e39fed10aae7842ff84354f3e864565e1e7e222cb766b5db3cd003","/static/css/main.f8f8ca5b.chunk.css.map":"d41ea7e3642492fae4b3ab3047403bb90b1fe3f39e509038604124bb5d9d0713","/static/js/main.f784e500.chunk.js.map":"dba686788f04caca746e44e485cd80e83e537b272c7dfb936816f1684d24da49","/static/js/2.4654871f.chunk.js":"b1d37008ec9c140ce0d5bb69f2dd91e06101a359a337dd468f3ae1229e67c21c","/static/css/2.032362bf.chunk.css.map":"e264d7d6bd331fc42a2bd7696a2653338ba6558baffa8e933c125d00175ffd70","/static/js/2.4654871f.chunk.js.map":"640a4b4a616185320d51a52152c6bc43e41a2a8631cc14bc62b2cdd63610565d"}}
+[debug] [2026-04-04T01:14:05.672Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf:populateFiles 200
+[debug] [2026-04-04T01:14:05.672Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf:populateFiles {"uploadRequiredHashes":["58ee21c18bb6b01f76996db4862c7125b40fb0a3663941250360fb6999d7284d","d41ea7e3642492fae4b3ab3047403bb90b1fe3f39e509038604124bb5d9d0713","1b5a27fb1975db4f27e367df25b906cee4601d0d0f6c41489c3b791d3b59c7b8","dba686788f04caca746e44e485cd80e83e537b272c7dfb936816f1684d24da49","2441e483cf6e5180628927f50341d5c348b76351fc9661332ea81301e3e597ad","b1d37008ec9c140ce0d5bb69f2dd91e06101a359a337dd468f3ae1229e67c21c","1a397c7928f7aed33f84fc51dcf33c2127e6b1b2192ebc67327dbfa65a09b8a8","640a4b4a616185320d51a52152c6bc43e41a2a8631cc14bc62b2cdd63610565d","cc2b5ef146c906551b829327d13161e127571312be95ba822241d36aa489c0a2","c3bf97643edccdb8e6f5fd2e74c1cbfbfe50fefdc88115ac84c8bc12fdfe221a"],"uploadUrl":"https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files"}
+[debug] [2026-04-04T01:14:05.672Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.672Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.672Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.673Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.674Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.674Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.674Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.674Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.674Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.674Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:05.674Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/58ee21c18bb6b01f76996db4862c7125b40fb0a3663941250360fb6999d7284d [none]
+[debug] [2026-04-04T01:14:05.674Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/58ee21c18bb6b01f76996db4862c7125b40fb0a3663941250360fb6999d7284d [stream]
+[debug] [2026-04-04T01:14:05.676Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/d41ea7e3642492fae4b3ab3047403bb90b1fe3f39e509038604124bb5d9d0713 [none]
+[debug] [2026-04-04T01:14:05.676Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/d41ea7e3642492fae4b3ab3047403bb90b1fe3f39e509038604124bb5d9d0713 [stream]
+[debug] [2026-04-04T01:14:05.677Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1b5a27fb1975db4f27e367df25b906cee4601d0d0f6c41489c3b791d3b59c7b8 [none]
+[debug] [2026-04-04T01:14:05.677Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1b5a27fb1975db4f27e367df25b906cee4601d0d0f6c41489c3b791d3b59c7b8 [stream]
+[debug] [2026-04-04T01:14:05.678Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/dba686788f04caca746e44e485cd80e83e537b272c7dfb936816f1684d24da49 [none]
+[debug] [2026-04-04T01:14:05.678Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/dba686788f04caca746e44e485cd80e83e537b272c7dfb936816f1684d24da49 [stream]
+[debug] [2026-04-04T01:14:05.679Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/2441e483cf6e5180628927f50341d5c348b76351fc9661332ea81301e3e597ad [none]
+[debug] [2026-04-04T01:14:05.679Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/2441e483cf6e5180628927f50341d5c348b76351fc9661332ea81301e3e597ad [stream]
+[debug] [2026-04-04T01:14:05.680Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/b1d37008ec9c140ce0d5bb69f2dd91e06101a359a337dd468f3ae1229e67c21c [none]
+[debug] [2026-04-04T01:14:05.680Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/b1d37008ec9c140ce0d5bb69f2dd91e06101a359a337dd468f3ae1229e67c21c [stream]
+[debug] [2026-04-04T01:14:05.680Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1a397c7928f7aed33f84fc51dcf33c2127e6b1b2192ebc67327dbfa65a09b8a8 [none]
+[debug] [2026-04-04T01:14:05.681Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1a397c7928f7aed33f84fc51dcf33c2127e6b1b2192ebc67327dbfa65a09b8a8 [stream]
+[debug] [2026-04-04T01:14:05.681Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/640a4b4a616185320d51a52152c6bc43e41a2a8631cc14bc62b2cdd63610565d [none]
+[debug] [2026-04-04T01:14:05.681Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/640a4b4a616185320d51a52152c6bc43e41a2a8631cc14bc62b2cdd63610565d [stream]
+[debug] [2026-04-04T01:14:05.682Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/cc2b5ef146c906551b829327d13161e127571312be95ba822241d36aa489c0a2 [none]
+[debug] [2026-04-04T01:14:05.682Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/cc2b5ef146c906551b829327d13161e127571312be95ba822241d36aa489c0a2 [stream]
+[debug] [2026-04-04T01:14:05.682Z] >>> [apiv2][query] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/c3bf97643edccdb8e6f5fd2e74c1cbfbfe50fefdc88115ac84c8bc12fdfe221a [none]
+[debug] [2026-04-04T01:14:05.683Z] >>> [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/c3bf97643edccdb8e6f5fd2e74c1cbfbfe50fefdc88115ac84c8bc12fdfe221a [stream]
+[debug] [2026-04-04T01:14:05.683Z] [hosting][populate queue][FINAL] {"max":1186,"min":1186,"avg":1186,"active":0,"complete":1,"success":1,"errored":0,"retried":0,"total":1,"elapsed":1195}
+[debug] [2026-04-04T01:14:05.683Z] [hosting] uploads queued: 10
+[info] i  hosting: uploading new files [0/10] (0%) 
+[debug] [2026-04-04T01:14:06.574Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1a397c7928f7aed33f84fc51dcf33c2127e6b1b2192ebc67327dbfa65a09b8a8 200
+[debug] [2026-04-04T01:14:06.574Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1a397c7928f7aed33f84fc51dcf33c2127e6b1b2192ebc67327dbfa65a09b8a8 [stream]
+[debug] [2026-04-04T01:14:06.576Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/58ee21c18bb6b01f76996db4862c7125b40fb0a3663941250360fb6999d7284d 200
+[debug] [2026-04-04T01:14:06.576Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/58ee21c18bb6b01f76996db4862c7125b40fb0a3663941250360fb6999d7284d [stream]
+[debug] [2026-04-04T01:14:06.593Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/d41ea7e3642492fae4b3ab3047403bb90b1fe3f39e509038604124bb5d9d0713 200
+[debug] [2026-04-04T01:14:06.594Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/d41ea7e3642492fae4b3ab3047403bb90b1fe3f39e509038604124bb5d9d0713 [stream]
+[debug] [2026-04-04T01:14:06.595Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/2441e483cf6e5180628927f50341d5c348b76351fc9661332ea81301e3e597ad 200
+[debug] [2026-04-04T01:14:06.595Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/2441e483cf6e5180628927f50341d5c348b76351fc9661332ea81301e3e597ad [stream]
+[debug] [2026-04-04T01:14:06.620Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/cc2b5ef146c906551b829327d13161e127571312be95ba822241d36aa489c0a2 200
+[debug] [2026-04-04T01:14:06.621Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/cc2b5ef146c906551b829327d13161e127571312be95ba822241d36aa489c0a2 [stream]
+[debug] [2026-04-04T01:14:06.621Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/c3bf97643edccdb8e6f5fd2e74c1cbfbfe50fefdc88115ac84c8bc12fdfe221a 200
+[debug] [2026-04-04T01:14:06.622Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/c3bf97643edccdb8e6f5fd2e74c1cbfbfe50fefdc88115ac84c8bc12fdfe221a [stream]
+[debug] [2026-04-04T01:14:06.622Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1b5a27fb1975db4f27e367df25b906cee4601d0d0f6c41489c3b791d3b59c7b8 200
+[debug] [2026-04-04T01:14:06.622Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/1b5a27fb1975db4f27e367df25b906cee4601d0d0f6c41489c3b791d3b59c7b8 [stream]
+[debug] [2026-04-04T01:14:06.636Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/b1d37008ec9c140ce0d5bb69f2dd91e06101a359a337dd468f3ae1229e67c21c 200
+[debug] [2026-04-04T01:14:06.637Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/b1d37008ec9c140ce0d5bb69f2dd91e06101a359a337dd468f3ae1229e67c21c [stream]
+[debug] [2026-04-04T01:14:06.788Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/640a4b4a616185320d51a52152c6bc43e41a2a8631cc14bc62b2cdd63610565d 200
+[debug] [2026-04-04T01:14:06.788Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/640a4b4a616185320d51a52152c6bc43e41a2a8631cc14bc62b2cdd63610565d [stream]
+[debug] [2026-04-04T01:14:06.830Z] <<< [apiv2][status] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/dba686788f04caca746e44e485cd80e83e537b272c7dfb936816f1684d24da49 200
+[debug] [2026-04-04T01:14:06.830Z] <<< [apiv2][body] POST https://upload-firebasehosting.googleapis.com/upload/sites/squarepad-demo-fix/versions/52354a25d2f5dddf/files/dba686788f04caca746e44e485cd80e83e537b272c7dfb936816f1684d24da49 [stream]
+[debug] [2026-04-04T01:14:06.830Z] [hosting][upload queue][FINAL] {"max":1157,"min":901,"avg":973,"active":0,"complete":10,"success":10,"errored":0,"retried":0,"total":10,"elapsed":1158}
+[info] i  hosting: upload complete 
+[info] +  hosting[squarepad-demo-fix]: file upload complete 
+[debug] [2026-04-04T01:14:06.830Z] [hosting] deploy completed after 2473ms
+[debug] [2026-04-04T01:14:06.830Z] [
+  {
+    "config": {
+      "public": "build",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "site": "squarepad-demo-fix"
+    },
+    "version": "projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf"
+  }
+]
+[info] i  hosting[squarepad-demo-fix]: finalizing version... 
+[debug] [2026-04-04T01:14:06.831Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:06.831Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:06.832Z] >>> [apiv2][query] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions/52354a25d2f5dddf updateMask=status%2Cconfig
+[debug] [2026-04-04T01:14:06.832Z] >>> [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions/52354a25d2f5dddf {"status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]}}
+[debug] [2026-04-04T01:14:08.288Z] <<< [apiv2][status] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions/52354a25d2f5dddf 200
+[debug] [2026-04-04T01:14:08.288Z] <<< [apiv2][body] PATCH https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/versions/52354a25d2f5dddf {"name":"projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-04-04T01:14:03.867908Z","createUser":{"email":"asim.scorpio9@gmail.com"},"finalizeTime":"2026-04-04T01:14:08.949614Z","finalizeUser":{"email":"asim.scorpio9@gmail.com"}}
+[debug] [2026-04-04T01:14:08.288Z] [hosting] finalized version for squarepad-demo-fix:[object Object]
+[info] +  hosting[squarepad-demo-fix]: version finalized 
+[info] i  hosting[squarepad-demo-fix]: releasing new version... 
+[debug] [2026-04-04T01:14:08.288Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:08.288Z] Checked if tokens are valid: true, expires at: 1775268840504
+[debug] [2026-04-04T01:14:08.288Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/channels/live/releases versionName=projects%2F804968652017%2Fsites%2Fsquarepad-demo-fix%2Fversions%2F52354a25d2f5dddf
+[debug] [2026-04-04T01:14:08.288Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/channels/live/releases {}
+[debug] [2026-04-04T01:14:09.570Z] <<< [apiv2][status] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/channels/live/releases 200
+[debug] [2026-04-04T01:14:09.570Z] <<< [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/squarepad-demo-fix/channels/live/releases {"name":"projects/804968652017/sites/squarepad-demo-fix/channels/live/releases/1775265249314000","version":{"name":"projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-04-04T01:14:03.867908Z","createUser":{"email":"asim.scorpio9@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocKMBxhjvbottjSQR8zVeguJunuW10CDQpLR0Po2pW7_S6tqHpavRA"},"finalizeTime":"2026-04-04T01:14:08.949614Z","finalizeUser":{"email":"asim.scorpio9@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocKMBxhjvbottjSQR8zVeguJunuW10CDQpLR0Po2pW7_S6tqHpavRA"}},"type":"DEPLOY","releaseTime":"2026-04-04T01:14:09.314Z","releaseUser":{"email":"asim.scorpio9@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocKMBxhjvbottjSQR8zVeguJunuW10CDQpLR0Po2pW7_S6tqHpavRA"}}
+[debug] [2026-04-04T01:14:09.570Z] [hosting] release: {"name":"projects/804968652017/sites/squarepad-demo-fix/channels/live/releases/1775265249314000","version":{"name":"projects/804968652017/sites/squarepad-demo-fix/versions/52354a25d2f5dddf","status":"FINALIZED","config":{"rewrites":[{"glob":"**","path":"/index.html"}]},"labels":{"deployment-tool":"cli-firebase"},"createTime":"2026-04-04T01:14:03.867908Z","createUser":{"email":"asim.scorpio9@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocKMBxhjvbottjSQR8zVeguJunuW10CDQpLR0Po2pW7_S6tqHpavRA"},"finalizeTime":"2026-04-04T01:14:08.949614Z","finalizeUser":{"email":"asim.scorpio9@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocKMBxhjvbottjSQR8zVeguJunuW10CDQpLR0Po2pW7_S6tqHpavRA"}},"type":"DEPLOY","releaseTime":"2026-04-04T01:14:09.314Z","releaseUser":{"email":"asim.scorpio9@gmail.com","imageUrl":"https://lh3.googleusercontent.com/a/ACg8ocKMBxhjvbottjSQR8zVeguJunuW10CDQpLR0Po2pW7_S6tqHpavRA"}}
+[info] +  hosting[squarepad-demo-fix]: release complete 
+[info] 
+[info] +  Deploy complete! 
+[info] 
+[info] Project Console: https://console.firebase.google.com/project/squarepad-demo-fix/overview
+[info] Hosting URL: https://squarepad-demo-fix.web.app

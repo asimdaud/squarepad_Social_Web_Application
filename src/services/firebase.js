@@ -1,26 +1,27 @@
-import firebase from "firebase/app";
-import "firebase/auth";
-import "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
-// var firebaseui = require('firebaseui');
+const firebaseConfig = {
+  apiKey: "AIzaSyBaJn7k8fOtEvzKoV4wjNXe6YGz6nmlt50",
+  authDomain: "squarepad-demo-fix.firebaseapp.com",
+  projectId: "squarepad-demo-fix",
+  storageBucket: "squarepad-demo-fix.firebasestorage.app",
+  messagingSenderId: "804968652017",
+  appId: "1:804968652017:web:265c714385c4774861dd50",
+  measurementId: "G-NDES2PB1TW",
+};
 
-var firebaseConfig = {
-    apiKey: "AIzaSyBGLaPXq7JjITJZG-osUkeSK1pnp3fXG-c",
-    authDomain: "square-pad-3a630.firebaseapp.com",
-    databaseURL: "https://square-pad-3a630.firebaseio.com",
-    projectId: "square-pad-3a630",
-    storageBucket: "square-pad-3a630.appspot.com",
-    messagingSenderId: "498031225132",
-    appId: "1:498031225132:web:04f8dc7c835bec96dd2489",
-    measurementId: "G-PLVY9WE9JQ"
-  };
-  // Initialize Firebase 
-  firebase.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const firestore = firebase.firestore();
-const auth = firebase.auth();
+let analytics = null;
+isSupported()
+  .then((supported) => {
+    if (supported) {
+      analytics = getAnalytics(app);
+    }
+  })
+  .catch(() => {
+    analytics = null;
+  });
 
-// const ui = new firebaseui.auth.AuthUI(firebase.auth());
-
-
-export { firebase, firestore, auth};
+export { app, analytics, firebaseConfig };
