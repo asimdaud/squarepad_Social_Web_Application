@@ -1,6 +1,6 @@
 {
-  "short_name": "Square Pad",
-  "name": "Square Pad Social Network",
+  "short_name": "SquarePad",
+  "name": "SquarePad Portfolio Demo",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,8 +8,8 @@
       "type": "image/x-icon"
     }
   ],
-  "start_url": "./index.html",
+  "start_url": "/",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#f5f7fb",
+  "background_color": "#f5f7fb"
 }

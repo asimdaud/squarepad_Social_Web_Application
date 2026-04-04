@@ -2368,11 +2368,12 @@
 
 .portfolio-appbar-brand {
   gap: 0.85rem;
+  min-width: 0;
 }
 
 .portfolio-appbar-brandmark {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   letter-spacing: 0.02em;
 }
 
@@ -2406,17 +2407,18 @@
 
 .portfolio-nav {
   justify-content: center;
-  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .portfolio-route-pill {
   min-height: 42px;
-  padding: 0.72rem 1rem;
+  padding: 0.62rem 0.82rem;
   border-radius: 999px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--sp-text-2);
   font-weight: 600;
+  font-size: 0.84rem;
   transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -3244,5 +3246,111 @@
   .portfolio-profile-link,
   .portfolio-group-card {
     align-items: flex-start;
+  }
+}
+
+/* Final responsive polish */
+.portfolio-appbar-inner,
+.portfolio-stage-intro,
+.portfolio-stage-panel,
+.portfolio-thread-copy,
+.portfolio-profile-link-copy {
+  min-width: 0;
+}
+
+.portfolio-nav {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  min-width: 0;
+}
+
+.portfolio-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.portfolio-route-pill {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.portfolio-appbar-actions {
+  gap: 0.55rem;
+  flex-wrap: nowrap;
+}
+
+.portfolio-search-shell {
+  min-width: 160px;
+  max-width: 220px;
+}
+
+@media (max-width: 1200px) {
+  .portfolio-appbar-inner {
+    gap: 0.8rem;
+  }
+
+  .portfolio-appbar-actions {
+    flex-wrap: wrap;
+  }
+
+  .portfolio-search-shell {
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .portfolio-appbar {
+    padding-top: 0.7rem;
+  }
+
+  .portfolio-appbar-inner {
+    padding: 0.8rem;
+    border-radius: 18px;
+  }
+
+  .portfolio-nav {
+    order: 3;
+    width: 100%;
+    padding-bottom: 0.1rem;
+  }
+
+  .portfolio-appbar-actions {
+    order: 2;
+    width: 100%;
+    gap: 0.7rem;
+  }
+
+  .portfolio-search-shell,
+  .portfolio-theme-toggle.compact,
+  .portfolio-appbar-actions .portfolio-secondary-btn {
+    width: 100%;
+    max-width: none;
+  }
+
+  .portfolio-theme-toggle.compact {
+    justify-content: space-between;
+  }
+
+  .portfolio-theme-toggle.compact button {
+    flex: 1 1 0;
+  }
+
+  .portfolio-route-pill {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .portfolio-stage-intro {
+    gap: 1rem;
+  }
+
+  .portfolio-stage-panel-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .portfolio-footer-nav {
+    justify-content: flex-start;
   }
 }
