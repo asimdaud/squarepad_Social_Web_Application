@@ -1,4 +1,4 @@
-# SquarePad Portfolio Demo
+# SquarePad Demo
 
 SquarePad is now a portfolio-safe social product demo built with React and Firebase Hosting. It preserves the original product breadth with a local-first data layer, interactive profiles, feed reactions, messaging, groups, admin metrics, theme switching, and polished demo flows.
 
