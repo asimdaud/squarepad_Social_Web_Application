@@ -1,36 +1,66 @@
-# SquarePad Demo
+# SquarePad
 
-SquarePad is now a portfolio-safe social product demo built with React and Firebase Hosting. It preserves the original product breadth with a local-first data layer, interactive profiles, feed reactions, messaging, groups, admin metrics, theme switching, and polished demo flows.
+SquarePad is a polished social product demo built for portfolio and interview use. It started as an older full-stack social app and was rebuilt into a local-first experience that still shows the shape of a real product: feed, profiles, messaging, groups, admin insights, theming, and motion.
 
-Live site:
-https://squarepad-demo-fix.web.app
+Live demo: https://squarepad-demo-fix.web.app
 
-## Automatic Firebase deploys from GitHub
+## What It Shows
 
-This repo is wired for GitHub Actions + Firebase Hosting.
+- Interactive timeline with likes, comments, sharing, and post deletion
+- Editable self profile with app-wide identity propagation
+- Cross-linked user profiles from posts, comments, messages, and groups
+- Local messaging threads with persistent demo state
+- Interactive groups with membership, members, and activity
+- Admin dashboard powered by real demo-derived metrics
+- Light default theme plus switchable dark mode
 
-- Push to `main` or `master`: deploys the live site automatically
-- Open a pull request: creates a Firebase Hosting preview deploy
+## Tech
 
-### One-time GitHub setup
+- React 16
+- Vite
+- React Router
+- Reactstrap + custom CSS
+- Framer Motion
+- Firebase Hosting
 
-Add this repository secret in GitHub:
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+Preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Deployment
+
+Manual Firebase deploy:
+
+```bash
+npm run deploy:firebase
+```
+
+This repo also supports automatic Firebase Hosting deploys through GitHub Actions:
+
+- push to `main` or `master` -> deploy live
+- open a pull request -> create a preview deploy
+
+GitHub Actions requires this repository secret:
 
 - `FIREBASE_SERVICE_ACCOUNT_SQUAREPAD_DEMO_FIX`
 
-That secret should contain the full JSON for a Firebase/Google Cloud service account with access to deploy Hosting for project `squarepad-demo-fix`.
+## Notes
 
-The workflow files are:
-
-- `.github/workflows/firebase-hosting-live.yml`
-- `.github/workflows/firebase-hosting-preview.yml`
-
-Edit profile feature:
-![Capture](https://github.com/asimdaud/squarepad_Social_Web_Application/assets/45770583/6c047627-a209-46fc-be02-096d248b0160)
-
-Chat feature:
-![ssCapture](https://github.com/asimdaud/squarepad_Social_Web_Application/assets/45770583/86998227-d8b2-4c38-92c3-bb9b1eee96f9)
-
-Comment feature:
-![image](https://github.com/asimdaud/squarepad_Social_Web_Application/assets/45770583/1f087dbf-36cf-4f14-b6da-ba70dbe46041)
-
+- Demo data is local-first and persists in the browser
+- Remote images have fallbacks so the UI still holds up if external assets fail
+- The project was migrated from CRA to Vite to simplify the build and reduce legacy dependency noise
