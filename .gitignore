@@ -3,3 +3,6 @@
 .firebase
 .firebaserc
 .env
+.env.*
+firebase-debug.log
+firebase-debug.*
