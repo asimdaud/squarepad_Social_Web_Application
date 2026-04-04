@@ -22,34 +22,26 @@
   },
   "homepage": "/",
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts start",
-    "build": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts build",
-    "test": "cross-env NODE_OPTIONS=--openssl-legacy-provider react-scripts test",
-    "eject": "react-scripts eject",
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "echo \"No automated tests configured\"",
     "deploy:firebase": "npx firebase-tools deploy --only hosting --project squarepad-demo-fix",
-    "install:clean": "npm install --legacy-peer-deps && npm start"
+    "install:clean": "npm install && npm start"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": [
-    ">0.2%",
-    "not dead",
-    "not ie <= 11",
-    "not op_mini all"
-  ],
   "dependencies": {
     "bootstrap": "^4.5.2",
-    "cross-env": "^7.0.3",
     "firebase": "^10.13.2",
     "framer-motion": "^4.1.17",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "^3.4.1",
     "reactstrap": "^8.4.1"
   },
   "devDependencies": {
-    "playwright": "^1.59.1"
+    "@vitejs/plugin-react": "^4.3.4",
+    "playwright": "^1.59.1",
+    "vite": "^5.4.19"
   }
 }
