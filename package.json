@@ -1,7 +1,7 @@
 {
   "name": "squarepad",
   "version": "1.0.0",
-  "description": "React",
+  "description": "Squarepad local-first travel community demo",
   "main": "index.js",
   "repository": {
     "type": "git",
@@ -31,13 +31,11 @@
     "install:clean": "npm install && npm start"
   },
   "dependencies": {
-    "bootstrap": "^4.5.2",
-    "firebase": "^10.13.2",
-    "framer-motion": "^4.1.17",
+    "leaflet": "^1.9.4",
+    "leaflet.heat": "^0.2.0",
     "react": "^16.14.0",
     "react-dom": "^16.14.0",
-    "react-router-dom": "^5.2.0",
-    "reactstrap": "^8.4.1"
+    "react-router-dom": "^5.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

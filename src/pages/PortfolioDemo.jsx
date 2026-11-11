@@ -1,2307 +1,423 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  Badge,
-  Button,
-  Card,
-  CardBody,
-  Col,
-  Container,
-  FormGroup,
-  Input,
-  Progress,
-  Row,
-} from "reactstrap";
-import SimpleFooter from "components/Footers/SimpleFooter.jsx";
-import {
-  getDemoState,
-  resetDemoState,
-  saveDemoState,
-  selfProfileId,
-  validDemoTabs,
-} from "../demo/demoStorage";
+import React, { useEffect, useMemo, useState } from "react";
+import { getDemoState, saveDemoState, selfProfileId, validDemoTabs } from "../demo/demoStorage";
+import TravelMap from "../components/TravelMap";
+import InsightsDashboard from "../components/InsightsDashboard";
+import azoresImage from "../assets/azores-trail.webp";
+import kyotoImage from "../assets/kyoto-lane.webp";
+import amalfiImage from "../assets/amalfi-coast.webp";
 import "../assets/css/portfolio-demo.css";
 
-const tabMeta = {
-  timeline: {
-    label: "Timeline",
-    eyebrow: "Live Feed",
-    title: "A social product demo with believable motion, identity, and interaction depth.",
-    description:
-      "Compose posts, react to other creators, move between profiles, and show the whole product system without depending on auth or paid backend features.",
-  },
-  profile: {
-    label: "Profile",
-    eyebrow: "Identity System",
-    title: "Profiles feel connected because every surface resolves from the same person graph.",
-    description:
-      "Edit your own profile, browse anyone else, and see names, handles, comments, chats, and groups stay in sync across the entire app.",
-  },
-  messages: {
-    label: "Messages",
-    eyebrow: "Conversation Layer",
-    title: "Messaging stays contextual instead of floating as a disconnected demo panel.",
-    description:
-      "Open threads from people, comments, and group members, then jump back to a profile without losing the story of who you are talking to.",
-  },
-  groups: {
-    label: "Groups",
-    eyebrow: "Community Rooms",
-    title: "Groups are real spaces with owners, members, activity, and a reason to click deeper.",
-    description:
-      "Join communities, browse their members, inspect group-led conversations, and show how SquarePad expands beyond feed and chat into social structure.",
-  },
-  admin: {
-    label: "Admin",
-    eyebrow: "Health Dashboard",
-    title: "The admin layer now reflects actual activity rather than cinematic placeholder metrics.",
-    description:
-      "Surface live totals, strongest posts, active groups, and conversation load directly from the same demo data powering the rest of the product.",
-  },
-};
-
-const reactionDefs = [
-  { key: "like", label: "Like", icon: "heart" },
-  { key: "comment", label: "Comment", icon: "bubble" },
-  { key: "share", label: "Share", icon: "share" },
+const photos = { azores: azoresImage, kyoto: kyotoImage, amalfi: amalfiImage };
+const SAVED_ITEMS_KEY = "squarepad_saved_v2";
+const LEGACY_SAVED_ITEMS_KEY = "wayfarer_saved_v1";
+const navItems = [
+  ["timeline", "Your feed", "⌂"],
+  ["explore", "Explore", "⌕"],
+  ["map", "Traveller map", "◎"],
+  ["messages", "Messages", "↗"],
+  ["groups", "Communities", "◈"],
+  ["profile", "Your profile", "◌"],
+  ["insights", "Community insights", "↗"],
+];
+const stories = [
+  { id: "story-maya", personId: "person-maya", place: "The coast before breakfast", location: "Cadaqués, Spain", imageKey: "amalfi", stamp: "TODAY · 08:14" },
+  { id: "story-ray", personId: "person-raymond", place: "A walk through the old city", location: "London, UK", imageKey: "kyoto", stamp: "TODAY · 07:02" },
+  { id: "story-priya", personId: "person-priya", place: "One more cup, then the train", location: "Singapore", imageKey: "azores", stamp: "YESTERDAY · 18:46" },
+  { id: "story-omar", personId: "person-omar", place: "Where the road meets the dunes", location: "Al Marmoom, UAE", imageKey: "amalfi", stamp: "YESTERDAY · 16:21" },
+];
+const destinations = [
+  { id: "place-sete-cidades", city: "Sete Cidades", country: "Azores, Portugal", imageKey: "azores", type: "Trails", lat: 37.86, lon: -25.79, note: "Crater lakes, cloud-soft mornings, and a trail worth taking slowly." },
+  { id: "place-kyoto", city: "Kyoto", country: "Japan", imageKey: "kyoto", type: "City", lat: 35.01, lon: 135.77, note: "Early starts, lantern-lit lanes, and the pleasure of getting pleasantly lost." },
+  { id: "place-amalfi", city: "Amalfi Coast", country: "Italy", imageKey: "amalfi", type: "Coast", lat: 40.63, lon: 14.60, note: "Small harbors and big views, best seen from the water." },
+  { id: "place-lisbon", city: "Lisbon", country: "Portugal", imageKey: "azores", type: "City", lat: 38.72, lon: -9.14, note: "A city for walking with no particular destination in mind." },
 ];
 
-const placeholderPalettes = [
-  ["#EFF6FF", "#DBEAFE", "#1E3A8A"],
-  ["#F5F3FF", "#EDE9FE", "#5B21B6"],
-  ["#ECFDF5", "#D1FAE5", "#065F46"],
-  ["#FEF3C7", "#FDE68A", "#92400E"],
-  ["#FFE4E6", "#FECDD3", "#9F1239"],
-];
-
-const cardMotion = {
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -6 },
-  transition: { duration: 0.22, ease: [0.2, 0.8, 0.2, 1] },
+const initials = (name = "") => name.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join("").toUpperCase();
+const Icon = ({ name, size = 18 }) => {
+  const paths = {
+    heart: <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1L12 21l7.8-7.5 1.1-1.1a5.5 5.5 0 0 0-.1-7.8Z" />,
+    comment: <path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z" />,
+    save: <path d="M6 4h12v17l-6-4-6 4V4Z" />,
+    pin: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
+    send: <><path d="m21 3-7.5 18-3.8-7.7L2 9.5 21 3Z" /><path d="M9.7 13.3 21 3" /></>,
+    search: <><circle cx="10.8" cy="10.8" r="6.8" /><path d="m16 16 5 5" /></>,
+    arrow: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
+    close: <><path d="m6 6 12 12M18 6 6 18" /></>,
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 };
 
-const listMotion = (index = 0) => ({
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: {
-    duration: 0.2,
-    delay: Math.min(index * 0.04, 0.2),
-    ease: [0.2, 0.8, 0.2, 1],
-  },
-});
+function Avatar({ person, size = "" }) {
+  return <span className={`avatar ${size} tone-${person?.accent || "lime"}`} aria-hidden="true">{initials(person?.name || "?")}</span>;
+}
 
-const waitForPolish = (ms = 220) =>
-  new Promise((resolve) => window.setTimeout(resolve, ms));
+function Photo({ imageKey, className = "", alt = "" }) {
+  return <img className={`travel-photo ${className}`} src={photos[imageKey] || photos.azores} alt={alt} loading="lazy" />;
+}
 
-const initials = (name = "") =>
-  name
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-
-const hashString = (value = "") =>
-  value.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
-
-const createPlaceholderDataUri = (label = "SquarePad") => {
-  const [bgStart, bgEnd, textColor] =
-    placeholderPalettes[hashString(label) % placeholderPalettes.length];
-  const mark = initials(label) || "SP";
-  const safeLabel = label.slice(0, 28);
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
-      <defs>
-        <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="${bgStart}" />
-          <stop offset="100%" stop-color="${bgEnd}" />
-        </linearGradient>
-      </defs>
-      <rect width="1200" height="800" fill="url(#g)" rx="40" />
-      <circle cx="1000" cy="140" r="140" fill="rgba(255,255,255,0.4)" />
-      <circle cx="160" cy="670" r="190" fill="rgba(255,255,255,0.35)" />
-      <text x="100" y="355" font-size="170" font-family="Arial, sans-serif" font-weight="700" fill="${textColor}">${mark}</text>
-      <text x="104" y="435" font-size="46" font-family="Arial, sans-serif" fill="${textColor}" opacity="0.88">${safeLabel}</text>
-    </svg>
-  `;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
-};
-
-const pluralize = (count, singular, plural = `${singular}s`) =>
-  `${count} ${count === 1 ? singular : plural}`;
-
-const ReactionIcon = ({ type }) => {
-  if (type === "heart") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path
-          d="M12 21s-7.2-4.3-9.6-8.9C.4 8 .9 4.8 3.5 3.1 6 .9 9.2 1.4 12 4.1 14.8 1.4 18 .9 20.5 3.1c2.6 1.7 3.1 4.9 1.1 9-2.4 4.6-9.6 8.9-9.6 8.9Z"
-          fill="currentColor"
-        />
-      </svg>
-    );
-  }
-
-  if (type === "bubble") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path
-          d="M20 3H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v3.2c0 .6.7.9 1.1.5L11.8 18H20a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Zm-2 8H6V9h12v2Zm0-4H6V5h12v2Zm-6 8H6v-2h6v2Z"
-          fill="currentColor"
-        />
-      </svg>
-    );
-  }
-
+function PostCard({ post, profiles, groupsById, onLike, onSave, onComment, onDeleteComment, onProfile, onGroup, onDeletePost, onShare, saved }) {
+  const author = profiles[post.authorId] || profiles.self;
+  const [draft, setDraft] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const group = groupsById[post.groupId];
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path
-        d="M14.5 5.5 20 11l-5.5 5.5M20 11H8.5a4 4 0 0 0-4 4v3.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <article className="post-card">
+      <header className="post-header">
+        <button className="identity-button" onClick={() => onProfile(author.id)} aria-label={`View ${author.name}'s profile`}><Avatar person={author} /><span className="identity-copy"><strong>{author.name}</strong><small>@{author.username} <span>·</span> {post.timeLabel}</small></span></button>
+        <div className="post-menu-wrap">
+          <button className="icon-button" aria-label="Post actions" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}>···</button>
+          {menuOpen && <div className="post-menu" role="menu"><button role="menuitem" onClick={() => { onShare(post); setMenuOpen(false); }}>Copy trip note</button>{post.authorId === selfProfileId && <button role="menuitem" className="danger" onClick={() => { onDeletePost(post.id); setMenuOpen(false); }}>Delete post</button>}</div>}
+        </div>
+      </header>
+      {group && <button className="post-group-link" onClick={() => onGroup(group.id)}>Shared in {group.name}</button>}
+      <p className="post-caption">{post.caption}</p>
+      {post.location && <div className="post-location"><Icon name="pin" size={14} /><span>{post.location}</span><span className="location-separator">/</span><span>{post.mood}</span></div>}
+      {post.hasImage && <Photo imageKey={post.imageKey} alt={`${post.location || "Travel"}: ${post.caption}`} className="post-photo" />}
+      <div className="post-actions">
+        <button className={`action-link ${post.likedByMe ? "liked" : ""}`} onClick={() => onLike(post.id)} aria-pressed={post.likedByMe}><Icon name="heart" size={17} /> <span>{post.likes}</span></button>
+        <button className="action-link" onClick={() => document.getElementById(`comment-${post.id}`)?.focus()}><Icon name="comment" size={17} /> <span>{post.commentsData.length} notes</span></button>
+        <button className={`action-link save-action ${saved ? "saved" : ""}`} onClick={() => onSave(post.id)} aria-pressed={saved}><Icon name="save" size={16} /><span>{saved ? "Saved" : "Save"}</span></button>
+      </div>
+      {post.commentsData.length > 0 && <div className="comment-list">{post.commentsData.map((item) => {
+        const commenter = profiles[item.authorId] || profiles.self;
+        return <div className="comment-row" key={item.id}><Avatar person={commenter} size="tiny" /><p><strong>{commenter.name}</strong> {item.body} <small>{item.timeLabel}</small></p>{item.authorId === selfProfileId && <button className="delete-comment" aria-label={`Delete your comment: ${item.body}`} onClick={() => onDeleteComment(post.id, item.id)}>Delete</button>}</div>;
+      })}</div>}
+      <form className="comment-form" onSubmit={(event) => { event.preventDefault(); if (draft.trim()) { onComment(post.id, draft.trim()); setDraft(""); } }}>
+        <Avatar person={profiles.self} size="tiny" /><label className="sr-only" htmlFor={`comment-${post.id}`}>Add a travel note</label><input id={`comment-${post.id}`} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Add a note..." /><button type="submit" aria-label="Post comment" disabled={!draft.trim()}><Icon name="send" size={16} /></button>
+      </form>
+    </article>
   );
-};
-
-const Avatar = ({ name, size = "md", accent = "default" }) => (
-  <div className={`sp-avatar sp-avatar-${size} accent-${accent}`} aria-hidden="true">
-    {initials(name) || "?"}
-  </div>
-);
-
-const SafeMediaImage = ({ src, alt, label, className = "", height = 180 }) => {
-  const [resolvedSrc, setResolvedSrc] = useState(src || createPlaceholderDataUri(label));
-
-  useEffect(() => {
-    setResolvedSrc(src || createPlaceholderDataUri(label));
-  }, [label, src]);
-
-  return (
-    <img
-      src={resolvedSrc}
-      alt={alt}
-      className={`sp-media-image ${className}`}
-      style={{ height, width: "100%", objectFit: "cover" }}
-      loading="lazy"
-      onError={() => setResolvedSrc(createPlaceholderDataUri(label))}
-    />
-  );
-};
+}
 
 const PortfolioDemo = ({ history, match }) => {
-  const routeTab = match?.params?.tab;
-  const initialDemoState = getDemoState();
-
-  const [demoState, setDemoState] = useState(() => initialDemoState);
-  const [activeTab, setActiveTab] = useState(
-    validDemoTabs.includes(routeTab) ? routeTab : "timeline"
-  );
-  const [searchTerm, setSearchTerm] = useState("");
-  const [draftPost, setDraftPost] = useState("");
+  const routeTab = match?.params?.tab || "timeline";
+  const [state, setState] = useState(() => getDemoState());
+  const [query, setQuery] = useState("");
+  const [draft, setDraft] = useState("");
+  const [draftPlace, setDraftPlace] = useState("");
+  const [activeStory, setActiveStory] = useState(null);
+  const [selectedPlace, setSelectedPlace] = useState(destinations[0]);
+  const [selectedChatId, setSelectedChatId] = useState("chat-1");
   const [chatDraft, setChatDraft] = useState("");
-  const [profileDraft, setProfileDraft] = useState(() => initialDemoState.profile);
-  const [profileViewMode, setProfileViewMode] = useState("self");
-  const [selectedPersonId, setSelectedPersonId] = useState(
-    () => initialDemoState.people[0]?.id || null
-  );
-  const [selectedGroupId, setSelectedGroupId] = useState(
-    () => initialDemoState.groups[0]?.id || null
-  );
-  const [activeConversationId, setActiveConversationId] = useState(
-    () => initialDemoState.conversations[0]?.id || null
-  );
-  const [expandedPostId, setExpandedPostId] = useState(null);
-  const [commentDrafts, setCommentDrafts] = useState({});
-  const [openPostMenuId, setOpenPostMenuId] = useState(null);
-  const [pendingPost, setPendingPost] = useState(false);
-  const [pendingProfile, setPendingProfile] = useState(false);
-  const [pendingReset, setPendingReset] = useState(false);
-  const [pendingMessage, setPendingMessage] = useState(false);
-  const [pendingCommentPostId, setPendingCommentPostId] = useState(null);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [pendingPanelFocus, setPendingPanelFocus] = useState(false);
-  const panelHeadingRef = useRef(null);
-  const menuTriggerRefs = useRef({});
+  const [profileDraft, setProfileDraft] = useState(state.profile);
+  const [profileEditing, setProfileEditing] = useState(false);
+  const [viewingProfileId, setViewingProfileId] = useState(selfProfileId);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [toast, setToast] = useState("");
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [savedIds, setSavedIds] = useState(() => {
+    try {
+      const currentStorage = localStorage.getItem(SAVED_ITEMS_KEY);
+      const legacyStorage = localStorage.getItem(LEGACY_SAVED_ITEMS_KEY);
+      const saved = JSON.parse(currentStorage || legacyStorage || "[]");
+      if (!currentStorage && legacyStorage && Array.isArray(saved)) localStorage.setItem(SAVED_ITEMS_KEY, JSON.stringify(saved));
+      return Array.isArray(saved) ? saved : [];
+    } catch { return []; }
+  });
+  const [photoKey, setPhotoKey] = useState("azores");
 
-  useEffect(() => {
-    saveDemoState(demoState);
-  }, [demoState]);
+  useEffect(() => { saveDemoState(state); }, [state]);
+  useEffect(() => { try { localStorage.setItem(SAVED_ITEMS_KEY, JSON.stringify(savedIds)); } catch { /* local demo */ } }, [savedIds]);
+  useEffect(() => { if (validDemoTabs.includes(routeTab) && routeTab !== "admin") return; if (routeTab === "admin") history.replace("/demo/insights"); else history.replace("/demo/timeline"); }, [routeTab, history]);
+  useEffect(() => { setProfileDraft(state.profile); }, [state.profile]);
+  useEffect(() => { document.title = "Squarepad — travel, shared"; }, []);
+  useEffect(() => { if (!toast) return undefined; const timer = window.setTimeout(() => setToast(""), 2800); return () => window.clearTimeout(timer); }, [toast]);
 
-  useEffect(() => {
-    setProfileDraft(demoState.profile);
-  }, [demoState.profile]);
-
-  useEffect(() => {
-    if (!routeTab || !validDemoTabs.includes(routeTab)) {
-      history.replace("/demo/timeline");
-      return;
-    }
-    setActiveTab(routeTab);
-  }, [history, routeTab]);
-
-  useEffect(() => {
-    const handlePointerDown = (event) => {
-      if (!event.target.closest(".portfolio-post-menu")) {
-        setOpenPostMenuId(null);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, []);
-
-  useEffect(() => {
-    if (!openPostMenuId) return undefined;
-
-    const handleEscape = (event) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      const trigger = menuTriggerRefs.current[openPostMenuId];
-      setOpenPostMenuId(null);
-      if (trigger) {
-        window.setTimeout(() => trigger.focus(), 0);
-      }
-    };
-
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [openPostMenuId]);
-
-  useEffect(() => {
-    if (!pendingPanelFocus || !panelHeadingRef.current) return undefined;
-
-    const frame = window.requestAnimationFrame(() => {
-      panelHeadingRef.current.focus();
-      setPendingPanelFocus(false);
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [activeConversationId, activeTab, pendingPanelFocus, profileViewMode, selectedGroupId, selectedPersonId]);
-
-  useEffect(() => {
-    if (!statusMessage) return undefined;
-
-    const timeoutId = window.setTimeout(() => setStatusMessage(""), 2400);
-    return () => window.clearTimeout(timeoutId);
-  }, [statusMessage]);
-
-  const updateDemoState = (updater) => {
-    setDemoState((state) => updater(state));
-  };
-
-  const updatePosts = (updater) => {
-    updateDemoState((state) => ({ ...state, posts: updater(state.posts) }));
-  };
-
-  const updateGroups = (updater) => {
-    updateDemoState((state) => ({ ...state, groups: updater(state.groups) }));
-  };
-
-  const updateConversations = (updater) => {
-    updateDemoState((state) => ({ ...state, conversations: updater(state.conversations) }));
-  };
-
-  const selfFollowingIds = useMemo(() => {
-    const fallbackIds = demoState.people.filter((person) => person.isFollowing).map((person) => person.id);
-    const ids =
-      Array.isArray(demoState.profile.followingIds) && demoState.profile.followingIds.length >= 0
-        ? demoState.profile.followingIds
-        : fallbackIds;
-
-    return [...new Set(ids)].filter((id) =>
-      demoState.people.some((person) => person.id === id)
-    );
-  }, [demoState.people, demoState.profile.followingIds]);
-
-  const selfProfile = useMemo(
-    () => ({
+  const people = useMemo(() => state.people.map((traveler) => ({
+    ...traveler,
+    visited: new Set(state.posts.filter((post) => post.authorId === traveler.id).map((post) => (post.location || "").trim().toLowerCase()).filter(Boolean)).size,
+  })), [state.people, state.posts]);
+  const profiles = useMemo(() => ({
+    self: {
       id: selfProfileId,
-      accent: "violet",
-      status: "Signed in",
-      ...demoState.profile,
-      followingIds: selfFollowingIds,
-    }),
-    [demoState.profile, selfFollowingIds]
-  );
-
-  const peopleProfiles = useMemo(
-    () =>
-      demoState.people.map((person) => ({
-        ...person,
-        isFollowing: selfFollowingIds.includes(person.id),
-      })),
-    [demoState.people, selfFollowingIds]
-  );
-
-  const profiles = useMemo(() => [selfProfile, ...peopleProfiles], [peopleProfiles, selfProfile]);
-
-  const profilesById = useMemo(
-    () =>
-      profiles.reduce((accumulator, profile) => {
-        accumulator[profile.id] = profile;
-        return accumulator;
-      }, {}),
-    [profiles]
-  );
-
-  const followerCountsById = useMemo(() => {
-    const counts = profiles.reduce((accumulator, profile) => {
-      accumulator[profile.id] = 0;
-      return accumulator;
-    }, {});
-
-    profiles.forEach((profile) => {
-      const followingIds =
-        profile.id === selfProfileId ? selfFollowingIds : profile.followingIds || [];
-      followingIds.forEach((followedId) => {
-        if (typeof counts[followedId] === "number") {
-          counts[followedId] += 1;
-        }
+      accent: "lime",
+      status: "Here for the journey",
+      ...state.profile,
+      visited: new Set(state.posts.filter((post) => post.authorId === selfProfileId).map((post) => (post.location || "").trim().toLowerCase()).filter(Boolean)).size,
+    },
+    ...Object.fromEntries(people.map((person) => [person.id, person])),
+  }), [people, state.profile, state.posts]);
+  const groupsById = useMemo(() => Object.fromEntries(state.groups.map((group) => [group.id, group])), [state.groups]);
+  const posts = useMemo(() => state.posts.map((post) => {
+    const likes = post.likesByIds || [];
+    return { ...post, likes: likes.length, likedByMe: likes.includes(selfProfileId), commentsData: post.commentsData || [] };
+  }), [state.posts]);
+  const postPlaces = useMemo(() => {
+    const knownPlaces = [...destinations, ...(state.places || [])];
+    const locations = new Map();
+    state.posts.forEach((post) => {
+      if (!Number.isFinite(post.lat) || !Number.isFinite(post.lon) || !post.location?.trim()) return;
+      const location = post.location.trim();
+      const locationKey = location.toLowerCase();
+      if (knownPlaces.some((place) => locationKey.includes(place.city.toLowerCase())) || locations.has(locationKey)) return;
+      const parts = location.split(",").map((part) => part.trim()).filter(Boolean);
+      const authorLocation = profiles[post.authorId]?.location || "";
+      const authorParts = authorLocation.split(",").map((part) => part.trim());
+      let country = parts.slice(1).join(", ");
+      if (parts.length > 1 && authorParts.length > 1 && authorParts[0].toLowerCase() === parts.slice(1).join(", ").toLowerCase()) {
+        country = authorLocation;
+      }
+      locations.set(locationKey, {
+        id: `post-place-${locationKey.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`,
+        city: parts[0] || location,
+        country: country || authorLocation || "Shared trip",
+        type: "Community note",
+        lat: post.lat,
+        lon: post.lon,
+        note: post.caption,
+        imageKey: post.imageKey,
+        fromPost: true,
       });
     });
-
-    return counts;
-  }, [profiles, selfFollowingIds]);
-
-  const groupsById = useMemo(
-    () =>
-      demoState.groups.reduce((accumulator, group) => {
-        accumulator[group.id] = group;
-        return accumulator;
-      }, {}),
-    [demoState.groups]
-  );
-
-  const decoratedPosts = useMemo(
-    () =>
-      demoState.posts.map((post) => {
-        const author = profilesById[post.authorId] || selfProfile;
-        const likesByIds = [...new Set(post.likesByIds || [])].filter((id) => profilesById[id]);
-        const commentsData = (post.commentsData || []).map((comment) => ({
-          ...comment,
-          author: profilesById[comment.authorId] || selfProfile,
-          isMine: comment.authorId === selfProfileId,
-        }));
-
-        return {
-          ...post,
-          author,
-          likesByIds,
-          likes: likesByIds.length,
-          commentsData,
-          comments: commentsData.length,
-          likedByMe: likesByIds.includes(selfProfileId),
-          isMine: post.authorId === selfProfileId,
-          group: post.groupId ? groupsById[post.groupId] || null : null,
-        };
-      }),
-    [demoState.posts, groupsById, profilesById, selfProfile]
-  );
-
-  const decoratedConversations = useMemo(
-    () =>
-      demoState.conversations.map((conversation) => {
-        const profile = profilesById[conversation.profileId] || peopleProfiles[0] || selfProfile;
-        const messages = (conversation.messages || []).map((message) => ({
-          ...message,
-          sender: profilesById[message.senderId] || selfProfile,
-          isMine: message.senderId === selfProfileId,
-        }));
-        const lastMessage = messages[messages.length - 1];
-
-        return {
-          ...conversation,
-          profile,
-          messages,
-          preview: lastMessage?.body || `Start a thread with ${profile.name}.`,
-          timeLabel: lastMessage?.timeLabel || "Now",
-        };
-      }),
-    [demoState.conversations, peopleProfiles, profilesById, selfProfile]
-  );
-
-  useEffect(() => {
-    if (!selectedPersonId || !profilesById[selectedPersonId] || selectedPersonId === selfProfileId) {
-      setSelectedPersonId(peopleProfiles[0]?.id || null);
-    }
-  }, [peopleProfiles, profilesById, selectedPersonId]);
-
-  useEffect(() => {
-    if (!activeConversationId || !decoratedConversations.find((item) => item.id === activeConversationId)) {
-      setActiveConversationId(decoratedConversations[0]?.id || null);
-    }
-  }, [activeConversationId, decoratedConversations]);
-
-  useEffect(() => {
-    if (!selectedGroupId || !groupsById[selectedGroupId]) {
-      setSelectedGroupId(demoState.groups[0]?.id || null);
-    }
-  }, [demoState.groups, groupsById, selectedGroupId]);
-
-  const activeConversation = useMemo(
-    () =>
-      decoratedConversations.find((conversation) => conversation.id === activeConversationId) ||
-      decoratedConversations[0] ||
-      null,
-    [activeConversationId, decoratedConversations]
-  );
-
-  const selectedPerson = useMemo(
-    () => profilesById[selectedPersonId] || peopleProfiles[0] || null,
-    [peopleProfiles, profilesById, selectedPersonId]
-  );
-
-  const selfPosts = useMemo(
-    () => decoratedPosts.filter((post) => post.authorId === selfProfileId),
-    [decoratedPosts]
-  );
-
-  const selectedPersonPosts = useMemo(
-    () => decoratedPosts.filter((post) => post.authorId === selectedPerson?.id),
-    [decoratedPosts, selectedPerson]
-  );
-
-  const filteredPosts = useMemo(() => {
-    const needle = searchTerm.trim().toLowerCase();
-    if (!needle) return decoratedPosts;
-
-    return decoratedPosts.filter((post) =>
-      [
-        post.author.name,
-        `@${post.author.username}`,
-        post.caption,
-        post.mood,
-        post.timeLabel,
-        post.group?.name,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(needle)
-    );
-  }, [decoratedPosts, searchTerm]);
-
-  const filteredGroups = useMemo(() => {
-    const needle = searchTerm.trim().toLowerCase();
-    if (!needle) return demoState.groups;
-
-    return demoState.groups.filter((group) => {
-      const owner = profilesById[group.ownerId];
-      return [
-        group.name,
-        group.category,
-        group.description,
-        group.spotlight,
-        owner?.name,
-        ...(group.tags || []),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(needle);
-    });
-  }, [demoState.groups, profilesById, searchTerm]);
-
-  const filteredConversations = useMemo(() => {
-    const needle = searchTerm.trim().toLowerCase();
-    if (!needle) return decoratedConversations;
-
-    return decoratedConversations.filter((conversation) =>
-      [conversation.profile.name, conversation.preview, ...conversation.messages.map((message) => message.body)]
-        .join(" ")
-        .toLowerCase()
-        .includes(needle)
-    );
-  }, [decoratedConversations, searchTerm]);
-
-  const currentGroup = useMemo(() => {
-    const scopedGroup =
-      filteredGroups.find((group) => group.id === selectedGroupId) ||
-      demoState.groups.find((group) => group.id === selectedGroupId);
-
-    return scopedGroup || filteredGroups[0] || demoState.groups[0] || null;
-  }, [demoState.groups, filteredGroups, selectedGroupId]);
-
-  const currentGroupPosts = useMemo(
-    () =>
-      decoratedPosts.filter(
-        (post) => post.groupId && currentGroup && post.groupId === currentGroup.id
-      ),
-    [currentGroup, decoratedPosts]
-  );
-
-  const isPersonProfileView = activeTab === "profile" && profileViewMode === "person" && selectedPerson;
-  const viewedProfile = isPersonProfileView ? selectedPerson : selfProfile;
-  const viewedProfilePosts = isPersonProfileView ? selectedPersonPosts : selfPosts;
-  const activeThreadProfile = activeConversation?.profile || selfProfile;
-  const activeTheme = demoState.settings?.theme === "dark" ? "dark" : "light";
-  const currentMeta = tabMeta[activeTab] || tabMeta.timeline;
-  const themeLabel = activeTheme === "dark" ? "Midnight" : "Air";
-  const followedProfiles = peopleProfiles.filter((person) => selfFollowingIds.includes(person.id));
-  const peopleCount = peopleProfiles.length + 1;
-  const socialActivityCount = decoratedPosts.reduce(
-    (sum, post) => sum + post.likes + post.comments,
-    0
-  );
-
-  const heroStats = [
-    {
-      label: isPersonProfileView ? "Viewing" : "Signed in as",
-      value: viewedProfile.name,
-      detail: viewedProfile.role,
-    },
-    {
-      label: "People in demo",
-      value: peopleCount.toString(),
-      detail: `${followedProfiles.length} followed by you`,
-    },
-    {
-      label: "Interaction count",
-      value: socialActivityCount.toString(),
-      detail: "Likes and comments across the product",
-    },
-    {
-      label: "Theme",
-      value: themeLabel,
-      detail: "Switch anytime from demo settings",
-    },
-  ];
-
-  const adminSnapshot = useMemo(() => {
-    const totalPosts = decoratedPosts.length;
-    const totalLikes = decoratedPosts.reduce((sum, post) => sum + post.likes, 0);
-    const totalComments = decoratedPosts.reduce((sum, post) => sum + post.comments, 0);
-    const totalMessages = decoratedConversations.reduce(
-      (sum, conversation) => sum + conversation.messages.length,
-      0
-    );
-    const totalMembers = demoState.groups.reduce(
-      (sum, group) => sum + (group.memberIds || []).length,
-      0
-    );
-    const totalFollowers = Object.values(followerCountsById).reduce((sum, count) => sum + count, 0);
-    const topPost = decoratedPosts.reduce(
-      (best, post) =>
-        post.likes + post.comments > best.score
-          ? { score: post.likes + post.comments, post }
-          : best,
-      { score: -1, post: null }
-    ).post;
-    const topGroup = demoState.groups.reduce(
-      (best, group) =>
-        (group.memberIds || []).length > best.count
-          ? { count: (group.memberIds || []).length, group }
-          : best,
-      { count: -1, group: null }
-    ).group;
-    const busiestThread = decoratedConversations.reduce(
-      (best, conversation) =>
-        conversation.messages.length > best.count
-          ? { count: conversation.messages.length, conversation }
-          : best,
-      { count: -1, conversation: null }
-    ).conversation;
-    const strongestProfile = profiles.reduce(
-      (best, profile) =>
-        (followerCountsById[profile.id] || 0) > best.count
-          ? { count: followerCountsById[profile.id] || 0, profile }
-          : best,
-      { count: -1, profile: null }
-    ).profile;
-
+    return [...locations.values()];
+  }, [state.posts, state.places, profiles]);
+  const allPlaces = useMemo(() => [...destinations, ...(state.places || []), ...postPlaces], [state.places, postPlaces]);
+  const mapPlaces = useMemo(() => allPlaces.map((place) => {
+    const placePosts = posts.filter((post) => (post.location || "").toLowerCase().includes(place.city.toLowerCase()));
+    const noteCount = placePosts.length;
+    const likeCount = placePosts.reduce((sum, post) => sum + post.likes, 0);
+    const commentCount = placePosts.reduce((sum, post) => sum + post.commentsData.length, 0);
+    const savedPostCount = placePosts.filter((post) => savedIds.includes(post.id)).length;
+    const savedPlaceCount = savedIds.includes(`place-${place.city}`) ? 1 : 0;
     return {
-      metrics: [
-        {
-          label: "Posts live",
-          value: totalPosts.toString(),
-          detail: "Visible across timeline, profiles, and groups",
-          progress: Math.min(100, 20 + totalPosts * 9),
-        },
-        {
-          label: "Engagement",
-          value: totalLikes.toString(),
-          detail: `${totalComments} comments layered into the feed`,
-          progress: Math.min(100, 18 + totalLikes * 4),
-        },
-        {
-          label: "Messages",
-          value: totalMessages.toString(),
-          detail: `${decoratedConversations.length} active threads`,
-          progress: Math.min(100, 18 + totalMessages * 5),
-        },
-        {
-          label: "Followers",
-          value: totalFollowers.toString(),
-          detail: "Derived from the live follow graph",
-          progress: Math.min(100, 16 + totalFollowers * 8),
-        },
-        {
-          label: "Group members",
-          value: totalMembers.toString(),
-          detail: `${demoState.groups.length} interactive communities`,
-          progress: Math.min(100, 18 + totalMembers * 4),
-        },
-        {
-          label: "People graph",
-          value: profiles.length.toString(),
-          detail: "Profiles connected across the demo",
-          progress: Math.min(100, 24 + profiles.length * 8),
-        },
-      ],
-      queue: [
-        topPost
-          ? {
-              id: "insight-post",
-              title: "Most active post",
-              note: `${topPost.author.name} is leading with ${pluralize(
-                topPost.likes,
-                "like"
-              )} and ${pluralize(topPost.comments, "comment")}.`,
-              status: "Feed",
-            }
-          : null,
-        topGroup
-          ? {
-              id: "insight-group",
-              title: "Largest group",
-              note: `${topGroup.name} currently has ${pluralize(
-                (topGroup.memberIds || []).length,
-                "member"
-              )} interacting around it.`,
-              status: "Group",
-            }
-          : null,
-        busiestThread
-          ? {
-              id: "insight-thread",
-              title: "Busiest thread",
-              note: `${busiestThread.profile.name}'s thread contains ${pluralize(
-                busiestThread.messages.length,
-                "message"
-              )}.`,
-              status: "Chat",
-            }
-          : null,
-        strongestProfile
-          ? {
-              id: "insight-profile",
-              title: "Most followed profile",
-              note: `${strongestProfile.name} is followed by ${pluralize(
-                followerCountsById[strongestProfile.id] || 0,
-                "person"
-              )}.`,
-              status: "People",
-            }
-          : null,
-      ].filter(Boolean),
+      ...place,
+      noteCount,
+      likeCount,
+      commentCount,
+      activityScore: noteCount + likeCount + commentCount + savedPostCount + savedPlaceCount,
     };
-  }, [decoratedConversations, decoratedPosts, demoState.groups, followerCountsById, profiles]);
-
-  const setTheme = (theme) => {
-    if (theme === activeTheme) return;
-    updateDemoState((state) => ({
-      ...state,
-      settings: { ...(state.settings || {}), theme },
-    }));
-    setStatusMessage(theme === "dark" ? "Dark mode enabled." : "Light theme enabled.");
+  }), [allPlaces, posts, savedIds]);
+  const selectedMapPlace = mapPlaces.find((place) => place.id === selectedPlace.id || place.city === selectedPlace.city) || mapPlaces[0];
+  const trendingPlaces = useMemo(() => [...mapPlaces].filter((place) => place.activityScore > 0).sort((a, b) => b.activityScore - a.activityScore), [mapPlaces]);
+  const filteredPosts = useMemo(() => posts.filter((post) => {
+    const author = profiles[post.authorId] || profiles.self;
+    const text = [post.caption, post.location, post.mood, author.name, author.username, groupsById[post.groupId]?.name].join(" ").toLowerCase();
+    const matchesText = text.includes(query.trim().toLowerCase());
+    const matchesFilter = activeFilter === "All" || post.mood === activeFilter || post.location?.toLowerCase().includes(activeFilter.toLowerCase());
+    return matchesText && matchesFilter;
+  }), [posts, profiles, groupsById, query, activeFilter]);
+  const filteredGroups = useMemo(() => state.groups.filter((group) => `${group.name} ${group.description} ${group.category} ${(group.tags || []).join(" ")}`.toLowerCase().includes(query.toLowerCase())), [state.groups, query]);
+  const activeChat = state.conversations.find((thread) => thread.id === selectedChatId) || state.conversations[0];
+  const activeChatPerson = profiles[activeChat?.profileId] || profiles["person-maya"];
+  const go = (tab) => { setMobileMenu(false); if (tab === "profile") { setViewingProfileId(selfProfileId); setProfileEditing(false); } history.push(`/demo/${tab}`); };
+  const updatePosts = (transform) => setState((current) => ({ ...current, posts: transform(current.posts) }));
+  const openProfile = (id = selfProfileId) => { setViewingProfileId(id || selfProfileId); setProfileEditing(false); setMobileMenu(false); history.push("/demo/profile"); };
+  const toggleFollow = (id) => setState((current) => ({ ...current, profile: { ...current.profile, followingIds: current.profile.followingIds.includes(id) ? current.profile.followingIds.filter((item) => item !== id) : [...current.profile.followingIds, id] } }));
+  const toggleLike = (id) => updatePosts((items) => items.map((post) => post.id === id ? { ...post, likesByIds: (post.likesByIds || []).includes(selfProfileId) ? post.likesByIds.filter((personId) => personId !== selfProfileId) : [...(post.likesByIds || []), selfProfileId] } : post));
+  const toggleSave = (id) => { setSavedIds((items) => items.includes(id) ? items.filter((item) => item !== id) : [...items, id]); setToast(savedIds.includes(id) ? "Removed from your saved places." : "Saved to your trip list."); };
+  const addComment = (postId, body) => updatePosts((items) => items.map((post) => post.id === postId ? { ...post, commentsData: [...(post.commentsData || []), { id: `comment-${Date.now()}`, authorId: selfProfileId, body, timeLabel: "Just now" }] } : post));
+  const deleteComment = (postId, commentId) => updatePosts((items) => items.map((post) => post.id === postId ? { ...post, commentsData: (post.commentsData || []).filter((item) => item.id !== commentId) } : post));
+  const deletePost = (id) => { if (!window.confirm("Delete this trip note?")) return; updatePosts((items) => items.filter((post) => post.id !== id)); setSavedIds((items) => items.filter((item) => item !== id)); setToast("Trip note deleted."); };
+  const publishPost = (event) => {
+    event.preventDefault();
+    if (!draft.trim()) return;
+    const location = draftPlace.trim() || "Somewhere on the way";
+    const linkedPlace = mapPlaces.find((place) => location.toLowerCase().includes(place.city.toLowerCase()));
+    updatePosts((items) => [{
+      id: `post-${Date.now()}`,
+      authorId: selfProfileId,
+      caption: draft.trim(),
+      location,
+      ...(linkedPlace ? { lat: linkedPlace.lat, lon: linkedPlace.lon, placeId: linkedPlace.id } : {}),
+      timeLabel: "Just now",
+      mood: "Trip note",
+      imageKey: photoKey,
+      hasImage: true,
+      likesByIds: [],
+      commentsData: [],
+    }, ...items]);
+    setDraft(""); setDraftPlace(""); setToast("Your travel note is on the map.");
   };
-
-  const openOwnProfile = () => {
-    setProfileViewMode("self");
-    setActiveTab("profile");
-    setPendingPanelFocus(true);
-    history.push("/demo/profile");
+  const sendMessage = (event) => { event.preventDefault(); if (!chatDraft.trim() || !activeChat) return; const body = chatDraft.trim(); setState((current) => ({ ...current, conversations: current.conversations.map((thread) => thread.id === activeChat.id ? { ...thread, messages: [...thread.messages, { id: `message-${Date.now()}`, senderId: selfProfileId, body, timeLabel: "Just now" }] } : thread) })); setChatDraft(""); };
+  const toggleGroup = (id) => setState((current) => ({ ...current, groups: current.groups.map((group) => group.id === id ? { ...group, memberIds: group.memberIds.includes(selfProfileId) ? group.memberIds.filter((member) => member !== selfProfileId) : [...group.memberIds, selfProfileId] } : group) }));
+  const saveProfile = (event) => { event.preventDefault(); setState((current) => ({ ...current, profile: { ...current.profile, ...profileDraft } })); setProfileEditing(false); setToast("Your traveller profile is updated."); };
+  const sharePost = async (post) => { try { if (navigator.clipboard) await navigator.clipboard.writeText(`${post.location || "Trip note"} — ${post.caption}`); setToast("Trip note copied."); } catch { setToast("Trip note ready to share."); } };
+  const person = profiles.self;
+  const viewedProfile = profiles[viewingProfileId] || person;
+  const isOwnProfile = viewedProfile.id === selfProfileId;
+  const totalMessages = state.conversations.reduce((sum, thread) => sum + thread.messages.length, 0);
+  const totalLikes = posts.reduce((sum, post) => sum + post.likes, 0);
+  const totalComments = posts.reduce((sum, post) => sum + post.commentsData.length, 0);
+  const totalMembers = state.groups.reduce((sum, group) => sum + group.memberIds.length, 0);
+  const currentPeopleIds = new Set(people.map((traveler) => traveler.id));
+  const totalConnections = new Set([
+    ...(state.profile.followingIds || []),
+    ...people.filter((traveler) => (traveler.followingIds || []).includes(selfProfileId)).map((traveler) => traveler.id),
+  ].filter((personId) => currentPeopleIds.has(personId))).size;
+  const uniqueTripLocations = new Set(posts.map((post) => (post.location || "").trim().toLowerCase()).filter(Boolean)).size;
+  const savedPostCount = posts.filter((post) => savedIds.includes(post.id)).length;
+  const topPlace = trendingPlaces[0] || null;
+  const topPost = posts.reduce((best, post) => !best || post.likes + post.commentsData.length > best.likes + best.commentsData.length ? post : best, null);
+  const busiestThread = state.conversations.reduce((best, thread) => !best || thread.messages.length > best.messages.length ? thread : best, null);
+  const currentTab = routeTab === "admin" ? "insights" : routeTab;
+  const tripCountForProfile = (profileId) => new Set(posts
+    .filter((post) => post.authorId === profileId)
+    .map((post) => (post.location || "").trim().toLowerCase())
+    .filter(Boolean)).size;
+  const addMapPlace = (place) => {
+    setState((current) => ({ ...current, places: [...(current.places || []), place] }));
+    setSelectedPlace(place);
+    setToast(`${place.city} is on your travel map.`);
   };
-
-  const openProfile = (personId) => {
-    if (!personId || personId === selfProfileId) {
-      openOwnProfile();
-      return;
+  const removeMapPlace = (placeId) => {
+    const removed = (state.places || []).find((place) => place.id === placeId);
+    setState((current) => ({ ...current, places: (current.places || []).filter((place) => place.id !== placeId) }));
+    if (removed) {
+      setSavedIds((current) => current.filter((id) => id !== `place-${removed.city}`));
+      setSelectedPlace(destinations[0]);
+      setToast(`${removed.city} was removed from your map.`);
     }
-
-    setSelectedPersonId(personId);
-    setProfileViewMode("person");
-    setActiveTab("profile");
-    setPendingPanelFocus(true);
-    history.push("/demo/profile");
+  };
+  const writeNoteFromPlace = (place) => {
+    setDraftPlace(`${place.city}, ${place.country}`);
+    go("timeline");
   };
 
-  const openProfileById = (profileId) => {
-    if (profileId === selfProfileId) {
-      openOwnProfile();
-      return;
-    }
-    openProfile(profileId);
-  };
-
-  const goToTab = (tab) => {
-    if (tab === "profile") {
-      openOwnProfile();
-      return;
-    }
-
-    setActiveTab(tab);
-    setPendingPanelFocus(true);
-    history.push(`/demo/${tab}`);
-  };
-
-  const openGroup = (groupId) => {
-    if (!groupId) return;
-    setSelectedGroupId(groupId);
-    setActiveTab("groups");
-    setPendingPanelFocus(true);
-    history.push("/demo/groups");
-  };
-
-  const addPost = async () => {
-    const caption = draftPost.trim();
-    if (!caption || pendingPost) return;
-
-    setPendingPost(true);
-    await waitForPolish();
-
-    updatePosts((posts) => [
-      {
-        id: `post-${Date.now()}`,
-        authorId: selfProfileId,
-        caption,
-        timeLabel: "Just now",
-        mood: "New",
-        hasImage: false,
-        likesByIds: [],
-        commentsData: [],
-      },
-      ...posts,
-    ]);
-
-    setDraftPost("");
-    setPendingPost(false);
-    setStatusMessage("Post published.");
-  };
-
-  const deletePost = (postId) => {
-    const postToDelete = demoState.posts.find((post) => post.id === postId);
-    if (!postToDelete || postToDelete.authorId !== selfProfileId) return;
-
-    const confirmed = window.confirm("Delete this post from your demo feed?");
-    if (!confirmed) return;
-
-    updatePosts((posts) => posts.filter((post) => post.id !== postId));
-    setCommentDrafts((state) => {
-      const next = { ...state };
-      delete next[postId];
-      return next;
-    });
-    setExpandedPostId((current) => (current === postId ? null : current));
-    setOpenPostMenuId(null);
-    setPendingPanelFocus(true);
-    setStatusMessage("Post deleted.");
-  };
-
-  const toggleLike = (postId) => {
-    const targetPost = decoratedPosts.find((post) => post.id === postId);
-    if (!targetPost) return;
-
-    updatePosts((posts) =>
-      posts.map((post) => {
-        if (post.id !== postId) return post;
-        const likesByIds = post.likesByIds || [];
-        const nextLikes = likesByIds.includes(selfProfileId)
-          ? likesByIds.filter((id) => id !== selfProfileId)
-          : [...likesByIds, selfProfileId];
-        return { ...post, likesByIds: nextLikes };
-      })
-    );
-
-    setStatusMessage(targetPost.likedByMe ? "Like removed." : "Post liked.");
-  };
-
-  const setCommentDraft = (postId, value) => {
-    setCommentDrafts((state) => ({ ...state, [postId]: value }));
-  };
-
-  const submitComment = async (postId) => {
-    const body = (commentDrafts[postId] || "").trim();
-    if (!body || pendingCommentPostId === postId) return;
-
-    setPendingCommentPostId(postId);
-    await waitForPolish();
-
-    updatePosts((posts) =>
-      posts.map((post) =>
-        post.id !== postId
-          ? post
-          : {
-              ...post,
-              commentsData: [
-                ...(post.commentsData || []),
-                {
-                  id: `comment-${Date.now()}`,
-                  authorId: selfProfileId,
-                  body,
-                  timeLabel: "Just now",
-                },
-              ],
-            }
-      )
-    );
-
-    setCommentDrafts((state) => ({ ...state, [postId]: "" }));
-    setExpandedPostId(postId);
-    setPendingCommentPostId(null);
-    setStatusMessage("Comment added.");
-  };
-
-  const deleteComment = (postId, commentId) => {
-    updatePosts((posts) =>
-      posts.map((post) =>
-        post.id !== postId
-          ? post
-          : {
-              ...post,
-              commentsData: (post.commentsData || []).filter((comment) => comment.id !== commentId),
-            }
-      )
-    );
-
-    setStatusMessage("Comment deleted.");
-  };
-
-  const toggleFollow = (personId) => {
-    const person = profilesById[personId];
-    if (!person || person.id === selfProfileId) return;
-
-    updateDemoState((state) => {
-      const currentIds = Array.isArray(state.profile.followingIds) ? state.profile.followingIds : [];
-      const nextFollowingIds = currentIds.includes(personId)
-        ? currentIds.filter((id) => id !== personId)
-        : [...currentIds, personId];
-
-      return {
-        ...state,
-        profile: {
-          ...state.profile,
-          followingIds: nextFollowingIds,
-        },
-        people: state.people.map((entry) =>
-          entry.id !== personId
-            ? entry
-            : {
-                ...entry,
-                isFollowing: nextFollowingIds.includes(personId),
-              }
-        ),
-      };
-    });
-
-    setStatusMessage(
-      selfFollowingIds.includes(personId) ? `Unfollowed ${person.name}.` : `Following ${person.name}.`
-    );
-  };
-
-  const openConversationForProfile = (personId) => {
-    if (!personId || personId === selfProfileId) {
-      goToTab("messages");
-      return;
-    }
-
-    const existing = demoState.conversations.find((item) => item.profileId === personId);
-    if (existing) {
-      setActiveConversationId(existing.id);
-    } else {
-      const person = profilesById[personId];
-      if (person) {
-        const newConversation = {
-          id: `chat-${Date.now()}`,
-          profileId: personId,
-          messages: [
-            {
-              id: `message-${Date.now()}`,
-              senderId: personId,
-              body: `Started a fresh demo thread with ${person.name}.`,
-              timeLabel: "Just now",
-            },
-          ],
-        };
-
-        updateConversations((conversations) => [newConversation, ...conversations]);
-        setActiveConversationId(newConversation.id);
-      }
-    }
-
-    setActiveTab("messages");
-    setPendingPanelFocus(true);
-    history.push("/demo/messages");
-  };
-
-  const saveProfile = async () => {
-    if (pendingProfile) return;
-
-    setPendingProfile(true);
-    await waitForPolish();
-
-    updateDemoState((state) => ({
-      ...state,
-      profile: {
-        ...state.profile,
-        ...profileDraft,
-        followingIds: state.profile.followingIds || [],
-      },
-    }));
-
-    setPendingProfile(false);
-    setStatusMessage("Profile saved.");
-  };
-
-  const sendMessage = async () => {
-    const body = chatDraft.trim();
-    if (!body || !activeConversation || pendingMessage) return;
-
-    setPendingMessage(true);
-    await waitForPolish();
-
-    updateConversations((conversations) =>
-      conversations.map((conversation) =>
-        conversation.id !== activeConversation.id
-          ? conversation
-          : {
-              ...conversation,
-              messages: [
-                ...(conversation.messages || []),
-                {
-                  id: `message-${Date.now()}`,
-                  senderId: selfProfileId,
-                  body,
-                  timeLabel: "Just now",
-                },
-              ],
-            }
-      )
-    );
-
-    setChatDraft("");
-    setPendingMessage(false);
-    setStatusMessage("Message sent.");
-  };
-
-  const toggleGroupMembership = (groupId) => {
-    const group = groupsById[groupId];
-    if (!group) return;
-
-    const isMember = (group.memberIds || []).includes(selfProfileId);
-    updateGroups((groups) =>
-      groups.map((item) =>
-        item.id !== groupId
-          ? item
-          : {
-              ...item,
-              memberIds: isMember
-                ? (item.memberIds || []).filter((id) => id !== selfProfileId)
-                : [...new Set([...(item.memberIds || []), selfProfileId])],
-            }
-      )
-    );
-
-    setStatusMessage(isMember ? `Left ${group.name}.` : `Joined ${group.name}.`);
-  };
-
-  const restoreDemo = async () => {
-    if (pendingReset) return;
-
-    setPendingReset(true);
-    await waitForPolish(260);
-
-    const restored = resetDemoState();
-    setDemoState(restored);
-    setProfileDraft(restored.profile);
-    setProfileViewMode("self");
-    setSelectedPersonId(restored.people[0]?.id || null);
-    setSelectedGroupId(restored.groups[0]?.id || null);
-    setActiveConversationId(restored.conversations[0]?.id || null);
-    setExpandedPostId(null);
-    setDraftPost("");
-    setChatDraft("");
-    setSearchTerm("");
-    setCommentDrafts({});
-    setOpenPostMenuId(null);
-    setPendingPanelFocus(true);
-    history.push("/demo/timeline");
-    setPendingReset(false);
-    setStatusMessage("Demo state restored.");
-  };
-
-  const sharePost = async (postId) => {
-    const shareUrl = `${window.location.origin}/demo/timeline#${postId}`;
-
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(shareUrl);
-        setStatusMessage("Share link copied.");
-        return;
-      }
-    } catch {
-      // Ignore clipboard issues and fall back to a status message.
-    }
-
-    setStatusMessage(`Share link ready: ${shareUrl}`);
-  };
-
-  const renderProfileLink = (profile, options = {}) => {
-    if (!profile) return null;
-
-    const {
-      meta,
-      size = "md",
-      className = "",
-      compact = false,
-      trailing,
-      label,
-      key,
-    } = options;
-
-    return (
-      <button
-        key={key || profile.id}
-        type="button"
-        className={`portfolio-profile-link ${compact ? "compact" : ""} ${className}`.trim()}
-        onClick={() => openProfileById(profile.id)}
-        aria-label={label || `Open ${profile.name}'s profile`}
-      >
-        <Avatar name={profile.name} size={size} accent={profile.accent} />
-        <span className="portfolio-profile-link-copy">
-          <strong>{profile.name}</strong>
-          <small>{meta || `@${profile.username}`}</small>
-        </span>
-        {trailing ? <span className="portfolio-profile-link-trailing">{trailing}</span> : null}
-      </button>
-    );
-  };
-
-  const renderPostCard = (post, index = 0, options = {}) => {
-    const showGroupLink = options.showGroupLink !== false;
-    const commentInputId = `comment-input-${post.id}`;
-    const menuId = `post-menu-${post.id}`;
-    const isCommentsOpen = expandedPostId === post.id;
-    const commentDraft = commentDrafts[post.id] || "";
-
-    return (
-      <motion.article key={post.id} {...listMotion(index)} className="portfolio-post-card">
-        <div className="portfolio-post-head">
-          {renderProfileLink(post.author, {
-            meta: post.timeLabel,
-            className: "portfolio-post-author",
-            label: `Open ${post.author.name}'s profile`,
-          })}
-          <div className="portfolio-post-head-actions">
-            {post.group && showGroupLink ? (
-              <button
-                type="button"
-                className="portfolio-inline-chip interactive"
-                onClick={() => openGroup(post.group.id)}
-              >
-                {post.group.name}
-              </button>
-            ) : null}
-            <span className="portfolio-inline-chip">{post.mood}</span>
-            {post.isMine ? (
-              <div className="portfolio-post-menu">
-                <button
-                  type="button"
-                  className="portfolio-post-menu-trigger"
-                  ref={(node) => {
-                    menuTriggerRefs.current[post.id] = node;
-                  }}
-                  onClick={() =>
-                    setOpenPostMenuId((current) => (current === post.id ? null : post.id))
-                  }
-                  aria-expanded={openPostMenuId === post.id}
-                  aria-controls={menuId}
-                  aria-label={`Open actions for ${post.caption.slice(0, 24) || "this post"}`}
-                >
-                  <span />
-                  <span />
-                  <span />
-                </button>
-                <AnimatePresence>
-                  {openPostMenuId === post.id ? (
-                    <motion.div {...cardMotion} id={menuId} className="portfolio-post-menu-popover" role="menu">
-                      <button type="button" role="menuitem" onClick={() => sharePost(post.id)}>
-                        Copy share link
-                      </button>
-                      <button type="button" role="menuitem" onClick={() => deletePost(post.id)}>
-                        Delete post
-                      </button>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <p className="portfolio-post-copy">{post.caption}</p>
-
-        {post.hasImage ? (
-          <SafeMediaImage
-            src={post.imageUrl}
-            alt={`${post.author.name} shared on SquarePad`}
-            label={`${post.author.name} post`}
-            className="portfolio-post-image"
-            height={220}
-          />
-        ) : null}
-
-        <div className="portfolio-post-stats">
-          <span>{pluralize(post.likes, "like")}</span>
-          <span>{pluralize(post.comments, "comment")}</span>
-        </div>
-
-        <div className="portfolio-reaction-row">
-          {reactionDefs.map((reaction) => {
-            if (reaction.key === "like") {
-              return (
-                <button
-                  key={reaction.key}
-                  type="button"
-                  className={`portfolio-reaction-pill ${post.likedByMe ? "active" : ""}`}
-                  onClick={() => toggleLike(post.id)}
-                  aria-pressed={post.likedByMe}
-                >
-                  <ReactionIcon type={reaction.icon} />
-                  <span>{reaction.label}</span>
-                </button>
-              );
-            }
-
-            if (reaction.key === "comment") {
-              return (
-                <button
-                  key={reaction.key}
-                  type="button"
-                  className={`portfolio-reaction-pill ${isCommentsOpen ? "active" : ""}`}
-                  onClick={() => setExpandedPostId((current) => (current === post.id ? null : post.id))}
-                  aria-pressed={isCommentsOpen}
-                  aria-controls={`comments-${post.id}`}
-                >
-                  <ReactionIcon type={reaction.icon} />
-                  <span>{reaction.label}</span>
-                </button>
-              );
-            }
-
-            return (
-              <button
-                key={reaction.key}
-                type="button"
-                className="portfolio-reaction-pill"
-                onClick={() => sharePost(post.id)}
-              >
-                <ReactionIcon type={reaction.icon} />
-                <span>{reaction.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        <AnimatePresence initial={false}>
-          {isCommentsOpen ? (
-            <motion.div {...cardMotion} id={`comments-${post.id}`} className="portfolio-comments-panel">
-              <div className="portfolio-comments-list">
-                {post.commentsData.length > 0 ? (
-                  post.commentsData.map((comment) => (
-                    <div key={comment.id} className="portfolio-comment-item">
-                      {renderProfileLink(comment.author, {
-                        meta: comment.timeLabel,
-                        className: "portfolio-comment-author",
-                        compact: true,
-                      })}
-                      <p className="portfolio-comment-body">{comment.body}</p>
-                      {comment.isMine ? (
-                        <button
-                          type="button"
-                          className="portfolio-comment-delete"
-                          onClick={() => deleteComment(post.id, comment.id)}
-                          aria-label="Delete your comment"
-                        >
-                          Delete
-                        </button>
-                      ) : null}
-                    </div>
-                  ))
-                ) : (
-                  <div className="portfolio-empty-state compact">
-                    <strong className="portfolio-empty-title">No comments yet</strong>
-                    <p className="portfolio-empty-copy">
-                      Start the conversation to show how this post performs in the demo.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="portfolio-comment-form">
-                <label className="portfolio-sr-only" htmlFor={commentInputId}>
-                  Add a comment
-                </label>
-                <Input
-                  id={commentInputId}
-                  className="portfolio-input"
-                  placeholder="Add a comment"
-                  value={commentDraft}
-                  onChange={(event) => setCommentDraft(post.id, event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      submitComment(post.id);
-                    }
-                  }}
-                />
-                <Button
-                  className={pendingCommentPostId === post.id ? "portfolio-primary-btn is-loading" : "portfolio-primary-btn"}
-                  disabled={!commentDraft.trim() || pendingCommentPostId === post.id}
-                  onClick={() => submitComment(post.id)}
-                >
-                  {pendingCommentPostId === post.id ? (
-                    <>
-                      <span className="portfolio-btn-spinner" aria-hidden="true" />
-                      Posting...
-                    </>
-                  ) : (
-                    "Post comment"
-                  )}
-                </Button>
-              </div>
-            </motion.div>
-          ) : null}
-        </AnimatePresence>
-      </motion.article>
-    );
-  };
-
-  const renderTimeline = () => (
-    <Row className="portfolio-content-grid">
-      <Col xl="4" lg="12" className="mb-4">
-        <motion.div {...cardMotion}>
-          <Card className="portfolio-shell-card portfolio-stage-card">
-            <CardBody>
-              <div className="portfolio-section-head">
-                <span className="portfolio-dot" />
-                <h2 className="portfolio-eyebrow mb-0">Compose</h2>
-              </div>
-              {renderProfileLink(selfProfile, {
-                meta: "Publishing locally in portfolio mode",
-                className: "portfolio-composer-identity",
-              })}
-              <FormGroup className="mt-3 mb-3">
-                <label className="portfolio-field-label" htmlFor="timeline-post-input">
-                  Publish post
-                </label>
-                <Input
-                  id="timeline-post-input"
-                  type="textarea"
-                  rows="5"
-                  className="portfolio-input"
-                  placeholder="Share a product insight, a launch note, or something reviewers should remember."
-                  value={draftPost}
-                  onChange={(event) => setDraftPost(event.target.value)}
-                  aria-describedby="timeline-post-hint"
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && event.ctrlKey) {
-                      addPost();
-                    }
-                  }}
-                />
-              </FormGroup>
-              <div className="portfolio-card-meta">
-                <span className="portfolio-inline-chip" id="timeline-post-hint">
-                  Ctrl + Enter publishes instantly
-                </span>
-                <Button
-                  className={pendingPost ? "portfolio-primary-btn is-loading" : "portfolio-primary-btn"}
-                  onClick={addPost}
-                  disabled={!draftPost.trim() || pendingPost}
-                >
-                  {pendingPost ? (
-                    <>
-                      <span className="portfolio-btn-spinner" aria-hidden="true" />
-                      Publishing...
-                    </>
-                  ) : (
-                    "Publish post"
-                  )}
-                </Button>
-              </div>
-            </CardBody>
-          </Card>
-        </motion.div>
-
-        <motion.div {...cardMotion} transition={{ ...cardMotion.transition, delay: 0.06 }}>
-          <Card className="portfolio-shell-card portfolio-support-card mt-4">
-            <CardBody>
-              <div className="portfolio-section-head">
-                <span className="portfolio-dot" />
-                <h2 className="portfolio-eyebrow mb-0">Following</h2>
-              </div>
-              <p className="portfolio-muted-copy mb-3">
-                Your follow graph drives profile buttons, group membership, counts, and thread entry points.
-              </p>
-              <div className="portfolio-mini-stack">
-                {followedProfiles.length > 0 ? (
-                  followedProfiles.map((person) =>
-                    renderProfileLink(person, {
-                      key: person.id,
-                      meta: person.status,
-                      className: "portfolio-mini-person",
-                      compact: true,
-                    })
-                  )
-                ) : (
-                  <div className="portfolio-empty-state compact">
-                    <strong className="portfolio-empty-title">You are not following anyone yet</strong>
-                    <p className="portfolio-empty-copy">
-                      Open a profile and follow someone to populate this section.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardBody>
-          </Card>
-        </motion.div>
-      </Col>
-
-      <Col xl="8" lg="12">
-        <div className="portfolio-post-list">
-          {filteredPosts.length > 0 ? (
-            filteredPosts.map((post, index) => renderPostCard(post, index))
-          ) : (
-            <Card className="portfolio-shell-card portfolio-empty-card">
-              <CardBody>
-                <div className="portfolio-empty-state">
-                  <p className="portfolio-eyebrow mb-2">Timeline</p>
-                  <strong className="portfolio-empty-title">
-                    {searchTerm ? "No posts match this search" : "The timeline is empty"}
-                  </strong>
-                  <p className="portfolio-empty-copy">
-                    {searchTerm
-                      ? "Try another keyword or clear the search to bring the feed back into view."
-                      : "Publish a post to repopulate the feed."}
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-          )}
-        </div>
-      </Col>
-    </Row>
-  );
-
-  const renderProfile = () => {
-    const followersCount = followerCountsById[viewedProfile.id] || 0;
-    const followingCount =
-      viewedProfile.id === selfProfileId
-        ? selfFollowingIds.length
-        : (viewedProfile.followingIds || []).length;
-
-    return (
-      <Row className="portfolio-content-grid">
-        <Col xl="4" lg="12" className="mb-4">
-          <motion.div {...cardMotion}>
-            <Card className="portfolio-shell-card portfolio-stage-card">
-              <CardBody>
-                <SafeMediaImage
-                  src={viewedProfile.coverImageUrl}
-                  alt={`${viewedProfile.name} cover`}
-                  label={viewedProfile.name}
-                  className="portfolio-profile-cover"
-                  height={160}
-                />
-                <div className="portfolio-profile-hero">
-                  {renderProfileLink(viewedProfile, {
-                    size: "lg",
-                    meta: viewedProfile.location,
-                    className: "portfolio-profile-identity",
-                  })}
-                  <Badge className="portfolio-badge-soft mt-3">{viewedProfile.role}</Badge>
-                  <p className="portfolio-muted-copy mt-3 mb-0">{viewedProfile.bio}</p>
-                </div>
-
-                <div className="portfolio-stat-row">
-                  <div className="portfolio-stat-card">
-                    <strong>{viewedProfilePosts.length}</strong>
-                    <span>Posts</span>
-                  </div>
-                  <div className="portfolio-stat-card">
-                    <strong>{followersCount}</strong>
-                    <span>Followers</span>
-                  </div>
-                  <div className="portfolio-stat-card">
-                    <strong>{followingCount}</strong>
-                    <span>Following</span>
-                  </div>
-                </div>
-
-                {isPersonProfileView ? (
-                  <div className="portfolio-action-row mt-3">
-                    <Button
-                      className={viewedProfile.isFollowing ? "portfolio-secondary-btn" : "portfolio-primary-btn"}
-                      onClick={() => toggleFollow(viewedProfile.id)}
-                      aria-pressed={viewedProfile.isFollowing}
-                    >
-                      {viewedProfile.isFollowing ? "Following" : "Follow"}
-                    </Button>
-                    <Button className="portfolio-secondary-btn" onClick={() => openConversationForProfile(viewedProfile.id)}>
-                      Message
-                    </Button>
-                    <Button className="portfolio-ghost-btn" onClick={openOwnProfile}>
-                      View my profile
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="portfolio-card-meta mt-3">
-                    <span className="portfolio-inline-chip">Everything here updates app-wide</span>
-                    <Button className="portfolio-secondary-btn" onClick={() => goToTab("timeline")}>
-                      Open composer
-                    </Button>
-                  </div>
-                )}
-              </CardBody>
-            </Card>
-          </motion.div>
-
-          <motion.div {...cardMotion} transition={{ ...cardMotion.transition, delay: 0.06 }}>
-            <Card className="portfolio-shell-card portfolio-support-card mt-4">
-              <CardBody>
-                <div className="portfolio-section-head">
-                  <span className="portfolio-dot" />
-                  <h2 className="portfolio-eyebrow mb-0">People</h2>
-                </div>
-                <div className="portfolio-mini-stack mt-3">
-                  {peopleProfiles.map((person) =>
-                    renderProfileLink(person, {
-                      key: person.id,
-                      meta: `${followerCountsById[person.id] || 0} followers`,
-                      className:
-                        isPersonProfileView && selectedPerson?.id === person.id
-                          ? "portfolio-mini-person is-active"
-                          : "portfolio-mini-person",
-                      compact: true,
-                      trailing: person.status,
-                    })
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          </motion.div>
-        </Col>
-
-        <Col xl="8" lg="12">
-          {!isPersonProfileView ? (
-            <Row>
-              <Col lg="7" className="mb-4">
-                <motion.div {...cardMotion}>
-                  <Card className="portfolio-shell-card portfolio-stage-card">
-                    <CardBody>
-                      <div className="portfolio-section-head">
-                        <span className="portfolio-dot" />
-                        <h2 className="portfolio-eyebrow mb-0">Edit profile</h2>
-                      </div>
-                      <Row className="mt-2">
-                        <Col md="6">
-                          <FormGroup>
-                            <label className="portfolio-field-label" htmlFor="profile-display-name">
-                              Display name
-                            </label>
-                            <Input
-                              id="profile-display-name"
-                              className="portfolio-input"
-                              value={profileDraft.name}
-                              onChange={(event) =>
-                                setProfileDraft({ ...profileDraft, name: event.target.value })
-                              }
-                            />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup>
-                            <label className="portfolio-field-label" htmlFor="profile-username">
-                              Username
-                            </label>
-                            <Input
-                              id="profile-username"
-                              className="portfolio-input"
-                              value={profileDraft.username}
-                              onChange={(event) =>
-                                setProfileDraft({
-                                  ...profileDraft,
-                                  username: event.target.value.replace(/\s+/g, ""),
-                                })
-                              }
-                            />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <Row>
-                        <Col md="6">
-                          <FormGroup>
-                            <label className="portfolio-field-label" htmlFor="profile-role">
-                              Role
-                            </label>
-                            <Input
-                              id="profile-role"
-                              className="portfolio-input"
-                              value={profileDraft.role}
-                              onChange={(event) =>
-                                setProfileDraft({ ...profileDraft, role: event.target.value })
-                              }
-                            />
-                          </FormGroup>
-                        </Col>
-                        <Col md="6">
-                          <FormGroup>
-                            <label className="portfolio-field-label" htmlFor="profile-location">
-                              Location
-                            </label>
-                            <Input
-                              id="profile-location"
-                              className="portfolio-input"
-                              value={profileDraft.location}
-                              onChange={(event) =>
-                                setProfileDraft({ ...profileDraft, location: event.target.value })
-                              }
-                            />
-                          </FormGroup>
-                        </Col>
-                      </Row>
-                      <FormGroup>
-                        <label className="portfolio-field-label" htmlFor="profile-bio">
-                          Bio
-                        </label>
-                        <Input
-                          id="profile-bio"
-                          type="textarea"
-                          rows="4"
-                          className="portfolio-input"
-                          value={profileDraft.bio}
-                          onChange={(event) =>
-                            setProfileDraft({ ...profileDraft, bio: event.target.value })
-                          }
-                        />
-                      </FormGroup>
-                      <div className="portfolio-card-meta">
-                        <span className="portfolio-inline-chip">
-                          Saving here updates your posts, comments, and message identity everywhere.
-                        </span>
-                        <Button
-                          className={pendingProfile ? "portfolio-primary-btn is-loading" : "portfolio-primary-btn"}
-                          onClick={saveProfile}
-                          disabled={pendingProfile}
-                        >
-                          {pendingProfile ? (
-                            <>
-                              <span className="portfolio-btn-spinner" aria-hidden="true" />
-                              Saving...
-                            </>
-                          ) : (
-                            "Save profile"
-                          )}
-                        </Button>
-                      </div>
-                    </CardBody>
-                  </Card>
-                </motion.div>
-              </Col>
-
-              <Col lg="5" className="mb-4">
-                <motion.div {...cardMotion} transition={{ ...cardMotion.transition, delay: 0.06 }}>
-                  <Card className="portfolio-shell-card portfolio-support-card">
-                    <CardBody>
-                      <div className="portfolio-section-head">
-                        <span className="portfolio-dot" />
-                        <h2 className="portfolio-eyebrow mb-0">Appearance</h2>
-                      </div>
-                      <p className="portfolio-muted-copy mt-3 mb-3">
-                        Use the brighter glass theme by default, or switch into the darker workspace when you want a more dramatic presentation.
-                      </p>
-                      <div className="portfolio-theme-toggle" role="group" aria-label="Theme selection">
-                        <button
-                          type="button"
-                          className={activeTheme === "light" ? "active" : ""}
-                          onClick={() => setTheme("light")}
-                          aria-pressed={activeTheme === "light"}
-                        >
-                          Light
-                        </button>
-                        <button
-                          type="button"
-                          className={activeTheme === "dark" ? "active" : ""}
-                          onClick={() => setTheme("dark")}
-                          aria-pressed={activeTheme === "dark"}
-                        >
-                          Dark
-                        </button>
-                      </div>
-                      <div className="portfolio-card-meta mt-4">
-                        <span className="portfolio-inline-chip">Theme is persisted locally</span>
-                        <Button
-                          className={pendingReset ? "portfolio-secondary-btn is-loading" : "portfolio-secondary-btn"}
-                          onClick={restoreDemo}
-                          disabled={pendingReset}
-                        >
-                          {pendingReset ? (
-                            <>
-                              <span className="portfolio-btn-spinner" aria-hidden="true" />
-                              Resetting...
-                            </>
-                          ) : (
-                            "Reset demo state"
-                          )}
-                        </Button>
-                      </div>
-                    </CardBody>
-                  </Card>
-                </motion.div>
-              </Col>
-            </Row>
-          ) : null}
-
-          <Card className="portfolio-shell-card portfolio-stage-card">
-            <CardBody>
-              <div className="portfolio-section-head">
-                <span className="portfolio-dot" />
-                <h2 className="portfolio-eyebrow mb-0">
-                  {isPersonProfileView ? `${viewedProfile.name}'s posts` : "Your posts"}
-                </h2>
-              </div>
-              <div className="portfolio-post-list mt-3">
-                {viewedProfilePosts.length > 0 ? (
-                  viewedProfilePosts.map((post, index) =>
-                    renderPostCard(post, index, { showGroupLink: true })
-                  )
-                ) : (
-                  <div className="portfolio-empty-state">
-                    <strong className="portfolio-empty-title">No posts here yet</strong>
-                    <p className="portfolio-empty-copy">
-                      {isPersonProfileView
-                        ? `${viewedProfile.name} has not posted in this demo yet.`
-                        : "Publish something from the timeline and it will appear here instantly."}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardBody>
-          </Card>
-        </Col>
-      </Row>
-    );
-  };
-
-  const renderMessages = () => (
-    <Row className="portfolio-content-grid">
-      <Col xl="4" lg="12" className="mb-4">
-        <motion.div {...cardMotion}>
-          <Card className="portfolio-shell-card portfolio-stage-card">
-            <CardBody>
-              <div className="portfolio-section-head">
-                <span className="portfolio-dot" />
-                <h2 className="portfolio-eyebrow mb-0">Thread focus</h2>
-              </div>
-              {activeConversation ? (
-                <>
-                  <SafeMediaImage
-                    src={activeThreadProfile.coverImageUrl}
-                    alt={`${activeThreadProfile.name} cover`}
-                    label={activeThreadProfile.name}
-                    className="portfolio-message-cover"
-                    height={140}
-                  />
-                  <div className="portfolio-message-profile mt-3">
-                    {renderProfileLink(activeThreadProfile, {
-                      size: "lg",
-                      meta: activeThreadProfile.status,
-                      className: "portfolio-message-profile-link",
-                    })}
-                    <p className="portfolio-muted-copy mt-3 mb-0">{activeThreadProfile.bio}</p>
-                  </div>
-                  <div className="portfolio-action-row mt-3">
-                    <Button
-                      className={activeThreadProfile.isFollowing ? "portfolio-secondary-btn" : "portfolio-primary-btn"}
-                      onClick={() => toggleFollow(activeThreadProfile.id)}
-                      aria-pressed={activeThreadProfile.isFollowing}
-                      disabled={activeThreadProfile.id === selfProfileId}
-                    >
-                      {activeThreadProfile.id === selfProfileId
-                        ? "Your profile"
-                        : activeThreadProfile.isFollowing
-                        ? "Following"
-                        : "Follow"}
-                    </Button>
-                    <Button className="portfolio-ghost-btn" onClick={() => openProfileById(activeThreadProfile.id)}>
-                      View profile
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="portfolio-empty-state compact">
-                  <strong className="portfolio-empty-title">No threads yet</strong>
-                  <p className="portfolio-empty-copy">
-                    Open a profile and start messaging to seed the inbox.
-                  </p>
-                </div>
-              )}
-            </CardBody>
-          </Card>
-        </motion.div>
-
-        <motion.div {...cardMotion} transition={{ ...cardMotion.transition, delay: 0.06 }}>
-          <Card className="portfolio-shell-card portfolio-support-card mt-4">
-            <CardBody>
-              <div className="portfolio-section-head">
-                <span className="portfolio-dot" />
-                <h2 className="portfolio-eyebrow mb-0">People</h2>
-              </div>
-              <div className="portfolio-mini-stack mt-3">
-                {peopleProfiles.map((person) =>
-                  renderProfileLink(person, {
-                    key: person.id,
-                    meta: person.status,
-                    className: "portfolio-mini-person",
-                    compact: true,
-                    trailing: "Open profile",
-                  })
-                )}
-              </div>
-            </CardBody>
-          </Card>
-        </motion.div>
-      </Col>
-
-      <Col xl="8" lg="12">
-        <Card className="portfolio-shell-card portfolio-stage-card">
-          <CardBody>
-            <div className="portfolio-section-head">
-              <span className="portfolio-dot" />
-              <h2 className="portfolio-eyebrow mb-0">Inbox</h2>
-            </div>
-
-            <div className="portfolio-messages-shell mt-3">
-              <div className="portfolio-thread-column">
-                {filteredConversations.length > 0 ? (
-                  filteredConversations.map((conversation, index) => (
-                    <motion.button
-                      key={conversation.id}
-                      type="button"
-                      {...listMotion(index)}
-                      className={`portfolio-thread-card ${activeConversationId === conversation.id ? "active" : ""}`}
-                      onClick={() => setActiveConversationId(conversation.id)}
-                      aria-pressed={activeConversationId === conversation.id}
-                    >
-                      <Avatar name={conversation.profile.name} accent={conversation.profile.accent} />
-                      <span className="portfolio-thread-copy">
-                        <span className="portfolio-thread-top">
-                          <strong>{conversation.profile.name}</strong>
-                          <small>{conversation.timeLabel}</small>
-                        </span>
-                        <span>{conversation.preview}</span>
-                      </span>
-                    </motion.button>
-                  ))
-                ) : (
-                  <div className="portfolio-empty-state compact">
-                    <strong className="portfolio-empty-title">No matching threads</strong>
-                    <p className="portfolio-empty-copy">
-                      Clear the search or open a new conversation from a profile.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="portfolio-chat-column">
-                {activeConversation ? (
-                  <>
-                    <div className="portfolio-chat-header">
-                      {renderProfileLink(activeThreadProfile, {
-                        meta: "Local-first demo thread",
-                        className: "portfolio-chat-identity",
-                      })}
-                      <Badge className="portfolio-badge-soft">
-                        {pluralize(activeConversation.messages.length, "message")}
-                      </Badge>
-                    </div>
-
-                    <div className="portfolio-chat-messages">
-                      {activeConversation.messages.map((message, index) => (
-                        <motion.div
-                          key={message.id}
-                          {...listMotion(index)}
-                          className={`portfolio-message-row ${message.isMine ? "mine" : ""}`}
-                        >
-                          {!message.isMine ? (
-                            <button
-                              type="button"
-                              className="portfolio-message-avatar-button"
-                              onClick={() => openProfileById(message.sender.id)}
-                              aria-label={`Open ${message.sender.name}'s profile`}
-                            >
-                              <Avatar name={message.sender.name} accent={message.sender.accent} size="sm" />
-                            </button>
-                          ) : null}
-                          <div className={`portfolio-message-bubble ${message.isMine ? "mine" : ""}`}>
-                            <span className="portfolio-message-name">
-                              {message.isMine ? "You" : message.sender.name}
-                            </span>
-                            <p>{message.body}</p>
-                            <small>{message.timeLabel}</small>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    <div className="portfolio-chat-composer">
-                      <label className="portfolio-sr-only" htmlFor="message-compose-input">
-                        Type a message
-                      </label>
-                      <Input
-                        id="message-compose-input"
-                        className="portfolio-input"
-                        placeholder="Send a message"
-                        value={chatDraft}
-                        onChange={(event) => setChatDraft(event.target.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter") {
-                            event.preventDefault();
-                            sendMessage();
-                          }
-                        }}
-                      />
-                      <Button
-                        className={pendingMessage ? "portfolio-primary-btn is-loading" : "portfolio-primary-btn"}
-                        onClick={sendMessage}
-                        disabled={!chatDraft.trim() || pendingMessage}
-                      >
-                        {pendingMessage ? (
-                          <>
-                            <span className="portfolio-btn-spinner" aria-hidden="true" />
-                            Sending...
-                          </>
-                        ) : (
-                          "Send message"
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="portfolio-empty-state">
-                    <strong className="portfolio-empty-title">No active thread</strong>
-                    <p className="portfolio-empty-copy">
-                      Choose a person to start the conversation view.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-      </Col>
-    </Row>
-  );
-
-  const renderGroups = () => {
-    const currentGroupOwner = currentGroup ? profilesById[currentGroup.ownerId] || selfProfile : null;
-    const currentGroupMembers = currentGroup
-      ? (currentGroup.memberIds || []).map((memberId) => profilesById[memberId]).filter(Boolean)
-      : [];
-    const isCurrentGroupMember = currentGroup
-      ? (currentGroup.memberIds || []).includes(selfProfileId)
-      : false;
-
-    return (
-      <Row className="portfolio-content-grid">
-        <Col xl="5" lg="12" className="mb-4">
-          <motion.div {...cardMotion}>
-            <Card className="portfolio-shell-card portfolio-stage-card">
-              <CardBody>
-                <div className="portfolio-section-head">
-                  <span className="portfolio-dot" />
-                  <h2 className="portfolio-eyebrow mb-0">Communities</h2>
-                </div>
-                <div className="portfolio-group-grid mt-3">
-                  {filteredGroups.length > 0 ? (
-                    filteredGroups.map((group, index) => {
-                      const owner = profilesById[group.ownerId];
-                      const isActive = currentGroup?.id === group.id;
-                      const isMember = (group.memberIds || []).includes(selfProfileId);
-
-                      return (
-                        <motion.button
-                          key={group.id}
-                          type="button"
-                          {...listMotion(index)}
-                          className={`portfolio-group-card ${isActive ? "active" : ""}`}
-                          onClick={() => setSelectedGroupId(group.id)}
-                        >
-                          <SafeMediaImage
-                            src={group.imageUrl}
-                            alt={group.name}
-                            label={group.name}
-                            className="portfolio-group-card-image"
-                            height={116}
-                          />
-                          <span className="portfolio-group-card-copy">
-                            <span className="portfolio-group-card-top">
-                              <Badge className="portfolio-badge-soft">{group.category}</Badge>
-                              <small>{pluralize((group.memberIds || []).length, "member")}</small>
-                            </span>
-                            <strong>{group.name}</strong>
-                            <span>{group.spotlight}</span>
-                            <small>Hosted by {owner?.name || "SquarePad"}</small>
-                          </span>
-                          <span className={`portfolio-group-status ${isMember ? "joined" : ""}`}>
-                            {isMember ? "Joined" : "Preview"}
-                          </span>
-                        </motion.button>
-                      );
-                    })
-                  ) : (
-                    <div className="portfolio-empty-state">
-                      <strong className="portfolio-empty-title">No groups match this search</strong>
-                      <p className="portfolio-empty-copy">
-                        Try a broader keyword to bring the group catalogue back.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardBody>
-            </Card>
-          </motion.div>
-        </Col>
-
-        <Col xl="7" lg="12">
-          {currentGroup ? (
-            <>
-              <motion.div {...cardMotion}>
-                <Card className="portfolio-shell-card portfolio-stage-card">
-                  <CardBody>
-                    <SafeMediaImage
-                      src={currentGroup.imageUrl}
-                      alt={currentGroup.name}
-                      label={currentGroup.name}
-                      className="portfolio-group-cover"
-                      height={184}
-                    />
-                    <div className="portfolio-group-hero">
-                      <div>
-                        <div className="portfolio-section-head mb-2">
-                          <span className="portfolio-dot" />
-                          <h2 className="portfolio-eyebrow mb-0">{currentGroup.category}</h2>
-                        </div>
-                        <h3 className="portfolio-card-title portfolio-group-title">{currentGroup.name}</h3>
-                        <p className="portfolio-muted-copy">{currentGroup.description}</p>
-                      </div>
-                      <div className="portfolio-action-row">
-                        <Button
-                          className={isCurrentGroupMember ? "portfolio-secondary-btn" : "portfolio-primary-btn"}
-                          onClick={() => toggleGroupMembership(currentGroup.id)}
-                          aria-pressed={isCurrentGroupMember}
-                        >
-                          {isCurrentGroupMember ? "Leave group" : "Join group"}
-                        </Button>
-                        <Button className="portfolio-ghost-btn" onClick={() => openProfileById(currentGroup.ownerId)}>
-                          View host
-                        </Button>
-                      </div>
-                    </div>
-
-                    <div className="portfolio-group-meta">
-                      <div className="portfolio-inline-stack">
-                        <span className="portfolio-inline-chip">
-                          {pluralize((currentGroup.memberIds || []).length, "member")}
-                        </span>
-                        <span className="portfolio-inline-chip">{currentGroup.spotlight}</span>
-                      </div>
-                      <div className="portfolio-tag-row">
-                        {(currentGroup.tags || []).map((tag) => (
-                          <span key={tag} className="portfolio-tag">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              </motion.div>
-
-              <Row className="mt-4">
-                <Col lg="5" className="mb-4">
-                  <motion.div {...cardMotion} transition={{ ...cardMotion.transition, delay: 0.06 }}>
-                    <Card className="portfolio-shell-card portfolio-support-card h-100">
-                      <CardBody>
-                        <div className="portfolio-section-head">
-                          <span className="portfolio-dot" />
-                          <h2 className="portfolio-eyebrow mb-0">Members</h2>
-                        </div>
-                        <div className="portfolio-mini-stack mt-3">
-                          {currentGroupMembers.map((member) =>
-                            renderProfileLink(member, {
-                              key: member.id,
-                              meta: member.role,
-                              className: "portfolio-mini-person",
-                              compact: true,
-                              trailing: member.id === currentGroupOwner?.id ? "Host" : null,
-                            })
-                          )}
-                        </div>
-                      </CardBody>
-                    </Card>
-                  </motion.div>
-                </Col>
-
-                <Col lg="7" className="mb-4">
-                  <motion.div {...cardMotion} transition={{ ...cardMotion.transition, delay: 0.1 }}>
-                    <Card className="portfolio-shell-card portfolio-stage-card h-100">
-                      <CardBody>
-                        <div className="portfolio-section-head">
-                          <span className="portfolio-dot" />
-                          <h2 className="portfolio-eyebrow mb-0">Group activity</h2>
-                        </div>
-                        <div className="portfolio-post-list mt-3">
-                          {currentGroupPosts.length > 0 ? (
-                            currentGroupPosts.map((post, index) =>
-                              renderPostCard(post, index, { showGroupLink: false })
-                            )
-                          ) : (
-                            <div className="portfolio-empty-state">
-                              <strong className="portfolio-empty-title">No posts in this group yet</strong>
-                              <p className="portfolio-empty-copy">
-                                Join the group and publish from the timeline with a matching group tag if you want to extend the story later.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </CardBody>
-                    </Card>
-                  </motion.div>
-                </Col>
-              </Row>
-            </>
-          ) : null}
-        </Col>
-      </Row>
-    );
-  };
-
-  const renderAdmin = () => (
-    <Row className="portfolio-content-grid">
-      <Col xl="8" lg="12" className="mb-4">
-        <motion.div {...cardMotion}>
-          <Card className="portfolio-shell-card portfolio-stage-card">
-            <CardBody>
-              <div className="portfolio-section-head">
-                <span className="portfolio-dot" />
-                <h2 className="portfolio-eyebrow mb-0">System snapshot</h2>
-              </div>
-              <Row className="mt-3">
-                {adminSnapshot.metrics.map((metric, index) => (
-                  <Col md="6" className="mb-4" key={metric.label}>
-                    <motion.div {...listMotion(index)} className="portfolio-admin-stat">
-                      <span className="portfolio-admin-stat-label">{metric.label}</span>
-                      <strong>{metric.value}</strong>
-                      <p className="portfolio-admin-stat-detail">{metric.detail}</p>
-                      <Progress value={metric.progress} className="portfolio-progress" />
-                    </motion.div>
-                  </Col>
-                ))}
-              </Row>
-            </CardBody>
-          </Card>
-        </motion.div>
-      </Col>
-
-      <Col xl="4" lg="12" className="mb-4">
-        <motion.div {...cardMotion} transition={{ ...cardMotion.transition, delay: 0.06 }}>
-          <Card className="portfolio-shell-card portfolio-support-card">
-            <CardBody>
-              <div className="portfolio-section-head">
-                <span className="portfolio-dot" />
-                <h2 className="portfolio-eyebrow mb-0">Live insights</h2>
-              </div>
-              <div className="portfolio-mini-stack mt-3">
-                {adminSnapshot.queue.map((item) => (
-                  <div className="portfolio-insight-card" key={item.id}>
-                    <div className="portfolio-insight-top">
-                      <strong>{item.title}</strong>
-                      <Badge className="portfolio-badge-soft">{item.status}</Badge>
-                    </div>
-                    <p>{item.note}</p>
-                  </div>
-                ))}
-              </div>
-            </CardBody>
-          </Card>
-        </motion.div>
-      </Col>
-    </Row>
-  );
-
-  const tabContent = {
-    timeline: renderTimeline(),
-    profile: renderProfile(),
-    messages: renderMessages(),
-    groups: renderGroups(),
-    admin: renderAdmin(),
-  };
+  if (!validDemoTabs.includes(routeTab) || routeTab === "admin") return null;
+
+  const pageInfo = {
+    timeline: ["Feed", "Trip notes from your circle", "Posts, recommendations, and photos shared by people you follow."],
+    explore: ["Explore", "Find your next stop", "Browse places linked to trip notes and local recommendations."],
+    map: ["Traveller map", "Trips on the map", "Add places and see where posts, reactions, and saves are happening."],
+    messages: ["Messages", "Plan a trip together", "Ask about a route, share a tip, or start a conversation."],
+    groups: ["Communities", "Travel groups", "Join discussions about routes, food, walking, and local places."],
+    profile: ["Traveller profile", "Your profile and trip history", "Review your notes, saved places, and people you follow."],
+    insights: ["Community insights", "Activity across Squarepad", "Counts update from posts, reactions, saves, messages, and connections."],
+  }[currentTab];
 
   return (
-    <main className={`portfolio-demo-page theme-${activeTheme}`}>
-      <div className="portfolio-bg-shape shape-one" />
-      <div className="portfolio-bg-shape shape-two" />
-      <div className="portfolio-bg-shape shape-three" />
-
-      <div className="portfolio-live-region portfolio-sr-only" aria-live="polite" aria-atomic="true">
-        {statusMessage}
-      </div>
-
-      <header className="portfolio-appbar">
-        <Container className="portfolio-shell-container">
-          <div className="portfolio-appbar-inner">
-            <div className="portfolio-appbar-brand">
-              <div className="portfolio-appbar-brandmark">
-                <span className="sp-logo-dot" />
-                <strong>SquarePad</strong>
-              </div>
-              <span className="sp-demo-pill">Portfolio Edition</span>
-            </div>
-
-            <nav className="portfolio-nav" aria-label="Demo sections">
-              {validDemoTabs.map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  className={`portfolio-route-pill ${activeTab === tab ? "active" : ""}`}
-                  onClick={() => goToTab(tab)}
-                  aria-current={activeTab === tab ? "page" : undefined}
-                >
-                  {tabMeta[tab].label}
-                </button>
-              ))}
-            </nav>
-
-            <div className="portfolio-appbar-actions">
-              <div className="portfolio-search-shell" role="search">
-                <label className="portfolio-sr-only" htmlFor="demo-search-input">
-                  Search demo content
-                </label>
-                <span className="portfolio-search-icon">/</span>
-                <Input
-                  id="demo-search-input"
-                  className="portfolio-search-input"
-                  placeholder={`Search ${currentMeta.label.toLowerCase()}`}
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                />
-              </div>
-
-              <div className="portfolio-theme-toggle compact" role="group" aria-label="Theme selection">
-                <button
-                  type="button"
-                  className={activeTheme === "light" ? "active" : ""}
-                  onClick={() => setTheme("light")}
-                  aria-pressed={activeTheme === "light"}
-                >
-                  Light
-                </button>
-                <button
-                  type="button"
-                  className={activeTheme === "dark" ? "active" : ""}
-                  onClick={() => setTheme("dark")}
-                  aria-pressed={activeTheme === "dark"}
-                >
-                  Dark
-                </button>
-              </div>
-
-              <Button
-                className={pendingReset ? "portfolio-secondary-btn is-loading" : "portfolio-secondary-btn"}
-                onClick={restoreDemo}
-                disabled={pendingReset}
-              >
-                {pendingReset ? (
-                  <>
-                    <span className="portfolio-btn-spinner" aria-hidden="true" />
-                    Resetting...
-                  </>
-                ) : (
-                  "Reset"
-                )}
-              </Button>
-            </div>
-          </div>
-        </Container>
+    <main className="wayfarer-app">
+      <div className="ambient ambient-one" /><div className="ambient ambient-two" />
+      <header className="topbar">
+        <button className="brand-mark" onClick={() => go("timeline")} aria-label="Squarepad home"><span className="brand-symbol">s</span><span>squarepad<span className="brand-period">.</span></span></button>
+        <div className="topbar-search"><Icon name="search" size={17} /><label className="sr-only" htmlFor="global-search">Search places, people and stories</label><input id="global-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a place, a person, a story..." /></div>
+        <button className="avatar-button" aria-label="Open your profile" onClick={() => go("profile")}><Avatar person={person} size="small" /></button>
+        <button className="mobile-menu-button" onClick={() => setMobileMenu(!mobileMenu)} aria-expanded={mobileMenu} aria-label="Toggle navigation">{mobileMenu ? "Close" : "Menu"}</button>
       </header>
-
-      <section className="portfolio-stage-shell">
-        <Container className="portfolio-shell-container">
-          <motion.div {...cardMotion} className="portfolio-stage-intro">
-            <div className="portfolio-stage-copy">
-              <p className="portfolio-eyebrow">{currentMeta.eyebrow}</p>
-              <h1 className="portfolio-stage-title">{currentMeta.title}</h1>
-              <p className="portfolio-stage-description">{currentMeta.description}</p>
-              <div className="portfolio-inline-stack">
-                <button type="button" className="portfolio-inline-chip interactive" onClick={openOwnProfile}>
-                  My profile
-                </button>
-                <button type="button" className="portfolio-inline-chip interactive" onClick={() => goToTab("timeline")}>
-                  Timeline
-                </button>
-                <button type="button" className="portfolio-inline-chip interactive" onClick={() => goToTab("messages")}>
-                  Messages
-                </button>
+      <div className="app-layout">
+        <aside className={`sidebar ${mobileMenu ? "sidebar-open" : ""}`}>
+          <div className="sidebar-label">YOUR JOURNEY</div>
+          <nav aria-label="Main navigation">{navItems.map(([tab, label, glyph]) => <button key={tab} className={`nav-item ${currentTab === tab ? "active" : ""}`} onClick={() => go(tab)}><span className="nav-glyph" aria-hidden="true">{glyph}</span><span>{label}</span>{tab === "messages" && state.conversations.length > 0 && <span className="nav-count">{state.conversations.length}</span>}</button>)}</nav>
+          <div className="sidebar-spacer" />
+          <div className="sidebar-card">
+            <div className="sidebar-card-top"><span className="online-dot" /> YOUR ACTIVITY</div>
+            <p>{posts.length} trip notes shared across Squarepad.</p>
+            <span className="sidebar-byline">{uniqueTripLocations} locations · {totalConnections} travelers connected</span>
+          </div>
+          <button className="sidebar-profile" onClick={() => go("profile")}><Avatar person={person} size="small" /><span><strong>{person.name}</strong><small>@{person.username}</small></span><span className="profile-chevron">↗</span></button>
+        </aside>
+        <section className="main-column">
+          <div className="page-heading">
+            <div><div className="eyebrow"><span className="eyebrow-line" /> SQUAREPAD · TRAVEL</div><h1>{pageInfo[1]}</h1><p>{pageInfo[2]}</p></div>
+            {currentTab === "map" && <span className="live-label"><i /> {mapPlaces.length} places in atlas</span>}
+          </div>
+          {currentTab === "timeline" && <section className="timeline-page">
+            <div className="story-strip"><div className="story-strip-head"><strong>Stories from your circle</strong><span>STORIES <span className="story-count">{stories.length}</span></span></div><div className="story-row">
+              <button className="story-create" onClick={() => go("profile")}><span className="story-plus">+</span><span>Your story</span></button>
+              {stories.map((story) => { const author = profiles[story.personId]; return <button className="story-card" key={story.id} onClick={() => setActiveStory(story)} style={{ backgroundImage: `linear-gradient(180deg, transparent 30%, rgba(8,17,13,.88)), url(${photos[story.imageKey]})` }} aria-label={`View ${author.name}'s story: ${story.place}`}><span className="story-ring"><Avatar person={author} size="tiny" /></span><span className="story-name">{author.name.split(" ")[0]}</span><span className="story-place">{story.location}</span></button>; })}
+            </div></div>
+            <form className="composer" onSubmit={publishPost}><div className="composer-head"><Avatar person={person} /><div><strong>Share a travel note</strong><span>Add a tip, photo, or place from your trip.</span></div><span className="composer-marker"><Icon name="pin" size={15} /> TRIP NOTE</span></div><label className="sr-only" htmlFor="post-draft">Write your travel note</label><textarea id="post-draft" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="What should another traveler know?" rows="3" /><div className="composer-tools"><label className="location-input"><Icon name="pin" size={15} /><span className="sr-only">Location</span><input value={draftPlace} onChange={(event) => setDraftPlace(event.target.value)} placeholder="Add a place" /></label><label className="image-select">PHOTO <select value={photoKey} onChange={(event) => setPhotoKey(event.target.value)} aria-label="Choose a trip photo"><option value="azores">Azores trail</option><option value="kyoto">Kyoto lane</option><option value="amalfi">Amalfi coast</option></select></label><button className="primary-button" type="submit" disabled={!draft.trim()}>Share note <Icon name="arrow" size={16} /></button></div></form>
+            <div className="feed-heading"><div><span className="section-kicker">FROM YOUR CIRCLE</span><h2>Fresh from the road</h2></div><button className="quiet-button" onClick={() => go("explore")}>Explore all <Icon name="arrow" size={15} /></button></div>
+            {filteredPosts.map((post) => <PostCard key={post.id} post={post} profiles={profiles} groupsById={groupsById} onLike={toggleLike} onSave={toggleSave} onComment={addComment} onDeleteComment={deleteComment} onProfile={openProfile} onGroup={() => go("groups")} onDeletePost={deletePost} onShare={sharePost} saved={savedIds.includes(post.id)} />)}
+            {filteredPosts.length === 0 && <div className="empty-state"><span className="empty-mark">W</span><h3>No notes found yet.</h3><p>Try another search, or share the first story from this corner of the map.</p></div>}
+          </section>}
+          {currentTab === "explore" && <section className="explore-page">
+            <div className="explore-controls"><span className="section-kicker">GO WHERE YOU'RE CURIOUS</span><div className="filter-row">{["All", "Trails", "City", "Coast", "Local find", "Walking route"].map((filter) => <button key={filter} className={`filter-chip ${activeFilter === filter ? "selected" : ""}`} onClick={() => setActiveFilter(filter)}>{filter}</button>)}</div></div>
+            <div className="destination-grid">{mapPlaces.filter((destination) => (activeFilter === "All" || destination.type === activeFilter) && `${destination.city} ${destination.country} ${destination.note}`.toLowerCase().includes(query.toLowerCase())).map((destination, index) => <article className={`destination-card destination-${index + 1}`} key={destination.id || destination.city}><button className="destination-image-button" onClick={() => { setSelectedPlace(destination); go("map"); }} aria-label={`View ${destination.city} on map`}><Photo imageKey={destination.imageKey} alt={destination.city} className="destination-photo" /><span className="destination-index">{String(index + 1).padStart(2, "0")}</span><span className="destination-type">{destination.type}</span></button><div className="destination-copy"><div><h2>{destination.city}</h2><p>{destination.country}</p></div><button className="round-arrow" aria-label={`Explore ${destination.city} on map`} onClick={() => { setSelectedPlace(destination); go("map"); }}><Icon name="arrow" size={17} /></button><p className="destination-note">{destination.note}</p><div className="destination-footer"><span><Icon name="save" size={14} /> {destination.noteCount} trip notes · {destination.activityScore} activity signals</span><button onClick={() => toggleSave(`place-${destination.city}`)}>{savedIds.includes(`place-${destination.city}`) ? "Saved" : "Save place"}</button></div></div></article>)}</div>
+            <div className="feed-heading explore-feed-heading"><div><span className="section-kicker">TRAVELLERS' NOTES</span><h2>Go beyond the guidebook</h2></div><span className="results-count">{filteredPosts.length} notes</span></div>
+            <div className="explore-notes">{filteredPosts.slice(0, 4).map((post) => <PostCard key={post.id} post={post} profiles={profiles} groupsById={groupsById} onLike={toggleLike} onSave={toggleSave} onComment={addComment} onDeleteComment={deleteComment} onProfile={openProfile} onGroup={() => go("groups")} onDeletePost={deletePost} onShare={sharePost} saved={savedIds.includes(post.id)} />)}</div>
+          </section>}
+          {currentTab === "map" && <section className="map-page travel-map-page"><TravelMap places={mapPlaces} selectedPlace={selectedMapPlace} searchQuery={query} savedIds={savedIds} onSelectPlace={setSelectedPlace} onAddPlace={addMapPlace} onRemovePlace={removeMapPlace} onToggleSave={toggleSave} onWriteNote={writeNoteFromPlace} /></section>}
+          {currentTab === "messages" && <section className="messages-page"><div className="messages-shell">
+            <aside className="thread-list">
+              <div className="thread-list-title"><div><span className="section-kicker">YOUR TRAVEL CIRCLE</span><h2>Conversations</h2></div><span className="thread-number">{state.conversations.length.toString().padStart(2, "0")}</span></div>
+              {state.conversations.map((thread) => { const chatPerson = profiles[thread.profileId]; const last = thread.messages[thread.messages.length - 1]; return <button key={thread.id} className={`thread-item ${thread.id === activeChat?.id ? "thread-active" : ""}`} onClick={() => setSelectedChatId(thread.id)}><Avatar person={chatPerson} /><span className="thread-copy"><strong>{chatPerson.name}</strong><small>{last?.body || "Start a conversation"}</small></span><span className="thread-time">{last?.timeLabel}</span></button>; })}
+              <button className="start-conversation" onClick={() => { const first = state.people.find((personData) => !state.conversations.some((thread) => thread.profileId === personData.id)); if (!first) { setToast("You're already connected with everyone here."); return; } const thread = { id: `chat-${Date.now()}`, profileId: first.id, messages: [] }; setState((current) => ({ ...current, conversations: [...current.conversations, thread] })); setSelectedChatId(thread.id); }}>+ Start a new conversation</button>
+            </aside>
+            <div className="chat-pane">{activeChat ? <>
+              <header className="chat-header"><Avatar person={activeChatPerson} /><div><strong>{activeChatPerson.name}</strong><small><i className="online-dot" /> {activeChatPerson.status} · {activeChatPerson.location}</small></div><button className="quiet-button" onClick={() => openProfile(activeChatPerson.id)}>View profile <Icon name="arrow" size={14} /></button></header>
+              <div className="chat-context"><span className="context-rule" /> <span>MESSAGES · LOCAL DEMO</span> <span className="context-rule" /></div>
+              <div className="message-stream" aria-live="polite">{activeChat.messages.map((item) => <div key={item.id} className={`message-row ${item.senderId === selfProfileId ? "mine" : ""}`}>{item.senderId !== selfProfileId && <Avatar person={profiles[item.senderId]} size="tiny" />}<div className="message-bubble"><p>{item.body}</p><small>{item.timeLabel}</small></div></div>)}{activeChat.messages.length === 0 && <div className="empty-chat"><span>—</span><p>Send a message to start planning.</p></div>}</div>
+              <form className="message-composer" onSubmit={sendMessage}><label className="sr-only" htmlFor="message-draft">Write a message</label><input id="message-draft" value={chatDraft} onChange={(event) => setChatDraft(event.target.value)} placeholder={`Write to ${activeChatPerson.name.split(" ")[0]}...`} /><button type="submit" disabled={!chatDraft.trim()} aria-label="Send message"><Icon name="send" size={17} /></button></form>
+            </> : <div className="empty-state"><h3>No conversations yet</h3><p>Start a conversation with someone in your travel circle.</p></div>}</div>
+          </div></section>}
+          {currentTab === "groups" && <section className="groups-page"><div className="group-feature"><div className="group-feature-image"><Photo imageKey="azores" alt="Mountain path at sunrise" /><div className="feature-stamp">TRAVEL DISCUSSIONS</div></div><div className="group-feature-copy"><span className="section-kicker">SQUAREPAD GROUPS</span><h2>Talk travel with people who share your interests.</h2><p>Swap useful routes, local food finds, and advice for your next trip.</p><button className="text-arrow" onClick={() => setQuery("slow travel")}>Browse slow travel <Icon name="arrow" size={15} /></button></div></div><div className="feed-heading"><div><span className="section-kicker">YOUR GROUPS</span><h2>Groups for your next trip</h2></div><span className="results-count">{filteredGroups.length} groups</span></div><div className="groups-grid">{filteredGroups.map((group, index) => { const owner = profiles[group.ownerId]; const joined = group.memberIds.includes(selfProfileId); const groupPosts = posts.filter((post) => post.groupId === group.id); return <article className="group-card" key={group.id}><div className={`group-cover cover-${index % 3}`}><Photo imageKey={group.imageKey} alt="" /><span className="group-category">{group.category}</span><span className="group-serial">GROUP / {String(index + 1).padStart(2, "0")}</span></div><div className="group-card-body"><div className="group-owner"><Avatar person={owner} size="tiny" /><span>Started by <strong>{owner.name}</strong></span></div><h3>{group.name}</h3><p>{group.description}</p><div className="group-tags">{group.tags.map((tag) => <span key={tag}>{tag}</span>)}</div><div className="group-spotlight"><span>DISCUSSION PROMPT</span><p>{group.spotlight}</p></div><div className="group-card-footer"><span><strong>{group.memberIds.length}</strong> travelers <span>·</span> {groupPosts.length} notes</span><button className={joined ? "joined-button" : "join-button"} onClick={() => toggleGroup(group.id)}>{joined ? "Joined" : "Join group"}</button></div>{groupPosts[0] && <button className="group-story-link" onClick={() => go("timeline")}>Read latest: “{groupPosts[0].caption.slice(0, 58)}...” <Icon name="arrow" size={13} /></button>}</div></article>; })}</div></section>}
+          {currentTab === "profile" && <section className="profile-page">
+            <div className="profile-cover"><Photo imageKey="azores" alt="Azores coastline" /><div className="cover-caption">TRIP NOTES · {viewedProfile.location.toUpperCase()}</div></div>
+            <div className="profile-main">
+              <div className="profile-identity">
+                <Avatar person={viewedProfile} size="large" />
+                <div><span className="section-kicker">{isOwnProfile ? "YOUR PROFILE" : "TRAVELER PROFILE"}</span><h2>{viewedProfile.name}</h2><p>@{viewedProfile.username} <span>·</span> {viewedProfile.location}</p></div>
+                {isOwnProfile ? <button className="secondary-button" onClick={() => setProfileEditing(!profileEditing)}>{profileEditing ? "Cancel edit" : "Edit profile"}</button> : <button className={`follow-button profile-follow ${state.profile.followingIds.includes(viewedProfile.id) ? "is-following" : ""}`} onClick={() => toggleFollow(viewedProfile.id)}>{state.profile.followingIds.includes(viewedProfile.id) ? "Following" : "Follow"}</button>}
               </div>
+              {profileEditing && isOwnProfile
+                ? <form className="profile-edit-form" onSubmit={saveProfile}><label>Name<input value={profileDraft.name} onChange={(event) => setProfileDraft({ ...profileDraft, name: event.target.value })} /></label><label>Username<input value={profileDraft.username} onChange={(event) => setProfileDraft({ ...profileDraft, username: event.target.value.replace(/^@/, "") })} /></label><label>Home base<input value={profileDraft.location} onChange={(event) => setProfileDraft({ ...profileDraft, location: event.target.value })} /></label><label>About your travels<textarea value={profileDraft.bio} onChange={(event) => setProfileDraft({ ...profileDraft, bio: event.target.value })} rows="3" /></label><button className="primary-button" type="submit">Save profile <Icon name="arrow" size={15} /></button></form>
+                : <><p className="profile-bio">{viewedProfile.bio}</p><div className="profile-stats"><div><strong>{viewedProfile.visited}</strong><span>PLACES IN NOTES</span></div><div><strong>{(viewedProfile.followingIds || []).length}</strong><span>TRAVELERS FOLLOWED</span></div><div><strong>{isOwnProfile ? savedIds.length : posts.filter((post) => post.authorId === viewedProfile.id).length}</strong><span>{isOwnProfile ? "ITEMS SAVED" : "TRIP NOTES"}</span></div></div></>}
+              <div className="profile-saved">
+                <div className="feed-heading"><div><span className="section-kicker">{isOwnProfile ? "YOUR TRAVEL CIRCLE" : "TRAVEL CIRCLE"}</span><h2>Travelers in your circle</h2></div></div>
+                <div className="people-row">{people.map((traveler) => <article className="person-card" key={traveler.id}><button className="person-main" onClick={() => openProfile(traveler.id)}><Avatar person={traveler} /><span><strong>{traveler.name}</strong><small>{traveler.location}</small><small>{traveler.visited} places in notes</small></span></button><button className={`follow-button ${state.profile.followingIds.includes(traveler.id) ? "is-following" : ""}`} onClick={() => toggleFollow(traveler.id)}>{state.profile.followingIds.includes(traveler.id) ? "Following" : "Follow"}</button></article>)}</div>
+              </div>
+              <div className="feed-heading profile-post-heading"><div><span className="section-kicker">NOTES FROM {isOwnProfile ? "YOUR" : `${viewedProfile.name.split(" ")[0].toUpperCase()}'S`} TRIPS</span><h2>{isOwnProfile ? "Your recent notes" : "Recent trip notes"}</h2></div></div>
+              {posts.filter((post) => post.authorId === viewedProfile.id).map((post) => <PostCard key={post.id} post={post} profiles={profiles} groupsById={groupsById} onLike={toggleLike} onSave={toggleSave} onComment={addComment} onDeleteComment={deleteComment} onProfile={openProfile} onGroup={() => go("groups")} onDeletePost={deletePost} onShare={sharePost} saved={savedIds.includes(post.id)} />)}
             </div>
-
-            <div className="portfolio-stage-panel">
-              <div className="portfolio-stage-panel-top">
-                {renderProfileLink(viewedProfile, {
-                  meta: isPersonProfileView ? "Viewing profile" : "Signed in as",
-                  className: "portfolio-stage-profile-link",
-                })}
-                <span className="portfolio-inline-chip">{currentMeta.label}</span>
-              </div>
-
-              <div className="portfolio-stage-stats">
-                {heroStats.map((stat) => (
-                  <div className="portfolio-stage-stat" key={stat.label}>
-                    <span>{stat.label}</span>
-                    <strong>{stat.value}</strong>
-                    <small>{stat.detail}</small>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          <section className="portfolio-content-region" aria-labelledby="portfolio-panel-title">
-            <h2 className="portfolio-sr-only" id="portfolio-panel-title" ref={panelHeadingRef} tabIndex="-1">
-              {currentMeta.label}
-            </h2>
-
-            <AnimatePresence mode="wait">
-              <motion.div key={activeTab} {...cardMotion}>
-                {tabContent[activeTab]}
-              </motion.div>
-            </AnimatePresence>
-          </section>
-        </Container>
-      </section>
-
-      <SimpleFooter />
+          </section>}
+          {currentTab === "insights" && <InsightsDashboard posts={posts} profiles={profiles} groups={state.groups} conversations={state.conversations} places={mapPlaces} peopleConnected={totalConnections} tripLocations={uniqueTripLocations} savedItems={savedIds.length} savedPosts={savedPostCount} memberships={totalMembers} likes={totalLikes} comments={totalComments} messages={totalMessages} busiestPost={topPost} busiestConversation={busiestThread} onOpenPlace={(place) => { setSelectedPlace(place); go("map"); }} onOpenMessages={() => go("messages")} />}
+          <footer className="app-footer"><span>SQUAREPAD · TRAVEL COMMUNITY DEMO</span><span>LOCAL DEMO DATA</span></footer>
+        </section>
+        {currentTab === "timeline" && <aside className="right-rail"><div className="rail-card rail-destination"><div className="rail-image"><Photo imageKey={topPlace?.imageKey || "amalfi"} alt={topPlace?.city || "Trip location"} /><span>FROM YOUR TRIP NOTES</span></div><div className="rail-copy"><span className="section-kicker">MOST ACTIVE PLACE</span><h3>{topPlace?.city || "No location notes yet"}</h3><p>{topPlace ? `${topPlace.noteCount} trip notes · ${topPlace.activityScore} activity signals.` : "Add a location to a post to see it on your map."}</p><button className="text-arrow" onClick={() => { if (topPlace) setSelectedPlace(topPlace); go("map"); }}>{topPlace ? "View on map" : "Open map"} <Icon name="arrow" size={14} /></button></div></div><div className="rail-card people-rail"><div className="rail-heading"><span className="section-kicker">TRAVELERS YOU FOLLOW</span><button onClick={() => go("profile")}>VIEW ALL</button></div>{people.slice(0, 4).map((traveler) => <div className="rail-person" key={traveler.id}><button className="rail-person-identity" onClick={() => setToast(`${traveler.name} is ${traveler.status.toLowerCase()}.`)}><Avatar person={traveler} size="tiny" /><span><strong>{traveler.name}</strong><small>{traveler.location}</small></span></button><button className="rail-follow" aria-label={`Follow ${traveler.name}`} onClick={() => toggleFollow(traveler.id)}>{state.profile.followingIds.includes(traveler.id) ? "✓" : "+"}</button></div>)}</div><div className="rail-quote"><span>YOUR ACTIVITY</span><p>{posts.length} trip notes posted</p><small>{uniqueTripLocations} locations · {totalConnections} travelers connected</small></div></aside>}
+      </div>
+      {activeStory && <div className="modal-backdrop" role="presentation" onClick={() => setActiveStory(null)}><section className="story-modal" role="dialog" aria-modal="true" aria-label={`${profiles[activeStory.personId]?.name}'s story`} onClick={(event) => event.stopPropagation()} style={{ backgroundImage: `linear-gradient(180deg,rgba(5,12,9,.08),rgba(5,12,9,.76)),url(${photos[activeStory.imageKey]})` }}><button className="story-close" onClick={() => setActiveStory(null)} aria-label="Close story"><Icon name="close" /></button><div className="story-progress"><i /></div><div className="story-modal-meta"><Avatar person={profiles[activeStory.personId]} size="tiny" /><span><strong>{profiles[activeStory.personId]?.name}</strong><small>{activeStory.stamp}</small></span></div><div className="story-modal-copy"><span>{activeStory.location}</span><h2>{activeStory.place}</h2><button onClick={() => { setActiveStory(null); go("explore"); }}>See travel notes <Icon name="arrow" size={15} /></button></div></section></div>}
+      {toast && <div className="toast-message" role="status">{toast}<button onClick={() => setToast("")} aria-label="Dismiss"><Icon name="close" size={14} /></button></div>}
     </main>
   );
 };
+
+export function Welcome({ history }) {
+  const [notice, setNotice] = useState(false);
+  const [email, setEmail] = useState("");
+  const [demoData] = useState(() => getDemoState());
+  const featuredPost = demoData.posts[0];
+  const featuredAuthor = featuredPost?.authorId === selfProfileId
+    ? demoData.profile
+    : demoData.people.find((traveler) => traveler.id === featuredPost?.authorId);
+  useEffect(() => { document.title = "Squarepad — sign-in preview"; }, []);
+  const submit = (event) => { event.preventDefault(); setNotice(true); };
+  return (
+    <main className="welcome-page">
+      <section className="welcome-visual">
+        <div className="welcome-brand"><span className="brand-symbol">s</span><span>squarepad<span className="brand-period">.</span></span></div>
+        <div className="welcome-story">
+          <span className="eyebrow"><span className="eyebrow-line" /> TRAVEL POSTS & LOCAL RECOMMENDATIONS</span>
+          <h1>Travel posts<br />and local finds.</h1>
+          <p>Share trip notes, save places, and ask other travelers for recommendations.</p>
+          <div className="welcome-quote">
+            <span>“</span>
+            <p>{featuredPost?.caption || "Share a trip note to see it featured here."}</p>
+            <small>{featuredPost?.location || "From the Squarepad demo"}{featuredAuthor?.name ? ` · ${featuredAuthor.name}` : ""}</small>
+          </div>
+          <div className="welcome-foot">TRIPS · PLACES · PEOPLE <span>SQUAREPAD</span></div>
+        </div>
+      </section>
+      <section className="welcome-form-side">
+        <button className="welcome-back" onClick={() => history.push("/demo/timeline")}>← Open the demo</button>
+        <div className="welcome-form-wrap">
+          <span className="welcome-kicker">SIGN-IN PAGE PREVIEW</span>
+          <h2>Welcome back.</h2>
+          <p>Sign-in is disabled here. You can explore Squarepad without an account.</p>
+          <form className="welcome-form" onSubmit={submit}>
+            <label htmlFor="welcome-email">Email address</label>
+            <input id="welcome-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@example.com" autoComplete="off" />
+            <button type="submit">Continue <Icon name="arrow" size={17} /></button>
+          </form>
+          <div className="welcome-divider"><span>OR</span></div>
+          <button className="demo-access" onClick={() => history.push("/demo/timeline")}>Open Squarepad demo <Icon name="arrow" size={16} /></button>
+          <p className="demo-disclaimer">This page is a visual preview. It does not create accounts or send or store email addresses.</p>
+          {notice && <p className="demo-notice" role="status">This sign-in page is a visual demo. Your email was not sent or stored.</p>}
+          <div className="welcome-legal"><span>SQUAREPAD</span><span>DEMO PREVIEW</span></div>
+        </div>
+      </section>
+    </main>
+  );
+}
 
 export default PortfolioDemo;

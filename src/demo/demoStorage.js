@@ -1,560 +1,99 @@
-const STORAGE_KEY = "squarepad_portfolio_demo_v7";
+const STORAGE_KEY = "squarepad_demo_v2";
+const LEGACY_STORAGE_KEY = "wayfarer_demo_v1";
 
 export const selfProfileId = "self";
-export const validDemoTabs = ["timeline", "profile", "messages", "groups", "admin"];
+export const validDemoTabs = ["timeline", "explore", "map", "messages", "groups", "profile", "insights", "admin"];
 
-const createComment = (id, authorId, body, timeLabel) => ({
-  id,
-  authorId,
-  body,
-  timeLabel,
-});
-
-const createMessage = (id, senderId, body, timeLabel) => ({
-  id,
-  senderId,
-  body,
-  timeLabel,
-});
+const comment = (id, authorId, body, timeLabel) => ({ id, authorId, body, timeLabel });
+const message = (id, senderId, body, timeLabel) => ({ id, senderId, body, timeLabel });
 
 const createInitialState = () => ({
-  settings: {
-    theme: "light",
-  },
   profile: {
     name: "Asim Daud",
     username: "asimdaud",
-    bio: "Built SquarePad to explore what a social platform feels like when feed, profile, chat, groups, and community health all feel like one coherent product.",
-    role: "Product Designer & Frontend Engineer",
-    location: "Islamabad, PK",
+    bio: "Collecting long walks, small cafes, and the kind of places that stay with you.",
+    role: "Slow-travel enthusiast",
+    location: "Islamabad, Pakistan",
     followingIds: ["person-maya", "person-raymond", "person-priya", "person-lina"],
-    coverImageUrl:
-      "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80",
+    homeBase: "Islamabad",
   },
   people: [
-    {
-      id: "person-maya",
-      name: "Maya Torres",
-      username: "mayat",
-      bio: "Design lead focused on product storytelling, motion systems, and maker communities.",
-      role: "Creative Lead",
-      location: "Barcelona, ES",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-jordan", "person-raymond", "person-nia", "person-omar", "self"],
-      isFollowing: true,
-      status: "Active now",
-      accent: "cyan",
-    },
-    {
-      id: "person-jordan",
-      name: "Jordan Lee",
-      username: "jlee",
-      bio: "Frontend engineer who loves practical UI systems and snappy social interactions.",
-      role: "Frontend Engineer",
-      location: "Austin, US",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-maya", "person-zoe", "person-omar", "self"],
-      isFollowing: false,
-      status: "Away",
-      accent: "amber",
-    },
-    {
-      id: "person-raymond",
-      name: "Raymond Kim",
-      username: "raymondkim",
-      bio: "Community manager highlighting new groups, welcoming members, and keeping the feed healthy.",
-      role: "Community Lead",
-      location: "London, UK",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-maya", "person-nia", "person-lina", "self"],
-      isFollowing: true,
-      status: "Online",
-      accent: "rose",
-    },
-    {
-      id: "person-nia",
-      name: "Nia Smith",
-      username: "nias",
-      bio: "Independent founder sharing product notes, launch experiments, and honest reflections.",
-      role: "Founder",
-      location: "Berlin, DE",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-maya", "person-priya", "self"],
-      isFollowing: false,
-      status: "Recently active",
-      accent: "green",
-    },
-    {
-      id: "person-omar",
-      name: "Omar Haddad",
-      username: "ohaddad",
-      bio: "Engineer building fast prototypes, polished interfaces, and the tooling behind them.",
-      role: "Product Engineer",
-      location: "Dubai, AE",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1504593811423-6dd665756598?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-jordan", "person-priya", "person-raymond"],
-      isFollowing: false,
-      status: "Heads down",
-      accent: "cyan",
-    },
-    {
-      id: "person-priya",
-      name: "Priya Kapoor",
-      username: "priyak",
-      bio: "Researcher translating user behavior into product decisions and calm, confident flows.",
-      role: "Product Researcher",
-      location: "Singapore, SG",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-lina", "person-maya", "self"],
-      isFollowing: true,
-      status: "In review",
-      accent: "amber",
-    },
-    {
-      id: "person-lina",
-      name: "Lina Chen",
-      username: "linachen",
-      bio: "Brand and visual designer turning product surfaces into memorable experiences.",
-      role: "Brand Designer",
-      location: "Toronto, CA",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-maya", "person-nia", "self"],
-      isFollowing: false,
-      status: "Sketching",
-      accent: "rose",
-    },
-    {
-      id: "person-zoe",
-      name: "Zoe Park",
-      username: "zoep",
-      bio: "Growth-minded operator balancing community momentum, events, and launch energy.",
-      role: "Growth Lead",
-      location: "Seoul, KR",
-      coverImageUrl:
-        "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80",
-      followingIds: ["person-raymond", "person-nia", "person-priya"],
-      isFollowing: false,
-      status: "Planning a launch",
-      accent: "green",
-    },
+    { id: "person-maya", name: "Maya Torres", username: "mayat", bio: "Taking the scenic route through every city. Always looking for a good market and a better view.", role: "Photographer & curious walker", location: "Barcelona, Spain", homeBase: "Barcelona", followingIds: ["person-jordan", "person-raymond", "person-nia", "person-omar", "self"], isFollowing: true, status: "On the move", accent: "lime" },
+    { id: "person-jordan", name: "Jordan Lee", username: "jlee", bio: "Weekend trains, neighborhood bakeries, and a camera roll full of side streets.", role: "Railway wanderer", location: "Austin, Texas", homeBase: "Austin", followingIds: ["person-maya", "person-zoe", "person-omar", "self"], isFollowing: false, status: "Planning a trip", accent: "amber" },
+    { id: "person-raymond", name: "Raymond Kim", username: "raymondkim", bio: "A few years of one-way tickets taught me to stay an extra day.", role: "Independent traveler", location: "London, UK", homeBase: "London", followingIds: ["person-maya", "person-nia", "person-lina", "self"], isFollowing: true, status: "Around today", accent: "moss" },
+    { id: "person-nia", name: "Nia Smith", username: "nias", bio: "Finding the quiet edges of loud cities and sharing the route notes.", role: "City explorer", location: "Berlin, Germany", homeBase: "Berlin", followingIds: ["person-maya", "person-priya", "self"], isFollowing: false, status: "Recently active", accent: "coral" },
+    { id: "person-omar", name: "Omar Haddad", username: "ohaddad", bio: "Desert mornings, old ports, and the long way there.", role: "Slow traveler", location: "Dubai, UAE", homeBase: "Dubai", followingIds: ["person-jordan", "person-priya", "person-raymond"], isFollowing: false, status: "In the field", accent: "amber" },
+    { id: "person-priya", name: "Priya Kapoor", username: "priyak", bio: "Looking for the human story behind every place. Usually near a train station.", role: "Writer & researcher", location: "Singapore", homeBase: "Singapore", followingIds: ["person-lina", "person-maya", "self"], isFollowing: true, status: "Around today", accent: "lime" },
+    { id: "person-lina", name: "Lina Chen", username: "linachen", bio: "A sketchbook, one small bag, and an unreasonable number of saved bakeries.", role: "Illustrator on the road", location: "Toronto, Canada", homeBase: "Toronto", followingIds: ["person-maya", "person-nia", "self"], isFollowing: false, status: "Sketching somewhere", accent: "coral" },
+    { id: "person-zoe", name: "Zoe Park", username: "zoep", bio: "Finding places by following the sound of the neighborhood.", role: "Food & culture writer", location: "Seoul, South Korea", homeBase: "Seoul", followingIds: ["person-raymond", "person-nia", "person-priya"], isFollowing: false, status: "Planning a trip", accent: "moss" },
   ],
   posts: [
-    {
-      id: "post-1",
-      authorId: selfProfileId,
-      caption:
-        "Rebuilt SquarePad into a portfolio-safe demo without flattening the product. The challenge was keeping feed, chat, groups, and admin feeling alive at the same time.",
-      timeLabel: "Featured",
-      mood: "Launch",
-      hasImage: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-      likesByIds: ["person-maya", "person-jordan", "person-raymond", "person-priya"],
-      commentsData: [
-        createComment("p1-c1", "person-jordan", "The flow feels production-ready now.", "4m ago"),
-        createComment("p1-c2", "person-maya", "This is the kind of portfolio artifact that explains itself.", "2m ago"),
-      ],
-    },
-    {
-      id: "post-2",
-      authorId: selfProfileId,
-      caption:
-        "The hardest design problem here was tone. The timeline wants energy, profile wants intimacy, groups want warmth, and admin needs clarity without feeling sterile.",
-      timeLabel: "24m ago",
-      mood: "Systems",
-      hasImage: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
-      likesByIds: ["person-maya", "person-raymond", "person-lina"],
-      commentsData: [
-        createComment("p2-c1", "person-priya", "That tonal balance is what makes it feel like one product.", "12m ago"),
-      ],
-    },
-    {
-      id: "post-3",
-      authorId: "person-maya",
-      groupId: "g-design-systems",
-      caption:
-        "The profile view is finally strong enough to stand on its own. It feels more like a creator space and less like a settings screen.",
-      timeLabel: "58m ago",
-      mood: "Review",
-      hasImage: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1200&q=80",
-      likesByIds: [selfProfileId, "person-lina", "person-nia"],
-      commentsData: [
-        createComment("p3-c1", "person-lina", "The pacing and hierarchy are much better now.", "25m ago"),
-      ],
-    },
-    {
-      id: "post-4",
-      authorId: "person-jordan",
-      groupId: "g-frontend-circle",
-      caption:
-        "Thread switching feels fast, and the follow/message states finally have enough friction and feedback to feel believable.",
-      timeLabel: "1h ago",
-      mood: "Feedback",
-      hasImage: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&w=1200&q=80",
-      likesByIds: [selfProfileId, "person-omar"],
-      commentsData: [
-        createComment("p4-c1", "person-raymond", "The new feedback rhythm is a big improvement.", "38m ago"),
-      ],
-    },
-    {
-      id: "post-5",
-      authorId: "person-raymond",
-      groupId: "g-community-lab",
-      caption:
-        "Community features matter most when they create momentum without looking busy. SquarePad is getting close to that balance now.",
-      timeLabel: "2h ago",
-      mood: "Community",
-      hasImage: false,
-      likesByIds: [selfProfileId, "person-maya", "person-zoe"],
-      commentsData: [
-        createComment("p5-c1", selfProfileId, "That balance is exactly what I was chasing.", "1h ago"),
-      ],
-    },
-    {
-      id: "post-6",
-      authorId: "person-nia",
-      groupId: "g-startup-builders",
-      caption:
-        "I love that the new groups area can actually carry the story of the product instead of being a decorative grid.",
-      timeLabel: "3h ago",
-      mood: "Founders",
-      hasImage: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80",
-      likesByIds: [selfProfileId, "person-priya"],
-      commentsData: [
-        createComment("p6-c1", "person-zoe", "The join flow and member list really help.", "2h ago"),
-      ],
-    },
-    {
-      id: "post-7",
-      authorId: "person-priya",
-      groupId: "g-product-council",
-      caption:
-        "The strongest thing about this demo is that every click pays off. Nothing feels dead or placeholder-only anymore.",
-      timeLabel: "5h ago",
-      mood: "Research",
-      hasImage: false,
-      likesByIds: [selfProfileId, "person-maya", "person-lina", "person-raymond"],
-      commentsData: [],
-    },
-    {
-      id: "post-8",
-      authorId: "person-lina",
-      groupId: "g-creative-network",
-      caption:
-        "The light theme gives the product a much broader range. It now feels portfolio-ready for people outside the very technical crowd too.",
-      timeLabel: "8h ago",
-      mood: "Visual",
-      hasImage: true,
-      imageUrl:
-        "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80",
-      likesByIds: [selfProfileId, "person-maya", "person-zoe"],
-      commentsData: [
-        createComment("p8-c1", "person-omar", "The dark mode still looks strong too.", "3h ago"),
-      ],
-    },
+    { id: "post-1", authorId: "self", caption: "First light on the trail above Sete Cidades. We took the longer path and found the whole crater to ourselves. Worth every extra step.", location: "Sete Cidades, Azores", lat: 37.86, lon: -25.79, timeLabel: "Featured", mood: "Trail notes", imageKey: "azores", hasImage: true, likesByIds: ["person-maya", "person-jordan", "person-raymond", "person-priya"], commentsData: [comment("p1-c1", "person-jordan", "Adding this to my slow list. Which trail did you take?", "4m ago"), comment("p1-c2", "person-maya", "That light is unreal. The west rim at sunrise is magic.", "2m ago")] },
+    { id: "post-2", authorId: "self", caption: "A tiny breakfast counter in Kyoto, no menu in English and the best tamago sandwich I've had in years. Leave room for the second coffee.", location: "Nishiki Market, Kyoto", lat: 35.0116, lon: 135.7681, timeLabel: "Yesterday", mood: "Local find", imageKey: "kyoto", hasImage: true, likesByIds: ["person-maya", "person-raymond", "person-lina"], commentsData: [comment("p2-c1", "person-priya", "The places you stumble into are always the ones you remember.", "12m ago")] },
+    { id: "post-3", authorId: "person-maya", groupId: "g-design-systems", caption: "Took the first ferry out and walked the old port before the day-trippers arrived. The bakery by the blue door opens at seven.", location: "Cadaqués, Spain", lat: 42.2889, lon: 3.2777, timeLabel: "58m ago", mood: "Local find", imageKey: "amalfi", hasImage: true, likesByIds: ["self", "person-lina", "person-nia"], commentsData: [comment("p3-c1", "person-lina", "The blue door bakery is now a landmark in my notes.", "25m ago")] },
+    { id: "post-4", authorId: "person-jordan", groupId: "g-frontend-circle", caption: "The night train arrived an hour late. Nobody minded. We watched the city wake up from the station steps.", location: "Lisbon, Portugal", lat: 38.7223, lon: -9.1393, timeLabel: "1h ago", mood: "On the way", imageKey: "azores", hasImage: true, likesByIds: ["self", "person-omar"], commentsData: [comment("p4-c1", "person-raymond", "Best way to arrive, honestly.", "38m ago")] },
+    { id: "post-5", authorId: "person-raymond", groupId: "g-community-lab", caption: "A walking loop for rainy London: bookshop, covered market, warm pub, then the river when the clouds finally break.", location: "South Bank, London", lat: 51.5055, lon: -0.0754, timeLabel: "2h ago", mood: "Walking route", imageKey: "kyoto", hasImage: false, likesByIds: ["self", "person-maya", "person-zoe"], commentsData: [comment("p5-c1", "self", "Saved this for the next grey Sunday.", "1h ago")] },
+    { id: "post-6", authorId: "person-nia", groupId: "g-startup-builders", caption: "Found a pocket of wild green right in the middle of the city. Bring a book, not a schedule.", location: "Tempelhofer Feld, Berlin", lat: 52.4733, lon: 13.4031, timeLabel: "3h ago", mood: "Quiet corner", imageKey: "amalfi", hasImage: true, likesByIds: ["self", "person-priya"], commentsData: [comment("p6-c1", "person-zoe", "This is what I want more of in every city.", "2h ago")] },
+    { id: "post-7", authorId: "person-priya", groupId: "g-product-council", caption: "Three slow hours in Little India: flower stalls, filter coffee, and a conversation with a shopkeeper about the old neighborhood.", location: "Little India, Singapore", lat: 1.3066, lon: 103.8518, timeLabel: "5h ago", mood: "Neighborhood", imageKey: "kyoto", hasImage: false, likesByIds: ["self", "person-maya", "person-lina", "person-raymond"], commentsData: [] },
+    { id: "post-8", authorId: "person-lina", groupId: "g-creative-network", caption: "A long lunch in the shade, looking out at the water. The Amalfi bus is a ride, but the view makes the bends worth it.", location: "Amalfi Coast, Italy", lat: 40.6281, lon: 14.6023, timeLabel: "8h ago", mood: "On the way", imageKey: "amalfi", hasImage: true, likesByIds: ["self", "person-maya", "person-zoe"], commentsData: [comment("p8-c1", "person-omar", "Take the ferry back if you can. Completely different view.", "3h ago")] },
   ],
   conversations: [
-    {
-      id: "chat-1",
-      profileId: "person-maya",
-      messages: [
-        createMessage("m1", "person-maya", "The feed composer feels premium now. The smaller motions are doing the right amount of work.", "8m ago"),
-        createMessage("m2", selfProfileId, "That was the goal. I wanted it to feel intentional without screaming for attention.", "6m ago"),
-        createMessage("m3", "person-maya", "It reads like a product, not a mockup.", "Just now"),
-      ],
-    },
-    {
-      id: "chat-2",
-      profileId: "person-raymond",
-      messages: [
-        createMessage("m4", "person-raymond", "The new groups interactions finally explain why the community layer matters.", "32m ago"),
-        createMessage("m5", selfProfileId, "Exactly. I wanted groups to feel inhabited, not decorative.", "28m ago"),
-      ],
-    },
-    {
-      id: "chat-3",
-      profileId: "person-jordan",
-      messages: [
-        createMessage("m6", "person-jordan", "The profile route is much clearer now that self and person views are separated.", "1h ago"),
-        createMessage("m7", selfProfileId, "That identity split fixed a lot of weird context bugs.", "55m ago"),
-      ],
-    },
+    { id: "chat-1", profileId: "person-maya", messages: [message("m1", "person-maya", "Your Azores notes made me move my dates. Any chance you remember the name of that guesthouse?", "8m ago"), message("m2", "self", "Casa do Vale — family-run, and the breakfast is a reason to stay on its own.", "6m ago"), message("m3", "person-maya", "Perfect. I owe you a coffee when our paths cross.", "Just now")] },
+    { id: "chat-2", profileId: "person-raymond", messages: [message("m4", "person-raymond", "I put the South Bank loop in the London group. Feel free to add your own stops.", "32m ago"), message("m5", "self", "Will do. Bookshop first, always.", "28m ago")] },
+    { id: "chat-3", profileId: "person-jordan", messages: [message("m6", "person-jordan", "Have you done the Lisbon to Porto train? Debating an overnight stop.", "1h ago"), message("m7", "self", "Absolutely stop in Coimbra if you can spare a day.", "55m ago")] },
   ],
   groups: [
-    {
-      id: "g-frontend-circle",
-      name: "Frontend Circle",
-      category: "UI Systems",
-      description:
-        "A focused space for interaction design, component systems, animation experiments, and launch feedback from builders who care about the details.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1516382799247-87df95d790b7?auto=format&fit=crop&w=1000&q=80",
-      tags: ["React", "UI", "Motion", "A11y"],
-      ownerId: "person-jordan",
-      memberIds: [selfProfileId, "person-jordan", "person-maya", "person-omar", "person-priya"],
-      spotlight: "This week: critique the motion pass and tighten keyboard states.",
-    },
-    {
-      id: "g-design-systems",
-      name: "Design Systems Lab",
-      category: "Design Systems",
-      description:
-        "A home for component language, interaction consistency, tokens, editorial UX decisions, and the design-engineering details that make products feel finished.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1522542550221-31fd19575a2d?auto=format&fit=crop&w=1000&q=80",
-      tags: ["Tokens", "Components", "Design Ops", "Patterns"],
-      ownerId: "person-maya",
-      memberIds: [
-        selfProfileId,
-        "person-maya",
-        "person-jordan",
-        "person-lina",
-        "person-priya",
-      ],
-      spotlight: "Current lab: how far can a lightweight token system carry a demo into interview-ready territory?",
-    },
-    {
-      id: "g-startup-builders",
-      name: "Startup Builders",
-      category: "Founders",
-      description:
-        "Builders sharing launch plans, pivots, roadmap decisions, and the traction updates that tell the real story.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1000&q=80",
-      tags: ["Growth", "Launch", "Product"],
-      ownerId: "person-nia",
-      memberIds: [selfProfileId, "person-nia", "person-zoe", "person-raymond"],
-      spotlight: "Current thread: what makes a portfolio project feel hireable instead of academic?",
-    },
-    {
-      id: "g-creative-network",
-      name: "Creative Network",
-      category: "Culture",
-      description:
-        "A broad creative collective for designers, artists, writers, and side-project founders who care about craft above all else.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1000&q=80",
-      tags: ["Brand", "Design", "Writing", "Community"],
-      ownerId: "person-lina",
-      memberIds: [selfProfileId, "person-lina", "person-maya", "person-priya", "person-zoe"],
-      spotlight: "Featured prompt: design one detail today that reviewers will remember tomorrow.",
-    },
-    {
-      id: "g-community-lab",
-      name: "Community Lab",
-      category: "Operations",
-      description:
-        "The place for onboarding rituals, moderation flows, healthy conversation systems, and community health thinking.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1000&q=80",
-      tags: ["Safety", "Moderation", "Community"],
-      ownerId: "person-raymond",
-      memberIds: [selfProfileId, "person-raymond", "person-maya", "person-zoe"],
-      spotlight: "Open review: which moderation signals deserve dashboard space?",
-    },
-    {
-      id: "g-product-council",
-      name: "Product Council",
-      category: "Strategy",
-      description:
-        "Deep dives on product decisions, research readouts, prioritization tradeoffs, and the stories behind the roadmap.",
-      imageUrl:
-        "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1000&q=80",
-      tags: ["PM", "Research", "Roadmaps"],
-      ownerId: "person-priya",
-      memberIds: [selfProfileId, "person-priya", "person-nia", "person-jordan"],
-      spotlight: "Today: how much polish changes the perception of product quality in interviews.",
-    },
+    { id: "g-frontend-circle", name: "The Long Way Round", category: "Slow travel", description: "For travelers who choose the scenic route, take the local train, and leave space in the itinerary.", imageKey: "azores", tags: ["Rail journeys", "Walking", "Slow travel"], ownerId: "person-jordan", memberIds: ["self", "person-jordan", "person-maya", "person-omar", "person-priya"], spotlight: "This week: share a route that got better when you slowed down." },
+    { id: "g-design-systems", name: "Island Notes", category: "Coast & islands", description: "Ferry timetables, quiet coves, small harbors, and useful notes from the edges of the map.", imageKey: "amalfi", tags: ["Islands", "Coastal walks", "Ferries"], ownerId: "person-maya", memberIds: ["self", "person-maya", "person-jordan", "person-lina", "person-priya"], spotlight: "Current thread: the island you would return to tomorrow." },
+    { id: "g-startup-builders", name: "A Table for One More", category: "Food & culture", description: "The best meal is usually the one you found by asking someone who lives there.", imageKey: "kyoto", tags: ["Markets", "Coffee", "Neighborhoods"], ownerId: "person-nia", memberIds: ["self", "person-nia", "person-zoe", "person-raymond"], spotlight: "Current thread: the tiny place you almost walked past." },
+    { id: "g-creative-network", name: "Field Notes Club", category: "Travel journals", description: "A shared notebook for small observations, unhurried days, and stories that don't fit on a checklist.", imageKey: "azores", tags: ["Journals", "Photography", "Stories"], ownerId: "person-lina", memberIds: ["self", "person-lina", "person-maya", "person-priya", "person-zoe"], spotlight: "Featured prompt: what detail made a place feel like yours?" },
+    { id: "g-community-lab", name: "City on Foot", category: "Walking routes", description: "Thoughtful city walks built by people who know where to turn, pause, and look up.", imageKey: "amalfi", tags: ["Walking", "City guides", "Local"], ownerId: "person-raymond", memberIds: ["self", "person-raymond", "person-maya", "person-zoe"], spotlight: "Open call: a two-hour walk with one excellent coffee stop." },
+    { id: "g-product-council", name: "Window Seat Society", category: "Getting there", description: "Train rides, ferry decks, and the in-between places that become the best part of a trip.", imageKey: "kyoto", tags: ["Rail", "Ferries", "Routes"], ownerId: "person-priya", memberIds: ["self", "person-priya", "person-nia", "person-jordan"], spotlight: "Today: where has the journey been better than the arrival?" },
   ],
-  admin: {
-    queue: [
-      {
-        id: "q-1",
-        title: "Content review",
-        note: "One group post is waiting for a final moderation pass before getting featured.",
-        status: "Pending",
-      },
-      {
-        id: "q-2",
-        title: "Group launch",
-        note: "Creative Network is preparing a new weekly prompt and needs the hero slot.",
-        status: "Review",
-      },
-      {
-        id: "q-3",
-        title: "Safety check",
-        note: "Conversation health is strong, but one thread needs a follow-up from the community lead.",
-        status: "Stable",
-      },
-    ],
-  },
+  places: [],
 });
 
-const normalizeComments = (comments, fallbackComments = []) => {
-  const source = Array.isArray(comments) ? comments : [];
-  const base = source.length > 0 ? source : fallbackComments;
-
-  return base.map((comment, index) => ({
-    id: comment.id || `comment-${index + 1}`,
-    authorId: comment.authorId || fallbackComments[index]?.authorId || selfProfileId,
-    body: comment.body || "",
-    timeLabel: comment.timeLabel || "Just now",
-  }));
-};
-
-const normalizePost = (post, fallbackPost) => {
-  const fallback = fallbackPost || {};
-  const source = post || {};
-  const commentsData = normalizeComments(source.commentsData, fallback.commentsData || []);
-
-  return {
-    ...fallback,
-    ...source,
-    commentsData,
-    likesByIds:
-      Array.isArray(source.likesByIds) && source.likesByIds.length >= 0
-        ? source.likesByIds
-        : fallback.likesByIds || [],
-  };
-};
-
-const normalizePerson = (person, fallbackPerson) => {
-  const fallback = fallbackPerson || {};
-  const source = person || {};
-
-  return {
-    ...fallback,
-    ...source,
-    followingIds:
-      Array.isArray(source.followingIds) && source.followingIds.length >= 0
-        ? source.followingIds
-        : fallback.followingIds || [],
-    isFollowing: Boolean(source.isFollowing),
-  };
-};
-
-const normalizeConversation = (conversation, fallbackConversation) => {
-  const fallback = fallbackConversation || {};
-  const source = conversation || {};
-
-  return {
-    ...fallback,
-    ...source,
-    messages:
-      Array.isArray(source.messages) && source.messages.length > 0
-        ? source.messages.map((message, index) => ({
-            id: message.id || `message-${index + 1}`,
-            senderId: message.senderId || fallback.messages?.[index]?.senderId || selfProfileId,
-            body: message.body || "",
-            timeLabel: message.timeLabel || "Just now",
-          }))
-        : fallback.messages || [],
-  };
-};
-
-const normalizeGroup = (group, fallbackGroup) => {
-  const fallback = fallbackGroup || {};
-  const source = group || {};
-
-  return {
-    ...fallback,
-    ...source,
-    tags:
-      Array.isArray(source.tags) && source.tags.length > 0 ? source.tags : fallback.tags || [],
-    memberIds:
-      Array.isArray(source.memberIds) && source.memberIds.length > 0
-        ? source.memberIds
-        : fallback.memberIds || [selfProfileId],
-  };
-};
-
-const mergeDemoState = (saved = {}) => {
-  const init = createInitialState();
-  const savedPosts = Array.isArray(saved.posts) ? saved.posts : [];
-
-  return {
-    ...init,
-    ...saved,
-    settings: { ...init.settings, ...(saved.settings || {}) },
-    profile: {
-      ...init.profile,
-      ...(saved.profile || {}),
-      followingIds:
-        saved.profile && Array.isArray(saved.profile.followingIds)
-          ? saved.profile.followingIds
-          : init.profile.followingIds,
-    },
-    people:
-      Array.isArray(saved.people) && saved.people.length > 0
-        ? saved.people.map((person, index) =>
-            normalizePerson(person, init.people[index % init.people.length])
-          )
-        : init.people,
-    posts:
-      savedPosts.length > 0
-        ? savedPosts.map((post, index) => normalizePost(post, init.posts[index % init.posts.length]))
-        : init.posts,
-    conversations:
-      Array.isArray(saved.conversations) && saved.conversations.length > 0
-        ? saved.conversations.map((conversation, index) =>
-            normalizeConversation(conversation, init.conversations[index % init.conversations.length])
-          )
-        : init.conversations,
-    groups:
-      Array.isArray(saved.groups) && saved.groups.length > 0
-        ? saved.groups.map((group, index) =>
-            normalizeGroup(group, init.groups[index % init.groups.length])
-          )
-        : init.groups,
-    admin: {
-      ...init.admin,
-      ...(saved.admin || {}),
-      queue:
-        saved.admin && Array.isArray(saved.admin.queue) && saved.admin.queue.length > 0
-          ? saved.admin.queue
-          : init.admin.queue,
-    },
-  };
-};
-
 export const getDemoState = () => {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    const initial = createInitialState();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-    return initial;
-  }
-
   try {
-    const merged = mergeDemoState(JSON.parse(raw));
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-    return merged;
-  } catch {
+    const currentStorage = localStorage.getItem(STORAGE_KEY);
+    const legacyStorage = localStorage.getItem(LEGACY_STORAGE_KEY);
+    const saved = JSON.parse(currentStorage || legacyStorage || "null");
+    if (!currentStorage && legacyStorage && saved) localStorage.setItem(STORAGE_KEY, legacyStorage);
     const initial = createInitialState();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
-    return initial;
+    if (!saved || saved.version !== 1) {
+      const fresh = { ...initial, version: 1 };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(fresh));
+      return fresh;
+    }
+    return {
+      ...initial,
+      ...saved,
+      profile: { ...initial.profile, ...(saved.profile || {}) },
+      people: Array.isArray(saved.people) ? saved.people : initial.people,
+      posts: Array.isArray(saved.posts)
+        ? saved.posts.map((post) => {
+          const seededPost = initial.posts.find((item) => item.id === post.id);
+          return seededPost
+            ? { ...seededPost, ...post, lat: post.lat ?? seededPost.lat, lon: post.lon ?? seededPost.lon }
+            : post;
+        })
+        : initial.posts,
+      conversations: Array.isArray(saved.conversations) ? saved.conversations : initial.conversations,
+      groups: Array.isArray(saved.groups) ? saved.groups : initial.groups,
+      places: Array.isArray(saved.places) ? saved.places : initial.places,
+      version: 1,
+    };
+  } catch {
+    return { ...createInitialState(), version: 1 };
   }
 };
 
-export const saveDemoState = (state) => localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+export const saveDemoState = (state) => {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, version: 1 })); } catch { /* storage may be unavailable */ }
+};
 
 export const resetDemoState = () => {
-  const initial = createInitialState();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+  const initial = { ...createInitialState(), version: 1 };
+  saveDemoState(initial);
   return initial;
 };

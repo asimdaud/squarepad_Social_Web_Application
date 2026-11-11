@@ -1,66 +1,43 @@
-# SquarePad
+# Squarepad
 
-SquarePad is a polished social product demo built for portfolio and interview use. It started as an older full-stack social app and was rebuilt into a local-first experience that still shows the shape of a real product: feed, profiles, messaging, groups, admin insights, theming, and motion.
+Squarepad is a travel-social demo for sharing trip notes, finding local recommendations, and seeing where other travellers have been. It uses static demo records and browser storage; there is no backend or real sign-in.
 
 Live demo: https://squarepad-demo-fix.web.app
 
 ## What It Shows
 
-- Interactive timeline with likes, comments, sharing, and post deletion
-- Editable self profile with app-wide identity propagation
-- Cross-linked user profiles from posts, comments, messages, and groups
-- Local messaging threads with persistent demo state
-- Interactive groups with membership, members, and activity
-- Admin dashboard powered by real demo-derived metrics
-- Light default theme plus switchable dark mode
-
-## Tech
-
-- React 16
-- Vite
-- React Router
-- Reactstrap + custom CSS
-- Framer Motion
-- Firebase Hosting
+- A travel feed with stories, location-tagged posts, likes, comments, saves, and post creation
+- Searchable destination discovery with place creation, map pin selection, and trip-note-based heatmaps
+- A pan-and-zoom OpenStreetMap view with saved local places and weighted activity from real demo posts, likes, comments, and saves
+- Linked traveller profiles with local editing and follow states
+- Persistent demo conversations and travel communities
+- Community insights calculated from the local demo state
+- Presentation-only welcome and sign-in screens at `/welcome` and `/login`
 
 ## Local Development
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Build for production:
+Vite listens on port 5000 for the Replit preview. Build and preview the production bundle with:
 
 ```bash
 npm run build
-```
-
-Preview the production build locally:
-
-```bash
 npm run preview
 ```
 
+## Demo Data
+
+Seed profiles, posts, groups, conversations, and trip coordinates live in `src/demo/demoStorage.js`. Social changes and user-added map locations persist in localStorage, and existing Wayfarer demo data is migrated on first load. Counts and heatmap weights are derived from the current posts, likes, comments, saves, and follow graph, not seeded popularity totals. The map uses OpenStreetMap tiles and needs no API key; map tiles require an internet connection.
+
 ## Deployment
+
+GitHub Actions deploys Firebase Hosting on pushes to `main` or `master`; pull requests create preview deployments. The workflow expects the repository secret `FIREBASE_SERVICE_ACCOUNT_SQUAREPAD_DEMO_FIX`.
 
 Manual Firebase deploy:
 
 ```bash
 npm run deploy:firebase
 ```
-
-This repo also supports automatic Firebase Hosting deploys through GitHub Actions:
-
-- push to `main` or `master` -> deploy live
-- open a pull request -> create a preview deploy
-
-GitHub Actions requires this repository secret:
-
-- `FIREBASE_SERVICE_ACCOUNT_SQUAREPAD_DEMO_FIX`
-
-## Notes
-
-- Demo data is local-first and persists in the browser
-- Remote images have fallbacks so the UI still holds up if external assets fail
-- The project was migrated from CRA to Vite to simplify the build and reduce legacy dependency noise
